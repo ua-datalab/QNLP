@@ -1,6 +1,7 @@
 # Meeting on June 5th 2024.
 ## [results]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing))
-1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes,
+1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy.
+2. update: NO
 	
 
 
@@ -32,6 +33,19 @@
 			7. Todo
 				1. Train dev of uspantekan
 				2. Modifying
+3. 	update: june 5th 2024
+4. 		Path 2: Ran experiment. [here]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing)) are teh results Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model
+
+5. 	Options
+6. 		1. path 1:
+7. 			go back to  spanish- and load with embeddings.
+8.2. path 2:
+	try with discocat/bobcar parser + uspantekan..
+ 	last time we tried, got errors.
+ 	
+9.
+10. 		
+11. 			
 2. problem:
 
 # References and links:
