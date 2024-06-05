@@ -1,3 +1,12 @@
+# Meeting on June 5th 2024.
+## [results]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing))
+1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes,
+	
+
+
+
+
+
 # Project plan
 
 1. Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
