@@ -1,19 +1,8 @@
-# Meeting on June 5th 2024.
-## [results]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing))
-1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy.
-2. update: NO
-	
-
-
-
-
-
 # Project plan
 
 1. Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
-
 	1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes,
-	2. Path 1/  bottom up:  
+	2. Path 1 bottom up:  
 		1. Pick one thread. Eg. spider
 			1. Trying on spanish
 			2. Find embedding spanish
@@ -21,7 +10,6 @@
 				2. Try splitting - Spanish tokenizer- did accuracy improve
 			3. Align with embedding uspantekan
 			4. Run classification task again on uspantekan
-
 	3. Path 2:-
 		1. Qn) why don‘t we straight Run classification task again on uspantekan -with spider
 			1. No parser which can break tokens faithfully
@@ -33,24 +21,18 @@
 			7. Todo
 				1. Train dev of uspantekan
 				2. Modifying
-3. 	update: june 5th 2024
-4. 		Path 2: Ran experiment. [here]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing)) are teh results Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model
-
-5. 	Options
-6. 		1. path 1:
-7. 			go back to  spanish- and load with embeddings.
-8.2. path 2:
-	try with discocat/bobcar parser + uspantekan..
- 	last time we tried, got errors.
- 	
-9.
-10. 		
-11. 			
-2. problem:
+	3. update: june 5th 2024
+		1. Path 2: Ran experiment. [here]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing)) are teh results Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model
+		2. Options
+			1. path 1: go back to  spanish- and load with embeddings.
+			2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors..	
+		3. problem:
 
 # References and links:
 
 * Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
+	* * QNLP dataset: https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data
+ * [QNLP code repo: https://github.com/ua-datalab/QNLP/blob/main](QNLP code repo: https://github.com/ua-datalab/QNLP/blob/main)	 
 * Link to white paper: [https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4](https://www.google.com/url?q=https://www.overleaf.com/4483532232tcfnfdrrcbdc%2312a1b4&sa=D&source=editors&ust=1717607867015283&usg=AOvVaw0VwgWn_tu2jNMuTmaj2PDL)
 * All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
 	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share\_link](https://www.google.com/url?q=https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp%3Dshare_link&sa=D&source=editors&ust=1717607867016039&usg=AOvVaw3cDmd4Rclx66QuxHrZGi-b)
@@ -68,8 +50,29 @@
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
 
-# May 30, 2024 :
+# June 5th 2024.
+* [results]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing))
+1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy.
+	* update: NO
+3. Modelling and results update: june 5th 2024
+	1. Path 2: Ran experiment. [here]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing)) are teh results Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model
+		1. Options
+	2. path 1:
+		1. go back to  spanish- and load with embeddings.
+	3. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors.
+* Updated Jira with new tasks and updates
+* Megh's updates:
+	* Set up repo for code, as well as a folder with dataset in rhenderson's repo:
+ 	* QNLP dtaset: https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data
+ 	 * QNLP code repo: https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md	 
+* Todo for Megh
+	* Run the code for Spanish- we will need embeddings
+	* Use fasttex- Used by GPT for building ngrams and aligned work vectors. 
+	* Thesis code from Mithun’s contact (Khatri et al.)
+		* Run this code directly and see what happens
+* Examined issues received outlook calendar nvotes
 
+# May 30, 2024 :
 * Jira setup for project
 * Classical model pipeline with Spanish up and running
 	- Major update- removed all sentences with >32 tokens, and the Spanish model was able to run with lampeq
@@ -89,7 +92,6 @@
 		* Motivation, contribution thought
 
 # May 7th, 2024:
-
 * Classical case:
 	- Filename non-ASCII issue resolved with rename   and train, test, dev splits saved
 	- Classical case-  [ran into error while running sentence2diagram](https://www.google.com/url?q=https://colab.research.google.com/drive/12kNxLNX162hGznIYenBSqLJbflmFaE1y?usp%3Dsharing&sa=D&source=editors&ust=1717607867019672&usg=AOvVaw1SAvjipfXEAOkwHKcnRCgQ)
@@ -99,7 +101,6 @@
 * Whitepaper updates: Mithun shared his current working document
 
 # April 19th, 2024:
-
 * Issue with non-ASCII characters in filename persists- can’t read from file
 * Pipeline for reading sentences ready- need to work on reading files in with non-ASCII filenames
 * Todo:
