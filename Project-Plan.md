@@ -50,12 +50,13 @@
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
 
-# June 9th 2024
+# June 7th 2024
 * How to access shared analyses on Cyverse- Mithus shares his setup so we have access to GPUs
 * Go to [https://de.cyverse.org/analyses/](https://de.cyverse.org/analyses/) and switch the dropdown menu to "shared with me"
 * Choose the relevant analysis.
 * Setup and tech issues
-	* Get permission to run analysis with a GPU on cyverse. Talk to Michele about permissions 
+	* Get permission to run analysis with a GPU on cyverse. Talk to Michele about permissions
+ 	* Set CPU to 8GB 
 
 # June 5th 2024
 * [results location]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing))
