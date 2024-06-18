@@ -22,8 +22,8 @@
 				1. Train dev of uspantekan
 				2. Modifying
 	3. update: june 5th 2024
-		1. Path 2: Ran experiment. [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) are the results Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model
-		2. Options
+		1. Path 2: Ran experiment. [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) are the results of trying Uspantekan with spider parser, bobcat parser, and using pytorch trainer. Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model -so we have decided to move on.
+		2. Options to explore next
 			1. path 1: go back to  spanish- and load with embeddings.
 			2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors..	
 		3. problem:
