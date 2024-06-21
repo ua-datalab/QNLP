@@ -64,6 +64,11 @@
 	* Get permission to run analysis with a GPU on cyverse. Talk to Michele about permissions
  	* Set CPU to 8GB 
 
+# June 21st 2024
+- Updates to khatri et al code:
+	- Current work on Spanish data, using khatri et. al.: https://github.com/ua-datalab/QNLP/tree/megh_dev
+ 	- Mithun's updated code for khatri et. al.:  https://github.com/ua-datalab/QNLP/tree/mithun_dev 
+
 # June 5th 2024
 * [results location]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing))
 1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy?
