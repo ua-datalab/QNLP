@@ -1,3 +1,19 @@
+# References and links:
+* Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
+	* QNLP dataset: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
+ * QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
+* Link to white paper: [https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4](https://www.google.com/url?q=https://www.overleaf.com/4483532232tcfnfdrrcbdc%2312a1b4&sa=D&source=editors&ust=1717607867015283&usg=AOvVaw0VwgWn_tu2jNMuTmaj2PDL)
+* All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
+	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share\_link](https://www.google.com/url?q=https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp%3Dshare_link&sa=D&source=editors&ust=1717607867016039&usg=AOvVaw3cDmd4Rclx66QuxHrZGi-b)
+* Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)         
+* 1998 Lambeks paper on math===language: [here](https://www.google.com/url?q=https://drive.google.com/file/d/1BWhs5zOoA2n7y8aUnKoamfift0t9Xdhu/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867016692&usg=AOvVaw3z0FGavJsHiiA0aRD5yFLn)
+* 2020 bob coecke [QNLP](https://www.google.com/url?q=https://drive.google.com/file/d/15hXA_ecFN31JJdt9E8POdUFT1mlcwssv/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017007&usg=AOvVaw2jRw8msgoQEVE_z5vZxQCa)
+* Type grammar revisited: [https://link.springer.com/chapter/10.1007/3-540-48975-4\_1](https://www.google.com/url?q=https://link.springer.com/chapter/10.1007/3-540-48975-4_1&sa=D&source=editors&ust=1717607867017296&usg=AOvVaw0T99YvALpGGqp50dAnYxz9)
+* Khatri et al. thesis: [https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
+* Colab notebooks:
+	- Data pipeline: [https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp=sharing](https://www.google.com/url?q=https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp%3Dsharing&sa=D&source=editors&ust=1717607867017671&usg=AOvVaw3sePnYQ_2mwLcqo1YYvu9Y)
+	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
+
 # Project plan
 
 1. Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
@@ -27,23 +43,7 @@
 			1. path 1: go back to  spanish- and load with embeddings.
 			2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors..	
 		3. problem:
-
-# References and links:
-* Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
-	* QNLP dataset: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
- * QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
-* Link to white paper: [https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4](https://www.google.com/url?q=https://www.overleaf.com/4483532232tcfnfdrrcbdc%2312a1b4&sa=D&source=editors&ust=1717607867015283&usg=AOvVaw0VwgWn_tu2jNMuTmaj2PDL)
-* All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
-	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share\_link](https://www.google.com/url?q=https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp%3Dshare_link&sa=D&source=editors&ust=1717607867016039&usg=AOvVaw3cDmd4Rclx66QuxHrZGi-b)
-* Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)         
-* 1998 Lambeks paper on math===language: [here](https://www.google.com/url?q=https://drive.google.com/file/d/1BWhs5zOoA2n7y8aUnKoamfift0t9Xdhu/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867016692&usg=AOvVaw3z0FGavJsHiiA0aRD5yFLn)
-* 2020 bob coecke [QNLP](https://www.google.com/url?q=https://drive.google.com/file/d/15hXA_ecFN31JJdt9E8POdUFT1mlcwssv/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017007&usg=AOvVaw2jRw8msgoQEVE_z5vZxQCa)
-* Type grammar revisited: [https://link.springer.com/chapter/10.1007/3-540-48975-4\_1](https://www.google.com/url?q=https://link.springer.com/chapter/10.1007/3-540-48975-4_1&sa=D&source=editors&ust=1717607867017296&usg=AOvVaw0T99YvALpGGqp50dAnYxz9)
-* Khatri et al. thesis: [https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
-* Colab notebooks:
-	- Data pipeline: [https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp=sharing](https://www.google.com/url?q=https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp%3Dsharing&sa=D&source=editors&ust=1717607867017671&usg=AOvVaw3sePnYQ_2mwLcqo1YYvu9Y)
-	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
-
+  
 # General correspondence:
 
 * why did we decide to go with spanish first and not Uspanthekan?
