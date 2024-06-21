@@ -39,7 +39,7 @@
 * 1998 Lambeks paper on math===language: [here](https://www.google.com/url?q=https://drive.google.com/file/d/1BWhs5zOoA2n7y8aUnKoamfift0t9Xdhu/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867016692&usg=AOvVaw3z0FGavJsHiiA0aRD5yFLn)
 * 2020 bob coecke [QNLP](https://www.google.com/url?q=https://drive.google.com/file/d/15hXA_ecFN31JJdt9E8POdUFT1mlcwssv/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017007&usg=AOvVaw2jRw8msgoQEVE_z5vZxQCa)
 * Type grammar revisited: [https://link.springer.com/chapter/10.1007/3-540-48975-4\_1](https://www.google.com/url?q=https://link.springer.com/chapter/10.1007/3-540-48975-4_1&sa=D&source=editors&ust=1717607867017296&usg=AOvVaw0T99YvALpGGqp50dAnYxz9)
-* Khatri et al. thesis: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
+* Khatri et al. thesis: [https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
 * Colab notebooks:
 	- Data pipeline: [https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp=sharing](https://www.google.com/url?q=https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp%3Dsharing&sa=D&source=editors&ust=1717607867017671&usg=AOvVaw3sePnYQ_2mwLcqo1YYvu9Y)
 	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
