@@ -1,0 +1,13 @@
+cython
+numpy
+lambeq
+tensorflow
+spacy
+wandb
+ipython-autotime
+fasttext
+pytket
+pytket-quantinuum
+pytket-qiskit
+discopy
+lambeq
