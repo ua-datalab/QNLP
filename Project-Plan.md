@@ -14,7 +14,13 @@
 	- Data pipeline: [https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp=sharing](https://www.google.com/url?q=https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp%3Dsharing&sa=D&source=editors&ust=1717607867017671&usg=AOvVaw3sePnYQ_2mwLcqo1YYvu9Y)
 	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
 
-# Project plan
+# Project plan and Best Practices
+
+## Best Practices
+- Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
+- Save code to public repository, so it can be opened on Cyverse and run on colab: [https://github.com/ua-datalab/QNLP/blob/main/](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
+- Cyverse has resource allocations- so all big training done there. Example: 
+
 
 1. Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
 	1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes,
