@@ -50,6 +50,13 @@
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
 
+# June 21st 2024
+- Updated Khatri et al. added to:
+	- https://github.com/ua-datalab/QNLP/tree/megh_dev
+ 	- https://github.com/ua-datalab/QNLP/tree/mithun_dev
+-   Mithun was able to run inference for Uspantan. Need to be able to use FastText Spanish embeddings for Spanish
+	- about 5.1 GB  
+
 # June 9th 2024
 * How to access shared analyses on Cyverse- Mithus shares his setup so we have access to GPUs
 * Go to [https://de.cyverse.org/analyses/](https://de.cyverse.org/analyses/) and switch the dropdown menu to "shared with me"
