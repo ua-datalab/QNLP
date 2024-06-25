@@ -49,16 +49,19 @@
 			1. path 1: go back to  spanish- and load with embeddings.
 			2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors..	
 		3. problem:
-  4. update: june 25th 2024
-      - Megh tries loading uspantekan data into LLMs
-      - Mithun tries to load embeddings + quantum
-  
+  4. update: june 25th 2024:
+     - still working on QNLP +uspantekan + embedddings. reevaluated goal and pivoted because of the question: what baseline
+     - are we trying to beat. Decided we will do the baseline first on LLMs
+      
 # General correspondence:
 
 * why did we decide to go with spanish first and not Uspanthekan?
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
-
+# june 25th 2024
+- Megh tries loading uspantekan data into LLMs
+- Mithun tries to load embeddings + quantum
+  
 # June 7th 2024
 * How to access shared analyses on Cyverse- Mithus shares his setup so we have access to GPUs
 * Go to [https://de.cyverse.org/analyses/](https://de.cyverse.org/analyses/) and switch the dropdown menu to "shared with me"
