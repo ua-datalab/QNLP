@@ -14,17 +14,15 @@
 	- Data pipeline: [https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp=sharing](https://www.google.com/url?q=https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp%3Dsharing&sa=D&source=editors&ust=1717607867017671&usg=AOvVaw3sePnYQ_2mwLcqo1YYvu9Y)
 	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
 
-
-
-## Best Practices
+# Working Group Best Practices
 - Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
 - Save code to public repository, so it can be opened on Cyverse and run on colab: [https://github.com/ua-datalab/QNLP/blob/main/](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
 - Cyverse has resource allocations- so all big training done there. Example: 
 
-## Project plan 
-1. Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
-	1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes,
-	2. Path 1 bottom up:  
+# Project plan 
+Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
+1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes:
+	1. Path 1 bottom up:  
 		1. Pick one thread. Eg. spider
 			1. Trying on spanish
 			2. Find embedding spanish
@@ -32,7 +30,7 @@
 				2. Try splitting - Spanish tokenizer- did accuracy improve
 			3. Align with embedding uspantekan
 			4. Run classification task again on uspantekan
-	3. Path 2:-
+	2. Path 2
 		1. Qn- why don‘t we straight Run classification task again on uspantekan -with spider
 			1. No parser which can break tokens faithfully
 			2. No embeddings directly for uspantekan
@@ -43,26 +41,37 @@
 			7. Todo
 				1. Train dev of uspantekan
 				2. Modifying
-	3. update: june 5th 2024
-		1. Path 2: Ran experiment. [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) are the results of trying Uspantekan with spider parser, bobcat parser, and using pytorch trainer. Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model -so we have decided to move on.
-		2. Options to explore next
-			1. path 1: go back to  spanish- and load with embeddings.
-			2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors..	
-		3. problem:
-  4. update: june 25th 2024:
-     - still working on QNLP +uspantekan + embedddings. reevaluated goal and pivoted because of the question: what baseline
-     - are we trying to beat. Decided we will do the baseline first on LLMs
+2. update: june 5th 2024
+	1. Path 2: Ran experiment. [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) are the results of trying Uspantekan with spider parser, bobcat parser, and using pytorch trainer. Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model -so we have decided to move on.
+	2. Options to explore next
+		1. path 1: go back to  spanish- and load with embeddings.
+		2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors...
+3. update: june 25th 2024:
+	- still working on QNLP +uspantekan + embedddings. reevaluated goal and pivoted because of the question: what baseline
+	- are we trying to beat. Decided we will do the baseline first on LLMs
       
 # General correspondence:
-
 * why did we decide to go with spanish first and not Uspanthekan?
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
-# june 25th 2024
-- Megh tries loading uspantekan data into LLMs
+
+# Meeting Notes
+## June 25th 2024
+- Pivot to actually determining what the LLM baseline classification accuracy is for our dataset, os that we know what the quantum approach needs to beat.
+- ToDo Megh:
+	- Move Mithun's single python file to our repo
+ 	- Edit to load Uspantekan data 
+	- Run the LLM code, an untrained DistilBERT and RoBERTa using Mithun's codebase
+	- Report bugs and/or result.
 - Mithun tries to load embeddings + quantum
   
-# June 7th 2024
+## June 21st 2024
+- Updates to khatri et al code:
+	- Current work on Spanish data, using khatri et. al.: [https://github.com/ua-datalab/QNLP/tree/megh_dev](https://github.com/ua-datalab/QNLP/tree/megh_dev)
+ 	- Mithun shared his updated code for khatri et. al., that works on Uspantekan:  https://github.com/ua-datalab/QNLP/tree/mithun_dev
+  - Overhauled code to fit our classification task that has only one feature vector, as opposed to two. `lambeq` libraries and modules needed to be replaced due to depreciation.
+
+## June 7th 2024
 * How to access shared analyses on Cyverse- Mithus shares his setup so we have access to GPUs
 * Go to [https://de.cyverse.org/analyses/](https://de.cyverse.org/analyses/) and switch the dropdown menu to "shared with me"
 * Choose the relevant analysis.
@@ -70,12 +79,7 @@
 	* Get permission to run analysis with a GPU on cyverse. Talk to Michele about permissions
  	* Set CPU to 8GB 
 
-# June 21st 2024
-- Updates to khatri et al code:
-	- Current work on Spanish data, using khatri et. al.: https://github.com/ua-datalab/QNLP/tree/megh_dev
- 	- Mithun's updated code for khatri et. al.:  https://github.com/ua-datalab/QNLP/tree/mithun_dev 
-
-# June 5th 2024
+## June 5th 2024
 * [results location]([url](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing))
 1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy?
 	* update: NO
@@ -96,7 +100,7 @@
 		* Run this code directly and see what happens
 * Examined issues received outlook calendar nvotes
 
-# May 30, 2024 :
+## May 30, 2024 :
 * Jira setup for project
 * Classical model pipeline with Spanish up and running
 	- Major update- removed all sentences with >32 tokens, and the Spanish model was able to run with lampeq
@@ -115,7 +119,7 @@
 	* Pivot from a whitepaper to a one-pager
 		* Motivation, contribution thought
 
-# May 7th, 2024:
+## May 7th, 2024:
 * Classical case:
 	- Filename non-ASCII issue resolved with rename   and train, test, dev splits saved
 	- Classical case-  [ran into error while running sentence2diagram](https://www.google.com/url?q=https://colab.research.google.com/drive/12kNxLNX162hGznIYenBSqLJbflmFaE1y?usp%3Dsharing&sa=D&source=editors&ust=1717607867019672&usg=AOvVaw1SAvjipfXEAOkwHKcnRCgQ)
@@ -124,7 +128,7 @@
 	- Fix classical trainer, section “Training the model”, cell 67
 * Whitepaper updates: Mithun shared his current working document
 
-# April 19th, 2024:
+## April 19th, 2024:
 * Issue with non-ASCII characters in filename persists- can’t read from file
 * Pipeline for reading sentences ready- need to work on reading files in with non-ASCII filenames
 * Todo:
@@ -136,7 +140,7 @@
 		+  0 for bailar, 1 for educacion
 * ToDo Mithun: create list of file names, and convert them to ASCII
 
-# April 11th, 2024:
+## April 11th, 2024:
 
 * Updates
 	- Classical case set up on Cyverse
@@ -159,7 +163,7 @@
 * QNLP pipeline setup
 	- ToDo Megh: Run classical case on Cyverse with Spanish data
 
-# April 2nd, 2024:
+## April 2nd, 2024:
 
 1. We went through learning
 	1. Bobcat parser
@@ -195,7 +199,7 @@
 	5. We select 2 data files, with different topics
 	6. We create a classification task for differentiating between sentences under each topic
 
-# Mar 19th, 2024
+## Mar 19th, 2024
 
 * What is [DisCoCat](https://www.google.com/url?q=https://cqcl.github.io/lambeq/glossary.html%23term-DisCoCat&sa=D&source=editors&ust=1717607867026871&usg=AOvVaw1JT_SF8YpM08KtOmjl2vs9) ?
 	- Discrete mathematical category
