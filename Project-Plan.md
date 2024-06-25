@@ -55,6 +55,8 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
 
+
+
 # Meeting Notes
 ## June 25th 2024
 - Pivot to actually determining what the LLM baseline classification accuracy is for our dataset, os that we know what the quantum approach needs to beat.
@@ -72,6 +74,7 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
   - Overhauled code to fit our classification task that has only one feature vector, as opposed to two. `lambeq` libraries and modules needed to be replaced due to depreciation.
 
 ## June 7th 2024
+
 * How to access shared analyses on Cyverse- Mithus shares his setup so we have access to GPUs
 * Go to [https://de.cyverse.org/analyses/](https://de.cyverse.org/analyses/) and switch the dropdown menu to "shared with me"
 * Choose the relevant analysis.
