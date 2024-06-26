@@ -66,6 +66,7 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 	- Run the LLM code, an untrained DistilBERT and RoBERTa using Mithun's codebase
 	- Report bugs and/or result.
  	- update @5pm: running into cuda memory issues on cyverse. will start run locally
+  	- update: run details can be found at: https://wandb.ai/nazgul588/train_test_uspantekan/runs/f53yn1f7 atleast after 5am June 26th 2024
 - Megh tries to load embeddings + quantum
   
 ## June 21st 2024
