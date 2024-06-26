@@ -60,12 +60,13 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 # Meeting Notes
 ## June 25th 2024
 - Pivot to actually determining what the LLM baseline classification accuracy is for our dataset, os that we know what the quantum approach needs to beat.
-- ToDo Megh:
+- ToDo Mithun:
 	- Move Mithun's single python file to our repo
  	- Edit to load Uspantekan data 
 	- Run the LLM code, an untrained DistilBERT and RoBERTa using Mithun's codebase
 	- Report bugs and/or result.
-- Mithun tries to load embeddings + quantum
+ 	- update @5pm: running into cuda memory issues on cyverse. will start run locally
+- Megh tries to load embeddings + quantum
   
 ## June 21st 2024
 - Updates to khatri et al code:
