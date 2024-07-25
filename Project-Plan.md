@@ -58,8 +58,6 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
 
-
-
 # Meeting Notes
 
 ## July 25th 2024
@@ -71,9 +69,19 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 	-  How does Quantum trainer compare to NN?
  		- Feed forward- we look at the loss between the original and predicted value, does back propagation, until the right combination of weights provides us useable prediction
   		- Instead of neurons, we use quantum circuits
+    		- Instead of parameters for gates, we have a different system
+      		- Objective- minimize loss, and get optimal assignment of parameters, best combo of weights, to find mapping between input setence and label. "Why does a group pf words belong to x category, not y"?
+        	- What is loss value?
+        		- Classical: diff between gold and predicted, we backprop
+          		-  QNLP- Instead of weights, think of angles. machine's job is to find optimal "angles"  
   		- Thus, the trainer for QC is the same as NN- both have similar black boxes
+    			- Very hard to explain the difference between two sentences with the same syntax, but different meanings.
+      		- Different words will have different angles- so we can explain semantic differences in syntactically identical sentences. 
 - The code should look the same for deep and quantum trainer
-- 
+- What is "OOV", from a coding perspective?
+	- out of vocabulary words are assigned the same weights, which is not an accurate way to proceed
+- Fast text, Byte Pair Encoding: ways to solve this problem by using embeddings (n-gram models) to assign different weights to different OOV words
+-   
 
 ## June 25th 2024
 - Pivot to actually determining what the LLM baseline classification accuracy is for our dataset, os that we know what the quantum approach needs to beat.
