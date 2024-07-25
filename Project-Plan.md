@@ -58,6 +58,18 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 
 
 # Meeting Notes
+
+## July 25th 2024
+- Looked at the Khatri et al. code for Spanish, and worked on code fix: https://github.com/ua-datalab/QNLP/tree/megh_dev
+	-  Most of the word are OOV, so they can't be put into grammatical categories
+	-   
+- General Discussion:
+	-  How does Quantum trainer compare to NN?
+ 		- Feed forward- we look at the loss between the original and predicted value, does back propagation, until the right combination of weights provides us useable prediction
+  		- Instead of neurons, we use quantum circuits
+  		- Thus, the trainer for QC is the same as NN- both have similar black boxes
+- The code should look the same for deep and quantum trainer  
+
 ## June 25th 2024
 - Pivot to actually determining what the LLM baseline classification accuracy is for our dataset, os that we know what the quantum approach needs to beat.
 - ToDo Megh:
