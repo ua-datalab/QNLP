@@ -4,15 +4,18 @@
  * QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
 * Link to white paper: [https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4](https://www.google.com/url?q=https://www.overleaf.com/4483532232tcfnfdrrcbdc%2312a1b4&sa=D&source=editors&ust=1717607867015283&usg=AOvVaw0VwgWn_tu2jNMuTmaj2PDL)
 * All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
-	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share\_link](https://www.google.com/url?q=https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp%3Dshare_link&sa=D&source=editors&ust=1717607867016039&usg=AOvVaw3cDmd4Rclx66QuxHrZGi-b)
+	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link](https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link)
+ 	- Spanish data: [https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link](https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link) 
 * Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)         
 * 1998 Lambeks paper on math===language: [here](https://www.google.com/url?q=https://drive.google.com/file/d/1BWhs5zOoA2n7y8aUnKoamfift0t9Xdhu/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867016692&usg=AOvVaw3z0FGavJsHiiA0aRD5yFLn)
 * 2020 bob coecke [QNLP](https://www.google.com/url?q=https://drive.google.com/file/d/15hXA_ecFN31JJdt9E8POdUFT1mlcwssv/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017007&usg=AOvVaw2jRw8msgoQEVE_z5vZxQCa)
 * Type grammar revisited: [https://link.springer.com/chapter/10.1007/3-540-48975-4\_1](https://www.google.com/url?q=https://link.springer.com/chapter/10.1007/3-540-48975-4_1&sa=D&source=editors&ust=1717607867017296&usg=AOvVaw0T99YvALpGGqp50dAnYxz9)
-* Khatri et al. thesis: [https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
+* Khatri et al. thesis: [https://drive.google.com/file/d/141UTEmduZoFhq0-d1peWLGdUhMLpNlho/view?usp=share_link](https://drive.google.com/file/d/141UTEmduZoFhq0-d1peWLGdUhMLpNlho/view?usp=share_link)
 * Colab notebooks:
 	- Data pipeline: [https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp=sharing](https://www.google.com/url?q=https://colab.research.google.com/drive/1YwdVkFZRt30QPuUwQ-y9W1vSnYlkS656?usp%3Dsharing&sa=D&source=editors&ust=1717607867017671&usg=AOvVaw3sePnYQ_2mwLcqo1YYvu9Y)
 	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
+ 	- Khatri et al, for Spanish: [https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb)
+  	- Khatri et al, for Uspantekan: [https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb)
 
 # Working Group Best Practices
 - Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
