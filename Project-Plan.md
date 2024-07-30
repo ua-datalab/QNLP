@@ -87,6 +87,17 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 	- In our code, nearly all words are assigned OOV labels
  	- 
 
+## June 30th 2024
+- Discussion of Khatri et al., section 6
+	- Continuous bag of words model- teaching a machine a simple pattern matching method. When X word exists, works Y, Z are also likely to occur.
+ 	- "meaning is context", not "context is meaning".
+  	- Word embeddings have a similar understanding of mental lexicon as expeiments on lexical semantics?
+  	- Fast text- improving OOV issues by either working with n-grams (thus, meaning agnostic)
+  	- Mithun's idea- use GPT embeddings which may take care of OOV words by assessign words in a network of related words, rather than related phones.
+  	- 6.2- words belonging to one topic or category will be seen together. Two models are used, a general embedding, as well as a perceptron trained on task-specific vocabulary
+  	- Implementation of the baseline models- deeper models performed better than surface models
+  - ToDo- look at 6.0-6.4 again, and come back with notes. 
+
 ## June 25th 2024
 - Pivot to actually determining what the LLM baseline classification accuracy is for our dataset, os that we know what the quantum approach needs to beat.
 - ToDo Megh:
