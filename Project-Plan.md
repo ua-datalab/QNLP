@@ -60,11 +60,23 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 
 # Meeting Notes
 
+## August 9th 2024
+- Quick discussion on the difference between raw embeddings and other options
+- ToDo Tuesday: create materials for student presentation, and progress in the QNLP project
+- Debugging the code to fix fasstext issues
+	- The print statements are printing circuits, making it hard to see which words are the issue
+ 	- How are OOV words identified and their no. calculated? Is Fasttext being implemented correctly?
+	-  not the main issue- embeddings are being used correctly    
+  	- Is the code using the fasttext embeddings at all? or the spacy spanish parser?
+  	- Updates to code- added a try-except chunk: when a word is really OOV, the code will stop and print details for us
+  	- Examine why training loop is utilizing only 14 out of 90 sentences, why is bobcat parser not working with the rest?
+
 ## July 30th 2024
 - General discussion for wrapping up summer responsibilities- and plan going forward
 - Close reading of section 6.1-6.3
 - skip gram model vs context-aware methods
-- Mapping fasttext embeddings and the given input.
+- Mapping fasttext embeddings and the given input
+
 ## July 25th 2024
 - Looked at the Khatri et al. code for Spanish, and worked on code fix: https://github.com/ua-datalab/QNLP/tree/megh_dev
 	-  Most of the word are OOV, so they can't be put into grammatical categories
