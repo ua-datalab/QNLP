@@ -70,6 +70,7 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
   	- Is the code using the fasttext embeddings at all? or the spacy spanish parser?
   	- Updates to code- added a try-except chunk: when a word is really OOV, the code will stop and print details for us
   	- Examine why training loop is utilizing only 14 out of 90 sentences, why is bobcat parser not working with the rest?
+  	- Embeddings not being passed in the right format- hence a shape error
 
 ## July 30th 2024
 - General discussion for wrapping up summer responsibilities- and plan going forward
