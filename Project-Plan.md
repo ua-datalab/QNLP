@@ -60,6 +60,11 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 
 # Meeting Notes
 
+## July 30th 2024
+- General discussion for wrapping up summer responsibilities- and plan going forward
+- Close reading of section 6.1-6.3
+- skip gram model vs context-aware methods
+- Mapping fasttext embeddings and the given input.
 ## July 25th 2024
 - Looked at the Khatri et al. code for Spanish, and worked on code fix: https://github.com/ua-datalab/QNLP/tree/megh_dev
 	-  Most of the word are OOV, so they can't be put into grammatical categories
@@ -76,16 +81,13 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
           		-  QNLP- Instead of weights, think of angles. machine's job is to find optimal "angles"  
   		- Thus, the trainer for QC is the same as NN- both have similar black boxes
     			- Very hard to explain the difference between two sentences with the same syntax, but different meanings.
-      		- Different words will have different angles- so we can explain semantic differences in syntactically identical sentences.
-        	- 
-         	-  
+      		- Different words will have different angles- so we can explain semantic differences in syntactically identical sentences
 		- The code should look the same for deep and quantum trainer
 - What is "OOV", from a coding perspective?
 	- out of vocabulary words are assigned the same weights, which is not an accurate way to proceed
 	- Fast text, Byte Pair Encoding: ways to solve this problem by using embeddings (n-gram models) to assign different weights to different OOV words
  		- Our code needs to learn some kind of mapping between ngrams and angles  
 	- In our code, nearly all words are assigned OOV labels
- 	- 
 
 ## June 30th 2024
 - Discussion of Khatri et al., section 6
