@@ -269,8 +269,7 @@ def run_experiment(nlayers=1, seed=SEED):
     print(f"the type of value of of of train_embeddings vocab is {len(train_embeddings)}")
     print(f"type of of test_embeddings vocab is {type(test_embeddings)}")
     print(f"length of of test_embeddings vocab is {len(test_embeddings)}")
-    import sys
-    sys.exit()
+  
 
     print(f"BEGINNING QNLP MODEL TRAINING")
 
