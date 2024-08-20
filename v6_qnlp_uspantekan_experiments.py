@@ -131,7 +131,7 @@ print(ctr_train, ctr_test)
 
 
 import fasttext as ft
-embedding_model = ft.load_model('/content/embeddings-l-model.bin')
+embedding_model = ft.load_model('./embeddings-l-model.bin')
 
 
 # In[10]:
