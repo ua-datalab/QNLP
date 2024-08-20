@@ -100,6 +100,22 @@ for label, s in zip(train_y, train_X):
         this_y[label] = 1
         filt_train_y.append(this_y)
 
+#pad up everything to the size of the sentence with max length
+assert len(filt_train_X) == len(filt_train_y)
+len_longest_sent = max([len(x) for x in filt_train_X])
+sents_padded=[]
+for sent in filt_train_X: 
+    sent_split= sent.split(" ") 
+    for x in range (len_longest_sent-len(sent_split)):
+        sent_split.append("0")
+
+    assert len(sent_split) == len_longest_sent
+    sent_padded_joined= " ".join(sent_split)
+    sents_padded.append(sent_padded_joined)
+
+filt_train_X=sents_padded
+
+
 ctr_test = 0
 for label, s in zip(test_y, test_X):
     if len(s.split(' ')) <= MAXLEN:
@@ -396,13 +412,10 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
     #for eah symbol in qnlp, find its embedding vector in fasttext and then pick the value in that vector at idex- still don't know hwy
     #todo- find what is idx
     print(f"printing each symbol already in qnlp model")
-    for sym in qnlp_model.symbols:
-        print(f"value of sym is:{sym}")
+    for sym in qnlp_model.symbols:        
         wrd, idx = sym.name.rsplit('_', 1)
         initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
-    print(f"value of initial_param_vector is {initial_param_vector}")
-    print(f"length of initial_param_vector is {len(initial_param_vector)}")
-
+    
 
     #the initial weights of the model is the first value in the embedding of every single word in qnlp_model
     #not sure why he is using it to initialize here. I would have expected him to take the whole embedding for the word or a sum of it as
