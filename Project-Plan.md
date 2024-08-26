@@ -69,14 +69,16 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
    -  circuit level: tried adding dummy circuit. i.e say XX gates back to back ==1 but became a pain since they wanted it in Rx Ry gate. 
    - 	why was this not a problem earlier
    	- 		why 10?
-   	- 	why did this not happen in the english version- or even uspantekan version?
-   	- 	was he terminating english sentence- go back and look at his original code
-   	- 	what he is doing with maxlen.
+   	- 	why did this not happen in the english version- or even uspantekan version?- our own code?
+   	- 	in khatri tehsiswas he terminating english sentence- go back and look at his original code- answer: no, he is also doing same maxlength <=
+   	- 	what he is doing with maxlen.- picks sentences less than maxlenght. 
 - 	what are the potential solutions
 - 		without quantum level change
 - 			- try with period.--failed
 - 			- try with filler words. uhm--failed
 - 			- tokenizer spanish
+- 			- how is our own english/uspantekan code different than the spanish one. Are we using a different spider?
+- 			- how is khatri's code different than the spanish one. Are we using a different spider?
 - 			
 - 		with quantum level change
 3. Replace with quantum model/simulation?
