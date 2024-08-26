@@ -80,7 +80,7 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 - 			- tokenizer spanish
 - 			- how is our own english/uspantekan code different than the spanish one. Are we using a different spider?
 - 			- 1) spacy tokenizer
-- 			2)
+- 			2) update. we decided to do this comparison first. i.e compare between v4 (the code which worked end to end for uspantekan) kept [here](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v4_load_uspantekan_using_spider_classical.py) and v6(the code which is not working for spanish) [here] (https://github.com/ua-datalab/QNLP/blob/mithun_dev/v6_qnlp_uspantekan_experiments.py)
 - 			- how is khatri's code different than the spanish one. Are we using a different spider?
 - 			
 - 		with quantum level change
