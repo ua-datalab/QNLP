@@ -11,3 +11,4 @@ pytket-quantinuum
 pytket-qiskit
 discopy
 lambeq
+jax
