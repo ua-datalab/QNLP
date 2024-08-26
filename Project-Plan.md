@@ -1,4 +1,5 @@
 # References and links:
+* link to mithun experiments/tuning with uspantekan is kept [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing)
 * Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
 	* QNLP dataset: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
  * QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
