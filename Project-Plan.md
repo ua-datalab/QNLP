@@ -60,6 +60,18 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 
 # Meeting Notes
 
+## August 21st 2024
+- Main bug- Lambeq's classical example uses Numpy, which is set up to require square matricies as input.
+	- Khatri et al. uses the first 10 words in the sentence, discards the rest.
+ 	- Code does not run when sentences have >10 words
+- Potential Solutions
+	- try padding sentences with special characters or filler words?
+  		- This did not workwith special characters, which got filtered out
+  	- Filler words like "um"
+  	- Choose n_words >10, based on the data?
+  		- ToDo Megh: work on this
+ - Mithun contacted Robert Henderson, requested meeting  
+
 ## August 9th 2024
 - Quick discussion on the difference between raw embeddings and other options
 - ToDo Tuesday: create materials for student presentation, and progress in the QNLP project
