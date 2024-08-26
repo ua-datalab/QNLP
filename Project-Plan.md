@@ -60,6 +60,29 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 
 # Meeting Notes
 
+## August 26th 2024
+1. try with NUMPy model and square matrix issue
+   -  try with making all sentences padded with . -- failed -bob cat parser, automatically removed . 
+   -  try with same sentence- works fine./no matrix/array difference issue
+   -  sentence level: 
+   -  diagram level: ignored
+   -  circuit level: tried adding dummy circuit. i.e say XX gates back to back ==1 but became a pain since they wanted it in Rx Ry gate. 
+   - 	why was this not a problem earlier
+   	- 		why 10?
+   	- 	why did this not happen in the english version- or even uspantekan version?
+   	- 	was he terminating english sentence- go back and look at his original code
+   	- 	what he is doing with maxlen.
+- 	what are the potential solutions
+- 		without quantum level change
+- 			- try with period.--failed
+- 			- try with filler words. uhm--failed
+- 			- tokenizer spanish
+- 			
+- 		with quantum level change
+3. Replace with quantum model/simulation?
+4. once we have end to end system running, to improve accuracy
+5. 	add a spanish tokenizer expliciity
+
 ## August 21st 2024
 - Main bug- Lambeq's classical example uses Numpy, which is set up to require square matricies as input.
 	- Khatri et al. uses the first 10 words in the sentence, discards the rest.
