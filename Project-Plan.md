@@ -78,6 +78,8 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 - 			- try with filler words. uhm--failed
 - 			- tokenizer spanish
 - 			- how is our own english/uspantekan code different than the spanish one. Are we using a different spider?
+- 			- 1) spacy tokenizer
+- 			2)
 - 			- how is khatri's code different than the spanish one. Are we using a different spider?
 - 			
 - 		with quantum level change
