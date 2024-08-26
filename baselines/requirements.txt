@@ -1,4 +1,0 @@
-wandb
-transformers
-scikit-learn
-pandas

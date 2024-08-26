@@ -304,23 +304,23 @@ argumentParser.add_argument("--train_file",required=True)
 argumentParser.add_argument("--dev_file",required=True)
 argumentParser.add_argument("--model_type",required=True,help="#[bert-base-uncased, roberta-large]")
 argumentParser.add_argument("--epochs",required=True)
-argumentParser.add_argument("--use_wandb",default="True")
+argumentParser.add_argument("--disable_wandb",required=True)
 args=argumentParser.parse_args()
-
 
 train_file = args.train_file
 dev_file = args.dev_file
 model_type=  "roberta-large"
 EPOCHS =  int(args.epochs)
-ENABLE_WANDB = bool(args.use_wandb)
+DISABLE_WANDB = bool(args.disable_wandb)
+
 
 device = 'cuda' if cuda.is_available() else 'cpu'
-if (ENABLE_WANDB):
-    wandb.login()
-    wandb.init(project="train_test_uspantekan")
-else:
+if (DISABLE_WANDB):
     subprocess.Popen('wandb offline', shell=True)
-    
+
+
+wandb.init(project="fine_tune_fundamental_model_food_it")
+
 if "roberta" in model_type:
     tokenizer = RobertaTokenizer.from_pretrained(model_type)
     MODEL= RobertaModel.from_pretrained(model_type)
