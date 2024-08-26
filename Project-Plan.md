@@ -1,4 +1,5 @@
 # References and links:
+* link to mithun experiments/tuning with uspantekan is kept [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing)
 * Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
 	* QNLP dataset: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
  * QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
@@ -6,7 +7,7 @@
 * All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
 	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link](https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link)
  	- Spanish data: [https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link](https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link) 
-* Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)         
+* Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)     
 * 1998 Lambeks paper on math===language: [here](https://www.google.com/url?q=https://drive.google.com/file/d/1BWhs5zOoA2n7y8aUnKoamfift0t9Xdhu/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867016692&usg=AOvVaw3z0FGavJsHiiA0aRD5yFLn)
 * 2020 bob coecke [QNLP](https://www.google.com/url?q=https://drive.google.com/file/d/15hXA_ecFN31JJdt9E8POdUFT1mlcwssv/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017007&usg=AOvVaw2jRw8msgoQEVE_z5vZxQCa)
 * Type grammar revisited: [https://link.springer.com/chapter/10.1007/3-540-48975-4\_1](https://www.google.com/url?q=https://link.springer.com/chapter/10.1007/3-540-48975-4_1&sa=D&source=editors&ust=1717607867017296&usg=AOvVaw0T99YvALpGGqp50dAnYxz9)
@@ -22,43 +23,45 @@
 - Save code to public repository, so it can be opened on Cyverse and run on colab: [https://github.com/ua-datalab/QNLP/blob/main/](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
 - Cyverse has resource allocations- so all big training done there. Example: 
 
-# Project plan 
-Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
-1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes:
-	1. Path 1 bottom up:  
-		1. Pick one thread. Eg. spider
-			1. Trying on spanish
-			2. Find embedding spanish
-				1. Split by space- what is accuracy
-				2. Try splitting - Spanish tokenizer- did accuracy improve
-			3. Align with embedding uspantekan
-			4. Run classification task again on uspantekan
-	2. Path 2
-		1. Qn- why don‘t we straight Run classification task again on uspantekan -with spider
-			1. No parser which can break tokens faithfully
-			2. No embeddings directly for uspantekan
-			3. How much is bare bones accuracy?
-			4. With tuning how much can you get it upto?
-			5. If they both fail,
-			6. Then yes, we can think of bringing in spanish embeddings.
-			7. Todo
-				1. Train dev of uspantekan
-				2. Modifying
-2. update: june 5th 2024
-	1. Path 2: Ran experiment. [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) are the results of trying Uspantekan with spider parser, bobcat parser, and using pytorch trainer. Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model -so we have decided to move on.
-	2. Options to explore next
-		1. path 1: go back to  spanish- and load with embeddings.
-		2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors...
-3. update: june 25th 2024:
-	- still working on QNLP +uspantekan + embedddings. reevaluated goal and pivoted because of the question: what baseline
-	- are we trying to beat. Decided we will do the baseline first on LLMs
-      
-# General correspondence:
-* why did we decide to go with spanish first and not Uspanthekan?
-	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
-	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
 
 # Meeting Notes
+
+## August 26th 2024
+1. try with NUMPy model and square matrix issue
+	-  try with making all sentences padded with . -- failed -bob cat parser, automatically removed . 
+	-  try with same sentence- works fine./no matrix/array difference issue
+	-  sentence level: 
+	-  diagram level: ignored
+	-  circuit level: tried adding dummy circuit. i.e say XX gates back to back ==1 but became a pain since they wanted it in Rx Ry gate. 
+		- why was this not a problem earlier
+   		- why 10?
+- why did this not happen in the english version- or even uspantekan version?- our own code?
+	- in khatri tehsiswas he terminating english sentence- go back and look at his original code- answer: no, he is also doing same maxlength <=
+- what he is doing with maxlen.- picks sentences less than maxlength. 
+2. what are the potential solutions
+	- without quantum level change
+	- try with period.--failed
+	- try with filler words. uhm--failed
+	- tokenizer spanish
+	- how is our own english/uspantekan code different than the spanish one. Are we using a different spider?
+	- spacy tokenizer
+3. update. we decided to do this comparison first. i.e compare between v4 (the code which worked end to end for uspantekan) kept [here](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v4_load_uspantekan_using_spider_classical.py) and v6(the code which is not working for spanish) [here] (https://github.com/ua-datalab/QNLP/blob/mithun_dev/v6_qnlp_uspantekan_experiments.py)
+	- how is khatri's code different than the spanish one. Are we using a different spider?
+	- with quantum level change
+4. Replace with quantum model/simulation?
+5. once we have end to end system running, to improve accuracy, add a spanish tokenizer expliciity
+
+## August 21st 2024
+- Main bug- Lambeq's classical example uses Numpy, which is set up to require square matricies as input.
+	- Khatri et al. uses the first 10 words in the sentence, discards the rest.
+ 	- Code does not run when sentences have >10 words
+- Potential Solutions
+	- try padding sentences with special characters or filler words?
+  		- This did not workwith special characters, which got filtered out
+  	- Filler words like "um"
+  	- Choose n_words >10, based on the data?
+  		- ToDo Megh: work on this
+ - Mithun contacted Robert Henderson, requested meeting  
 
 ## August 9th 2024
 - Quick discussion on the difference between raw embeddings and other options
@@ -125,7 +128,8 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 ## June 21st 2024
 - Updates to khatri et al code:
 	- Current work on Spanish data, using khatri et. al.: [https://github.com/ua-datalab/QNLP/tree/megh_dev](https://github.com/ua-datalab/QNLP/tree/megh_dev)
- 	- Mithun shared his updated code for khatri et. al., that works on Uspantekan:  https://github.com/ua-datalab/QNLP/tree/mithun_dev
+ 	- Mithun shared his updated code for khatri et. al., that works on Uspantekan:  https://github.com/ua-datalab/QNLP/blob/mithun_dev/v4_load_uspantekan_using_spider_classical.py
+  - 
   - Overhauled code to fit our classification task that has only one feature vector, as opposed to two. `lambeq` libraries and modules needed to be replaced due to depreciation.
 
 ## June 7th 2024
@@ -304,3 +308,39 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 	- Run this on Spanish first
 	- Think of a problem
 * Jupyter notebook stored at: /data-store/iplant/home/mkrishnaswamy/qnlp
+
+# Project plan 
+Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
+1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes:
+	1. Path 1 bottom up:  
+		1. Pick one thread. Eg. spider
+			1. Trying on spanish
+			2. Find embedding spanish
+				1. Split by space- what is accuracy
+				2. Try splitting - Spanish tokenizer- did accuracy improve
+			3. Align with embedding uspantekan
+			4. Run classification task again on uspantekan
+	2. Path 2
+		1. Qn- why don‘t we straight Run classification task again on uspantekan -with spider
+			1. No parser which can break tokens faithfully
+			2. No embeddings directly for uspantekan
+			3. How much is bare bones accuracy?
+			4. With tuning how much can you get it upto?
+			5. If they both fail,
+			6. Then yes, we can think of bringing in spanish embeddings.
+			7. Todo
+				1. Train dev of uspantekan
+				2. Modifying
+2. update: june 5th 2024
+	1. Path 2: Ran experiment. [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) are the results of trying Uspantekan with spider parser, bobcat parser, and using pytorch trainer. Rather after tuning max accuracy on dev was 72%...which was given by cups and stairs model -so we have decided to move on.
+	2. Options to explore next
+		1. path 1: go back to  spanish- and load with embeddings.
+		2. path 2: try with discocat/bobcar parser + uspantekan.. last time we tried, got errors...
+3. update: june 25th 2024:
+	- still working on QNLP +uspantekan + embedddings. reevaluated goal and pivoted because of the question: what baseline
+	- are we trying to beat. Decided we will do the baseline first on LLMs
+      
+# General correspondence:
+* why did we decide to go with spanish first and not Uspanthekan?
+	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
+	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
