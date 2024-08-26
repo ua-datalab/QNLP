@@ -65,24 +65,26 @@ import string
 
 train_X = []
 train_y = []
-
-with open("./spanish_train.txt", encoding='utf-8-sig') as f:
+import os
+print(os.getcwd())
+with open("data/spanish_train.txt", encoding='utf-8-sig') as f:
     for line in f:
         procd_line = line.strip().split('  ')
-        train_X.append(procd_line[1])
-        train_y.append(int(procd_line[0]))
+        if procd_line:
+            train_X.append(procd_line[1])
+            train_y.append(int(procd_line[0]))
 
 test_X = []
 test_y = []
 
-with open("./spanish_test.txt", encoding='utf-8-sig') as f:
+with open("./data/spanish_test.txt", encoding='utf-8-sig') as f:
     for line in f:
         procd_line = line.strip().split('  ')
         test_X.append(procd_line[1])
         test_y.append(int(procd_line[0]))
 
 
-MAXLEN = 10
+MAXLEN = 12
 
 
 filt_train_X = []
@@ -100,20 +102,25 @@ for label, s in zip(train_y, train_X):
         this_y[label] = 1
         filt_train_y.append(this_y)
 
-#pad up everything to the size of the sentence with max length
+#pad up every sentence less than MAXlength  with . to reach maxlenght
 assert len(filt_train_X) == len(filt_train_y)
 len_longest_sent = max([len(x) for x in filt_train_X])
 sents_padded=[]
 for sent in filt_train_X: 
     sent_split= sent.split(" ") 
-    for x in range (len_longest_sent-len(sent_split)):
-        sent_split.append("0")
+    for x in range (MAXLEN-len(sent_split)):
+        sent_split.append(".")
 
-    assert len(sent_split) == len_longest_sent
+    assert len(sent_split) == MAXLEN
     sent_padded_joined= " ".join(sent_split)
     sents_padded.append(sent_padded_joined)
+for sent in sents_padded:
+    sent_split= sent.split(" ")
+    print(len(sent_split))
 
 filt_train_X=sents_padded
+
+
 
 
 ctr_test = 0
@@ -238,6 +245,25 @@ N = AtomicType.NOUN
 S = AtomicType.SENTENCE
 P = AtomicType.PREPOSITIONAL_PHRASE
 
+#not all circuits had the same length before sending into .fit (not sure if its a numpy/pytorch/classical machine model alone issue, but they want all circuits of same length. Going to try padding with dummy useless gates")
+def add_padding_circuits(train_circ,maxlen_train_circ):
+
+    for each_circ in train_circ:
+        length_this_circ = len(each_circ)
+        diff_padding_gates_need= maxlen_train_circ - length_this_circ
+        print(f"total numbner of padding gates needed for this circ is {diff_padding_gates_need}")
+
+        #if its an even number of gates needed we add XX gates and if its odd number we add HZH gates
+        #because XX= HZH HZH  = 1
+        
+        if(diff_padding_gates_need>0):
+            if(diff_padding_gates_need % 2 ==0):
+                no_of_even_gates_needed = diff_padding_gates_need/2
+                
+
+
+    return train_circ
+
 
 def run_experiment(nlayers=1, seed=SEED):
     print("insdie run_experiment")
@@ -267,7 +293,17 @@ def run_experiment(nlayers=1, seed=SEED):
         verbose = 'text',
         seed=seed
     )
-    print("trainer created")
+    print(f"trainer created. There are a total of {len(train_circs)} in the training data")
+    
+    print(f"and a total of {len(train_y)} labels") 
+    all_train_circ = [len(x) for x in train_circs ]
+    print(f"Even within the training circuits, these are the individual circuit lengths. {all_train_circ}")
+    max_train_len_circuit = max(all_train_circ)
+    print(f" within the training circuits, the circuit with max length has {max_train_len_circuit} components")
+    add_padding_circuits(train_circs,max_train_len_circuit)
+    import sys
+    sys.exit()
+
     train_dataset = Dataset(
                 train_circs,
                 train_y,
