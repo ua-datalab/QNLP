@@ -167,7 +167,8 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 ## June 21st 2024
 - Updates to khatri et al code:
 	- Current work on Spanish data, using khatri et. al.: [https://github.com/ua-datalab/QNLP/tree/megh_dev](https://github.com/ua-datalab/QNLP/tree/megh_dev)
- 	- Mithun shared his updated code for khatri et. al., that works on Uspantekan:  https://github.com/ua-datalab/QNLP/tree/mithun_dev
+ 	- Mithun shared his updated code for khatri et. al., that works on Uspantekan:  https://github.com/ua-datalab/QNLP/blob/mithun_dev/v4_load_uspantekan_using_spider_classical.py
+  - 
   - Overhauled code to fit our classification task that has only one feature vector, as opposed to two. `lambeq` libraries and modules needed to be replaced due to depreciation.
 
 ## June 7th 2024
