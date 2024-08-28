@@ -1,3 +1,4 @@
+baselines/*
 data/*
 *.txt
 *.pdf
