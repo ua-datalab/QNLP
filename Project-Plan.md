@@ -26,6 +26,15 @@
 
 # Meeting Notes
 
+## August 28th 2024
+- Why Spider? It works, gives results- use it for Spanish, as well as uspantekan
+	- Use for both cups and ansatz
+	-  
+- Model
+	- Use BCE loss- original code coded it, instead of calling it
+ - To Do
+ 	- v6 code- lambeq and pytorch have version issues
+  	- Do `lightning` and `lambeq` work together?
 ## August 26th 2024
 1. try with NUMPy model and square matrix issue
 	-  try with making all sentences padded with . -- failed -bob cat parser, automatically removed . 
