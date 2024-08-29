@@ -1,19 +1,10 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# <a href="https://colab.research.google.com/github/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-
-# In[ ]:
-
-
-# get_ipython().system('pip install lambeq')
-# get_ipython().system('pip install fasttext')
-
-
-# In[1]:
-
-
+import torch
 import os
+import lambeq
+import tqdm
+from lambeq.backend.tensor import Dim
+from lambeq import AtomicType, SpiderAnsatz
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
@@ -41,8 +32,12 @@ parser= BobcatParser()
 
 # In[4]:
 
-
+EPOCHS = 2
+LEARNING_RATE = 0.05
+SEED = 0
 MAXPARAMS = 108
+MAXLEN = 12
+
 
 
 # In[13]:
@@ -55,12 +50,14 @@ from tensorflow.keras import layers
 
 import matplotlib.pyplot as plt
 
+import spacy
+from lambeq import SpacyTokeniser
+spanish_tokeniser = spacy.load("es_core_news_sm")
+spacy_spanish_tokeniser = SpacyTokeniser()
+spacy_spanish_tokeniser.tokeniser = spanish_tokeniser
 
-# In[7]:
 
 
-# Load data and extract features and labels for train and test sets:
-# Ensure data is accessible to notebook
 import string
 
 train_X = []
@@ -84,7 +81,6 @@ with open("./data/spanish_test.txt", encoding='utf-8-sig') as f:
         test_y.append(int(procd_line[0]))
 
 
-MAXLEN = 12
 
 
 filt_train_X = []
@@ -103,22 +99,22 @@ for label, s in zip(train_y, train_X):
         filt_train_y.append(this_y)
 
 #pad up every sentence less than MAXlength  with . to reach maxlenght
-assert len(filt_train_X) == len(filt_train_y)
-len_longest_sent = max([len(x) for x in filt_train_X])
-sents_padded=[]
-for sent in filt_train_X: 
-    sent_split= sent.split(" ") 
-    for x in range (MAXLEN-len(sent_split)):
-        sent_split.append(".")
+# assert len(filt_train_X) == len(filt_train_y)
+# len_longest_sent = max([len(x) for x in filt_train_X])
+# sents_padded=[]
+# for sent in filt_train_X: 
+#     sent_split= sent.split(" ") 
+#     for x in range (MAXLEN-len(sent_split)):
+#         sent_split.append(".")
 
-    assert len(sent_split) == MAXLEN
-    sent_padded_joined= " ".join(sent_split)
-    sents_padded.append(sent_padded_joined)
-for sent in sents_padded:
-    sent_split= sent.split(" ")
-    print(len(sent_split))
+#     assert len(sent_split) == MAXLEN
+#     sent_padded_joined= " ".join(sent_split)
+#     sents_padded.append(sent_padded_joined)
+# for sent in sents_padded:
+#     sent_split= sent.split(" ")
+    
 
-filt_train_X=sents_padded
+# filt_train_X=sents_padded
 
 
 
@@ -160,20 +156,36 @@ embedding_model = ft.load_model('./embeddings-l-model.bin')
 # In[10]:
 
 
-from lambeq.text2diagram.tree_reader import BobcatParser
-import lambeq
+# from lambeq.text2diagram.tree_reader import BobcatParser
 
-parser= BobcatParser()
 
+# parser= BobcatParser()
+
+#trying to match with v4 which was using spider reader and cups ansatz
+from lambeq import spiders_reader
+
+def tokenize_convert_to_diags(data):
+    diags = []
+    for sent in data:
+            tokenized = spacy_spanish_tokeniser.tokenise_sentence(sent)            
+            if len(tokenized)> 30:
+                print(f"no of tokens inthis sentence is {len(tokenized)}")
+                continue
+            spiders_diagram = spiders_reader.sentence2diagram(sent)
+            diags.append(spiders_diagram)
+    return diags
 
 # In[11]:
 
 
+
 # Parse and create trees:
-train_diags = parser.sentences2diagrams(filt_train_X, suppress_exceptions=False)
+# train_diags = parser.sentences2diagrams(filt_train_X, suppress_exceptions=False)
+# test_diags = parser.sentences2diagrams(filt_test_X, suppress_exceptions=False)
 
-test_diags = parser.sentences2diagrams(filt_test_X, suppress_exceptions=False)
-
+#using spider reader to convert to diagrams
+train_diags = tokenize_convert_to_diags(filt_train_X)
+test_diags = tokenize_convert_to_diags(filt_test_X)
 
 # In[14]:
 
@@ -258,10 +270,7 @@ def add_padding_circuits(train_circ,maxlen_train_circ):
         
         if(diff_padding_gates_need>0):
             if(diff_padding_gates_need % 2 ==0):
-                no_of_even_gates_needed = diff_padding_gates_need/2
-                
-
-
+                no_of_even_gates_needed = diff_padding_gates_need/2                
     return train_circ
 
 
@@ -270,7 +279,11 @@ def run_experiment(nlayers=1, seed=SEED):
     print(f'RUNNING WITH {nlayers} layers and seed {seed}')
     #  given english language, convert
     # todo: check if the error comes from the machine not finding N, P, S
-    ansatz = Sim15Ansatz({N: 1, S: 1, P:1}, n_layers=nlayers, n_single_qubit_params=3)
+    # ansatz = Sim15Ansatz({N: 1, S: 1, P:1}, n_layers=nlayers, n_single_qubit_params=3)
+    ansatz = SpiderAnsatz({AtomicType.NOUN: Dim(2),
+                       AtomicType.SENTENCE: Dim(2),
+                       AtomicType.PREPOSITIONAL_PHRASE: Dim(2),
+                       })
     print(f"ansatz: {ansatz}")
     #  Tuning- assign numebr of qbits per word, can be modified
     #  We assign Qbits based on how many outputs a given head will connect to
@@ -279,20 +292,33 @@ def run_experiment(nlayers=1, seed=SEED):
     test_circs = [ansatz(d) for d in test_X]
     print(f"train_circs size: {len(train_circs)}, train_circs example: {train_circs[:1]}")
     print(f"test_circs size: {len(test_circs)},test_circs example: {test_circs[:1]}")
+    from lambeq import PytorchModel
+    from lambeq import PytorchTrainer
+    # lmbq_model = NumpyModel.from_diagrams(train_circs, use_jit=True)
+    lmbq_model = PytorchModel.from_diagrams(train_circs)
+    LEARNING_RATE = 0.05
+    trainer = PytorchTrainer(
+          model=lmbq_model,
+          loss_function=torch.nn.BCEWithLogitsLoss(),
+          optimizer=torch.optim.AdamW,
+          learning_rate=LEARNING_RATE,
+          epochs=EPOCHS,
+          evaluate_functions=eval_metrics,
+          evaluate_on_train=True,
+          verbose='text',
+          seed=SEED)
 
-    lmbq_model = NumpyModel.from_diagrams(train_circs, use_jit=True)
-
-    trainer = QuantumTrainer(
-        lmbq_model,
-        loss_function=loss,
-        epochs=EPOCHS,
-        optimizer=SPSAOptimizer,
-        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
-        evaluate_functions=eval_metrics,
-        evaluate_on_train=True,
-        verbose = 'text',
-        seed=seed
-    )
+    # trainer = PytorchTrainer(
+    #     lmbq_model,
+    #     loss_function=loss,
+    #     epochs=EPOCHS,
+    #     optimizer=SPSAOptimizer,
+    #     # optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
+    #     evaluate_functions=eval_metrics,
+    #     evaluate_on_train=True,
+    #     verbose = 'text',
+    #     seed=seed
+    # )
     print(f"trainer created. There are a total of {len(train_circs)} in the training data")
     
     print(f"and a total of {len(train_y)} labels") 
@@ -300,106 +326,113 @@ def run_experiment(nlayers=1, seed=SEED):
     print(f"Even within the training circuits, these are the individual circuit lengths. {all_train_circ}")
     max_train_len_circuit = max(all_train_circ)
     print(f" within the training circuits, the circuit with max length has {max_train_len_circuit} components")
-    add_padding_circuits(train_circs,max_train_len_circuit)
-    import sys
-    sys.exit()
+    # add_padding_circuits(train_circs,max_train_len_circuit)
+    
+
 
     train_dataset = Dataset(
                 train_circs,
                 train_y,
                 batch_size=BATCH_SIZE)
+    
+    val_dataset = Dataset(
+                test_circs,
+                test_y,
+                batch_size=BATCH_SIZE)
 
     np.random.seed(seed)
 
-    train_embeddings, test_embeddings, max_w_param_length =\
-      generate_initial_parameterisation(train_circs, test_circs, embedding_model, lmbq_model)
+    # train_embeddings, test_embeddings, max_w_param_length =\
+    #   generate_initial_parameterisation(train_circs, test_circs, embedding_model, lmbq_model)
 
 
-    print("done generating initial embeddings from fast text")
-    print(f"type of of train_embeddings vocab is {type(train_embeddings)}")
-    print(f"no of words in train_embeddings is {len(train_embeddings)}")
-    print(f"the type of value of of of train_embeddings vocab is {len(train_embeddings)}")
-    print(f"type of of test_embeddings vocab is {type(test_embeddings)}")
-    print(f"length of of test_embeddings vocab is {len(test_embeddings)}")
+    # print("done generating initial embeddings from fast text")
+    # print(f"type of of train_embeddings vocab is {type(train_embeddings)}")
+    # print(f"no of words in train_embeddings is {len(train_embeddings)}")
+    # print(f"the type of value of of of train_embeddings vocab is {len(train_embeddings)}")
+    # print(f"type of of test_embeddings vocab is {type(test_embeddings)}")
+    # print(f"length of of test_embeddings vocab is {len(test_embeddings)}")
   
 
     print(f"BEGINNING QNLP MODEL TRAINING")
 
     # ERROR IN THE NEXT LINE:
-    trainer.fit(train_dataset)
+    trainer.fit(train_dataset, val_dataset, eval_interval=1, log_interval=1)
     print("fit complete")
 
     train_preds = lmbq_model.get_diagram_output(train_circs)
-    train_loss = loss(train_preds, train_y)
-    train_acc = acc(train_preds, train_y)
-    print(f'TRAIN STATS: {train_loss, train_acc}')
+    # train_loss = loss(train_preds, train_y)
+    # train_acc = acc(train_preds, train_y)
+    # print(f'TRAIN STATS: {train_loss, train_acc}')
 
-    print('BEGINNING DNN MODEL TRAINING')
-    NN_model = generate_OOV_parameterising_model(lmbq_model,
-                                                 train_embeddings,
-                                                 max_w_param_length)
+    # print('BEGINNING DNN MODEL TRAINING')
+    # NN_model = generate_OOV_parameterising_model(lmbq_model,
+    #                                              train_embeddings,
+    #                                              max_w_param_length)
 
-    prediction_model = NumpyModel.from_diagrams(test_circs, use_jit=True)
+    # # prediction_model = NumpyModel.from_diagrams(test_circs, use_jit=True)
 
-    trained_wts = trained_params_from_model(lmbq_model, train_embeddings, max_w_param_length)
+    # trained_wts = trained_params_from_model(lmbq_model, train_embeddings, max_w_param_length)
 
-    print('Evaluating SMART MODEL')
-    smart_loss, smart_acc = evaluate_test_set(prediction_model,
-                                              test_circs,
-                                              test_y,
-                                              trained_wts,
-                                              test_embeddings,
-                                              max_w_param_length,
-                                              OOV_strategy='model',
-                                              OOV_model=NN_model)
+    # print('Evaluating SMART MODEL')
+    # smart_loss, smart_acc = evaluate_test_set(prediction_model,
+    #                                           test_circs,
+    #                                           test_y,
+    #                                           trained_wts,
+    #                                           test_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='model',
+    #                                           OOV_model=NN_model)
 
-    print('Evaluating EMBED model')
-    embed_loss, embed_acc = evaluate_test_set(prediction_model,
-                                              test_circs,
-                                              test_y,
-                                              trained_wts,
-                                              test_embeddings,
-                                              max_w_param_length,
-                                              OOV_strategy='embed')
+    # print('Evaluating EMBED model')
+    # embed_loss, embed_acc = evaluate_test_set(prediction_model,
+    #                                           test_circs,
+    #                                           test_y,
+    #                                           trained_wts,
+    #                                           test_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='embed')
 
-    print('Evaluating ZEROS model')
-    zero_loss, zero_acc = evaluate_test_set(prediction_model,
-                                              test_circs,
-                                              test_y,
-                                              trained_wts,
-                                              test_embeddings,
-                                              max_w_param_length,
-                                              OOV_strategy='zeros')
+    # print('Evaluating ZEROS model')
+    # zero_loss, zero_acc = evaluate_test_set(prediction_model,
+    #                                           test_circs,
+    #                                           test_y,
+    #                                           trained_wts,
+    #                                           test_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='zeros')
 
-    rand_losses = []
-    rand_accs = []
+    # rand_losses = []
+    # rand_accs = []
 
-    print('Evaluating RAND MODEL')
-    for _ in range(1000):
+    # print('Evaluating RAND MODEL')
+    # for _ in range(1000):
 
 
-        rl, ra = evaluate_test_set(prediction_model,
-                                   test_circs,
-                                   test_y,
-                                   trained_wts,
-                                   test_embeddings,
-                                   max_w_param_length,
-                                   OOV_strategy='random')
+    #     rl, ra = evaluate_test_set(prediction_model,
+    #                                test_circs,
+    #                                test_y,
+    #                                trained_wts,
+    #                                test_embeddings,
+    #                                max_w_param_length,
+    #                                OOV_strategy='random')
 
-        rand_losses.append(rl)
-        rand_accs.append(ra)
+    #     rand_losses.append(rl)
+    #     rand_accs.append(ra)
 
-    res =  {'TRAIN': (train_loss, train_acc),
-            'NN': (smart_loss, smart_acc),
-            'EMBED': (embed_loss, embed_acc),
-            'RAND': (rand_losses, rand_accs),
-            'ZERO': (zero_loss, zero_acc)
-           }
-    print(f'ZERO: {res["ZERO"]}')
-    print(f'EMBED: {res["EMBED"]}')
-    print(f'NN: {res["NN"]}')
+    # res =  {'TRAIN': (train_loss, train_acc),
+    #         'NN': (smart_loss, smart_acc),
+    #         'EMBED': (embed_loss, embed_acc),
+    #         'RAND': (rand_losses, rand_accs),
+    #         'ZERO': (zero_loss, zero_acc)
+    #        }
+    # print(f'ZERO: {res["ZERO"]}')
+    # print(f'EMBED: {res["EMBED"]}')
+    # print(f'NN: {res["NN"]}')
 
-    return res
+    # return 
+    
+    return
 
 
 # In[42]:

@@ -12,3 +12,4 @@ pytket-qiskit
 discopy
 lambeq
 jax
+lightning

@@ -5,6 +5,7 @@ Requirements:
 steps to run this code
 - download data files  (e.g. spanish_test.txt)from [this](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)  repo to the same location where this code is
 - pip install -r requirements.txt
+- python -m spacy download es_core_news_sm
 - install fasttext embedding model
     - ### to install fasttext
     - `wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin`
