@@ -39,7 +39,7 @@
     	-getting the symbol doesnt have size issue in laptop. Sounds like a version mismatch between lambeq and pytorch
     	- try on colab
       	- update- gets the same error on colab
-       	- try v4 on colab.
+       	- try v4 on colab.-update: works fine. 
         - if that is also getting the same error switch to Quantum Model- using actual quantum computer. If we are fighting stupid infrastructure and dll issues might as well do it for quantum model, not stupid pytorch or numpy models.
 ## August 26th 2024
 1. try with NUMPy model and square matrix issue
