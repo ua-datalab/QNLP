@@ -40,7 +40,12 @@
     	- try on colab
       	- update- gets the same error on colab
        	- try v4 on colab.-update: works fine. 
-        - if that is also getting the same error switch to Quantum Model- using actual quantum computer. If we are fighting stupid infrastructure and dll issues might as well do it for quantum model, not stupid pytorch or numpy models.
+        - also try v4 on laptop
+        - if no error related to pytorch in trainer.fit:
+        - 	find why v6 is not running.
+- 	else:
+        - switch to Quantum Model- using actual quantum computer. If we are fighting stupid infrastructure and dll issues might as well do it for quantum model, not stupid pytorch or numpy models.
+  	
 ## August 26th 2024
 1. try with NUMPy model and square matrix issue
 	-  try with making all sentences padded with . -- failed -bob cat parser, automatically removed . 
