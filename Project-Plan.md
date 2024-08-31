@@ -155,7 +155,7 @@
 	- Current work on Spanish data, using khatri et. al.: [https://github.com/ua-datalab/QNLP/tree/megh_dev](https://github.com/ua-datalab/QNLP/tree/megh_dev)
  	- Mithun shared his updated code for khatri et. al., that works on Uspantekan:  https://github.com/ua-datalab/QNLP/blob/mithun_dev/v4_load_uspantekan_using_spider_classical.py
   - 
-  - Overhauled code to fit our classification task that has only one feature vector, as opposed to two. `lambeq` libraries and modules needed to be replaced due to depreciation.
+  - Overhauled code to fit our classification task that has only one feature vector, as opposed to two. (that is because khatri code was designed for NLI kind of tasks, which expects a pair like hypotehsis and premise)+ `lambeq` libraries and modules needed to be replaced due to depreciation.
 
 ## June 7th 2024
 
