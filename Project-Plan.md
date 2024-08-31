@@ -42,7 +42,12 @@
        	- try v4 on colab.-update: works fine. 
         - also try v4 on laptop
         - if no error related to pytorch in trainer.fit:
+        - 	update@august31st-OOV error, . fixed by taking .fit() out of wandb sweep.v4 ran end to end for both spanish and uspantekan- atleast till trainer.fit since v4 didnt have the second ML model that khatri uses
         - 	find why v6 is not running.
+        - 	update@august31st-v6 still giving OOV error in first model
+        - 	remember: goal here is to get the spanish to work end to end with spanish embeddings. t
+        - 	then we willt hink about aligning with uspantekan translations for OOV in uspantekan
+        - 	
 - 	else:
         - switch to Quantum Model- using actual quantum computer. If we are fighting stupid infrastructure and dll issues might as well do it for quantum model, not stupid pytorch or numpy models.
   	
