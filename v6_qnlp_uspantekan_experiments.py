@@ -6,6 +6,8 @@ from lambeq.backend.tensor import Dim
 from lambeq import AtomicType, SpiderAnsatz
 import math 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+from lambeq import PytorchModel
+from lambeq import PytorchTrainer
 
 
 # In[2]:
@@ -33,7 +35,7 @@ else:
 from lambeq.text2diagram.tree_reader import BobcatParser
 import lambeq
 
-parser= BobcatParser()
+# parser= BobcatParser()
 
 
 # In[4]:
@@ -44,14 +46,14 @@ SEED = 0
 MAXPARAMS = 108
 MAXLEN = 12
 DATA_BASE_FOLDER= "data"
-TRAIN="uspantek_train.txt"
-DEV="uspantek_dev.txt"
-TEST="uspantek_test.txt"
+# TRAIN="uspantek_train.txt"
+# DEV="uspantek_dev.txt"
+# TEST="uspantek_test.txt"
 
 
-# TRAIN="spanish_train.txt"
-# DEV="spanish_dev.txt"
-# TEST="spanish_test.txt"
+TRAIN="spanish_train.txt"
+DEV="spanish_dev.txt"
+TEST="spanish_test.txt"
 
 
 # In[13]:
@@ -306,9 +308,9 @@ def run_experiment(nlayers=1, seed=SEED):
     test_circs = [ansatz(d) for d in test_X]
     print(f"train_circs size: {len(train_circs)}, train_circs example: {train_circs[:1]}")
     print(f"test_circs size: {len(test_circs)},test_circs example: {test_circs[:1]}")
-    from lambeq import PytorchModel
-    from lambeq import PytorchTrainer
+    
     # lmbq_model = NumpyModel.from_diagrams(train_circs, use_jit=True)
+
     lmbq_model = PytorchModel.from_diagrams(train_circs)
     LEARNING_RATE = 0.05
     trainer = PytorchTrainer(
@@ -322,17 +324,7 @@ def run_experiment(nlayers=1, seed=SEED):
           verbose='text',
           seed=SEED)
 
-    # trainer = PytorchTrainer(
-    #     lmbq_model,
-    #     loss_function=loss,
-    #     epochs=EPOCHS,
-    #     optimizer=SPSAOptimizer,
-    #     # optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
-    #     evaluate_functions=eval_metrics,
-    #     evaluate_on_train=True,
-    #     verbose = 'text',
-    #     seed=seed
-    # )
+   
     print(f"trainer created. There are a total of {len(train_circs)} in the training data")
     
     print(f"and a total of {len(train_y)} labels") 
@@ -382,10 +374,13 @@ def run_experiment(nlayers=1, seed=SEED):
     # print(f'TRAIN STATS: {train_loss, train_acc}')
 
     # print('BEGINNING DNN MODEL TRAINING')
+    # this is the model that learns the mapping between fast text embeddings and angles found by the pytorchtrainer model
     # NN_model = generate_OOV_parameterising_model(lmbq_model,
     #                                              train_embeddings,
     #                                              max_w_param_length)
 
+    # this is the model that learns relationship between angles and semantics through circuits
+    #note: in 28 august 2024 we decided to use pytorch trainer and a spider model, spider ansatz- since that was the only one we got to run end to end without issues. For a proof of concept, that is enough
     # # prediction_model = NumpyModel.from_diagrams(test_circs, use_jit=True)
 
     # trained_wts = trained_params_from_model(lmbq_model, train_embeddings, max_w_param_length)
@@ -400,7 +395,8 @@ def run_experiment(nlayers=1, seed=SEED):
     #                                           OOV_strategy='model',
     #                                           OOV_model=NN_model)
 
-    # print('Evaluating EMBED model')
+    # Embed-NN: This is the method described above, using the MLP to generate parameter assignments from FastText embeddings.
+
     # embed_loss, embed_acc = evaluate_test_set(prediction_model,
     #                                           test_circs,
     #                                           test_y,
