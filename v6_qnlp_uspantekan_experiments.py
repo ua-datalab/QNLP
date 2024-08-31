@@ -4,12 +4,18 @@ import lambeq
 import tqdm
 from lambeq.backend.tensor import Dim
 from lambeq import AtomicType, SpiderAnsatz
-
+import math 
 os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 
 # In[2]:
 
+sig = torch.sigmoid
+
+def accuracy(y_hat, y):
+    return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  # half due to double-counting
+
+eval_metrics = {"acc": accuracy}
 
 from psutil import virtual_memory
 ram_gb = virtual_memory().total / 1e9
@@ -37,13 +43,21 @@ LEARNING_RATE = 0.05
 SEED = 0
 MAXPARAMS = 108
 MAXLEN = 12
+DATA_BASE_FOLDER= "data"
+TRAIN="uspantek_train.txt"
+DEV="uspantek_dev.txt"
+TEST="uspantek_test.txt"
 
+
+# TRAIN="spanish_train.txt"
+# DEV="spanish_dev.txt"
+# TEST="spanish_test.txt"
 
 
 # In[13]:
 
 
-import numpy as np
+# import numpy as np
 
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -64,7 +78,7 @@ train_X = []
 train_y = []
 import os
 print(os.getcwd())
-with open("data/spanish_train.txt", encoding='utf-8-sig') as f:
+with open(os.path.join(DATA_BASE_FOLDER,TRAIN), encoding='utf-8-sig') as f:
     for line in f:
         procd_line = line.strip().split('  ')
         if procd_line:
@@ -74,7 +88,7 @@ with open("data/spanish_train.txt", encoding='utf-8-sig') as f:
 test_X = []
 test_y = []
 
-with open("./data/spanish_test.txt", encoding='utf-8-sig') as f:
+with open(os.path.join(DATA_BASE_FOLDER,DEV), encoding='utf-8-sig') as f:
     for line in f:
         procd_line = line.strip().split('  ')
         test_X.append(procd_line[1])
@@ -199,10 +213,10 @@ from collections import Counter
 
 #  Editing lines to get what we need from train_diags
 train_diags_raw = [d for d in train_diags if d is not None]
-train_y = np.array([y for d,y in zip(train_diags, filt_train_y) if d is not None])
+train_y =[y for d,y in zip(train_diags, filt_train_y) if d is not None]
 
 test_diags_raw = [d for d in test_diags if d is not None]
-test_y = np.array([y for d,y in zip(test_diags, filt_test_y) if d is not None])
+test_y = [y for d,y in zip(test_diags, filt_test_y) if d is not None]
 
 print("FINAL DATASET SIZE:")
 print("-----------------------------------")
@@ -340,8 +354,10 @@ def run_experiment(nlayers=1, seed=SEED):
                 test_y,
                 batch_size=BATCH_SIZE)
 
-    np.random.seed(seed)
+    # np.random.seed(seed)
 
+    # was giving error on august 28th 2024. something to do with embedding model. 
+    #comemnting it out temporarily unti the trainer.fit issues are fixed
     # train_embeddings, test_embeddings, max_w_param_length =\
     #   generate_initial_parameterisation(train_circs, test_circs, embedding_model, lmbq_model)
 
@@ -440,10 +456,10 @@ def run_experiment(nlayers=1, seed=SEED):
 
 # Helper functions from khatri et. al.:
 
-loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
-acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
+# loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
+# acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
 
-eval_metrics = {"acc": acc}
+# eval_metrics = {"acc": acc}
 
 def generate_initial_parameterisation(train_circuits, test_circuits, embedding_model, qnlp_model):
 
@@ -490,7 +506,7 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
     #not sure why he is using it to initialize here. I would have expected him to take the whole embedding for the word or a sum of it as
     #initial parameter assignment. but since even xavier glorot has to start somewher,e  i'll let it pass.
     #todo: dig deeper and find what symbols are in qnlp model is? that should give a better understanding.
-    qnlp_model.weights = np.array(initial_param_vector)
+    qnlp_model.weights =initial_param_vector
 
     print(f"lenght of train_vocab embeddings are {len(train_vocab_embeddings)}")
     print(f"lenght of test_vocab embeddings are {len(test_vocab_embeddings)} ")
@@ -505,21 +521,21 @@ def generate_OOV_parameterising_model(trained_qnlp_model,
     trained_params_raw = {symbol: param for symbol, param in zip(
                                                   trained_qnlp_model.symbols,
                                                   trained_qnlp_model.weights)}
-    trained_param_vectors = {wrd: np.zeros(max_word_param_length)\
+    trained_param_vectors = {wrd: [0]*(max_word_param_length)\
                              for wrd in train_vocab_embeddings}
-    print("trained_params_raw: ", np.shape(trained_params_raw))
-    print("trained_param_vectors:", np.shape(trained_param_vectors))
+    # print("trained_params_raw: ", np.shape(trained_params_raw))
+    # print("trained_param_vectors:", np.shape(trained_param_vectors))
     for symbol, train_val in trained_params_raw.items():
         wrd, idx = symbol.name.rsplit('_', 1)
         trained_param_vectors[wrd][int(idx)] = train_val
 
     wrds_in_order = list(train_vocab_embeddings.keys())
 
-    NN_train_X = np.array([train_vocab_embeddings[wrd] for wrd in wrds_in_order])
-    NN_train_Y = np.array([trained_param_vectors[wrd] for wrd in wrds_in_order])
+    NN_train_X = [train_vocab_embeddings[wrd] for wrd in wrds_in_order]
+    NN_train_Y = [trained_param_vectors[wrd] for wrd in wrds_in_order]
 
-    print("dimensions of features: ", np.shape(NN_train_X))
-    print("dimensions of labels: ", np.shape(NN_train_Y))
+    # print("dimensions of features: ", np.shape(NN_train_X))
+    # print("dimensions of labels: ", np.shape(NN_train_Y))
 
     OOV_NN_model = keras.Sequential([
       layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
@@ -552,13 +568,13 @@ def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, te
     # Use the words from train wherever possible, else use DNN prediction
     for wrd, embedding in test_vocab_embeddings.items():
         if OOV_strategy == 'model':
-            pred_parameter_map[wrd] = trained_params.get(wrd, OOV_model.predict(np.array([embedding]), verbose=0)[0])
+            pred_parameter_map[wrd] = trained_params.get(wrd, OOV_model.predict([embedding]), verbose=0)[0]
         elif OOV_strategy == 'embed':
             pred_parameter_map[wrd] = trained_params.get(wrd, embedding)
         elif OOV_strategy == 'zeros':
-            pred_parameter_map[wrd] = trained_params.get(wrd, np.zeros(max_word_param_length))
+            pred_parameter_map[wrd] = trained_params.get(wrd, [0]*(max_word_param_length))
         else:
-            pred_parameter_map[wrd] = trained_params.get(wrd, 2 * np.random.rand(max_word_param_length)-1)
+            pred_parameter_map[wrd] = trained_params.get(wrd, 2 * math.random(max_word_param_length)-1)
 
     pred_weight_vector = []
 
