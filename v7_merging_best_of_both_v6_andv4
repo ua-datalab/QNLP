@@ -26,8 +26,10 @@ import numpy as np
 import fasttext as ft
 from lambeq import PytorchTrainer
 from lightning.pytorch.loggers import WandbLogger
+from lambeq.backend.tensor import Dim
+from lambeq import AtomicType, SpiderAnsatz
 
-
+ansatz_to_use = SpiderAnsatz
 embedding_model = ft.load_model('./embeddings-l-model.bin')
 
 
@@ -36,20 +38,41 @@ EPOCHS = 2
 LEARNING_RATE = 0.05
 SEED = 0
 DATA_BASE_FOLDER= "data"
-# TRAIN="uspantek_train.txt"
-# DEV="uspantek_dev.txt"
-# TEST="uspantek_test.txt"
 
-TRAIN="spanish_train.txt"
-DEV="spanish_dev.txt"
-TEST="spanish_test.txt"
+USE_MRPC_DATA=False
+USE_SPANISH_DATA=True
+USE_USP_DATA=False
+
+if(USE_USP_DATA):
+    TRAIN="uspantek_train.txt"
+    DEV="uspantek_dev.txt"
+    TEST="uspantek_test.txt"
+
+if(USE_SPANISH_DATA):
+    TRAIN="spanish_train.txt"
+    DEV="spanish_dev.txt"
+    TEST="spanish_test.txt"
+
+
+if(USE_MRPC_DATA):
+    TRAIN="mrpc_train_80_sent.txt"
+    DEV="mrpc_dev_10_sent.txt"
+    TEST="mrpc_test_10sent.txt"
+
+
+spacy_tokeniser = SpacyTokeniser()
+
+if(USE_SPANISH_DATA) or (USE_USP_DATA):
+    spanish_tokeniser=spacy.load("es_core_news_sm")
+    spacy_tokeniser.tokeniser = spanish_tokeniser
 
 
 
+#for english tokenizer
+if(USE_MRPC_DATA):
+    english_tokenizer = spacy.load("en_core_web_sm")
+    spacy_tokeniser.tokeniser =english_tokenizer
 
-spanish_tokeniser = spacy.load("es_core_news_sm")
-spacy_spanish_tokeniser = SpacyTokeniser()
-spacy_spanish_tokeniser.tokeniser = spanish_tokeniser
 
 import os
 from lambeq import BobcatParser
@@ -73,26 +96,49 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
         lengths=[]
         for d in input_circuits:
             for symb in d.free_symbols:
-                l = symb.name.rsplit('_', 1)[1]
-                lengths.append(l)
+                x =  symb.name.split('_', 1)[1]
+                y = x.split('__')[0]
+                lengths.append(int(y))
         return lengths
     
-    get_max_word_param_length(train_circuits)
+    max_word_param_length=0
+    if(ansatz_to_use==SpiderAnsatz):
+        max_word_param_length_train = max(get_max_word_param_length(train_circuits))
+        max_word_param_length_test = max(get_max_word_param_length(test_circuits))
+        max_word_param_length = max(max_word_param_length_train, max_word_param_length_test) + 1
 
-    max_word_param_length = max(max(int() for d in train_circuits ),
-                            max(int(symb.name.rsplit('_', 1)[1]) for d in test_circuits for symb in d.free_symbols)) + 1
+    assert max_word_param_length!=0
+    
+    # max_word_param_length = max(max(int(symb.name.rsplit('_', 1)[1]) for d in train_circuits for symb in d.free_symbols),
+    #                         max(int(symb.name.rsplit('_', 1)[1]) for d in test_circuits for symb in d.free_symbols)) + 1
+    
+
+    # max_word_param_length = max(, ) + 1
     print(f'Max params/word: {max_word_param_length}')
 
     #for each word in train and test vocab get its embedding from fasttext
-    train_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in train_vocab}
-    test_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in test_vocab}
+    if(ansatz_to_use==SpiderAnsatz):        
+        train_vocab_embeddings = {wrd: embedding_model[wrd.split('_')[0].replace('\\','')] for wrd in train_vocab}
+        test_vocab_embeddings = {wrd: embedding_model[wrd.split('_')[0].replace('\\','')] for wrd in test_vocab}
+
+    else:
+        train_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in train_vocab}
+        test_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in test_vocab}
 
 
     #to store all the initial weights
     initial_param_vector = []
 
     for sym in qnlp_model.symbols:
-        wrd, idx = sym.name.rsplit('_', 1)
+        #@sep2nd2024-not sure what idx is supposed to do, am giong to give it the number associated with the word
+        if(ansatz_to_use==SpiderAnsatz):  
+            wrd =  sym.name.split('_', 1)[0].replace("\\","").replace("(","")
+            rest = sym.name.split('_', 1)[1]
+            idx = rest.split('__')[0]      
+        #@sep2nd2024/ end of day: getting key error for lots of words - e.g. aldea..but why are words in qnlpmodel.symbols not being done fasttext emb on the fly? why are we separating train_embeddings earlier?        
+        #what is the meaning of symbols in qnlp.model
+        #todo a) read the lambeq documentation on symbols b) read the 2010 discocat and CQM paper onwards up, chronologically
+        #no point turning knobs without deeply understanding what symbols do
         initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
 
     qnlp_model.weights = np.array(initial_param_vector)
@@ -203,11 +249,16 @@ def spanish_diagrams(list_sents,labels):
         # diag =parser.sentence2diagram(tokenized, tokenised= True)
         # diag.draw()
         # list_target.append(diag)
-        tokenized = spacy_spanish_tokeniser.tokenise_sentence(sent)
-        # tokenized = sent.split(" ")
-        if len(tokenized)> 30:
-            print(f"no of tokens inthis sentence is {len(tokenized)}")
-            continue
+        
+        if( USE_MRPC_DATA):
+            sent = sent.split('\t')[2]
+        tokenized = spacy_tokeniser.tokenise_sentence(sent)
+        
+        
+        if(not USE_MRPC_DATA):
+            if len(tokenized)> 30:
+                print(f"no of tokens inthis sentence is {len(tokenized)}")
+                continue
         spiders_diagram = spiders_reader.sentence2diagram(sent)
         list_target.append(spiders_diagram)
         labels_target.append(label)
@@ -237,13 +288,11 @@ assert len(test_diagrams)== len(test_labels)
 # val_diagrams[0].draw()
 # test_diagrams[0].draw()
 
-from lambeq.backend.tensor import Dim
 
-from lambeq import AtomicType, SpiderAnsatz
 
-ansatz = SpiderAnsatz({AtomicType.NOUN: Dim(2),
-                       AtomicType.SENTENCE: Dim(2),
-                       AtomicType.PREPOSITIONAL_PHRASE: Dim(2),
+ansatz = ansatz_to_use({AtomicType.NOUN: Dim(4),
+                       AtomicType.SENTENCE: Dim(2)
+                    #    AtomicType.PREPOSITIONAL_PHRASE: Dim(2),
                        })
 
 train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
