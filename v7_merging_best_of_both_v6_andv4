@@ -69,7 +69,17 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
     n_oov_symbs = len({symb.name for d in test_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols})
     print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in test_circuits for symb in d.free_symbols})}')
 
-    max_word_param_length = max(max(int(symb.name.rsplit('_', 1)[1]) for d in train_circuits for symb in d.free_symbols),
+    def get_max_word_param_length(input_circuits):
+        lengths=[]
+        for d in input_circuits:
+            for symb in d.free_symbols:
+                l = symb.name.rsplit('_', 1)[1]
+                lengths.append(l)
+        return lengths
+    
+    get_max_word_param_length(train_circuits)
+
+    max_word_param_length = max(max(int() for d in train_circuits ),
                             max(int(symb.name.rsplit('_', 1)[1]) for d in test_circuits for symb in d.free_symbols)) + 1
     print(f'Max params/word: {max_word_param_length}')
 
