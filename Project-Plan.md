@@ -25,6 +25,31 @@
 
 
 # Meeting Notes
+## September 4th 2024
+- v4 code running end-to-end. Why?
+	- Code was stuck before `fit()`.
+ 	- Code switched from `numpy` to `pytorch`, needed to switch from arrays to tensors
+  	- Ansatz- issues
+  	- Parser language settings- when the parser encodes
+  		- Embeddings from fasttext was different from what `lambeq` expected:
+  	 		- Parser from `lambeq` adds underscores and to each entry, which is missing in the fasttext embeddings. Needed cleanup to prevent mismatch.
+		- Khatri et al. expects a double underscore at the end of each entry
+	- Padding for symmetrical arrays that `numpy` needed. So, switched to Pytorch models. Hopefully, quantum models will also not have this issue.
+ 	- Expected issue, as no one has used spanish embeddings.
+  - Big picture- end-to-end model for Uspantekan and Spanish
+- Notes for meeting with Robert
+-  Current baselines: with about 100 sentences as input
+	- Spanish:
+ 		- without embeddings, with 100 sentences, classification accuracy is 71%. Very tunable
+ 		- Next plan: see what classification accuracy we get with embeddings
+   	- Uspantekan
+   		- Uspantekan data, no embeddings
+   	 	- Classification accuracy: 72%
+- Next steps:
+	- see what classification accuracy we get with Spanish embeddings, to see if embeddings can improve scores. This will help us rely on non-English text
+ 	- Tuning
+  	- Get F1 scores to assess all quadrants of the testing
+  	- Assess with quantum computing is able to get us closer to underspecificity.
 
 ## August 28th 2024
 - Why Spider? It works, gives results- use it for Spanish, as well as uspantekan
