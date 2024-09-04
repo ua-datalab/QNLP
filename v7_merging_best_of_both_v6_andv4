@@ -135,11 +135,11 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
             wrd =  sym.name.split('_', 1)[0].replace("\\","").replace("(","")
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
-        #@sep2nd2024/ end of day: getting key error for lots of words - e.g. aldea..but why are words in qnlpmodel.symbols not being done fasttext emb on the fly? why are we separating train_embeddings earlier?        
-        #what is the meaning of symbols in qnlp.model
-        #todo a) read the lambeq documentation on symbols b) read the 2010 discocat and CQM paper onwards up, chronologically
-        #no point turning knobs without deeply understanding what symbols do
-        initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
+            #@sep2nd2024/ end of day: getting key error for lots of words - e.g. aldea..but why are words in qnlpmodel.symbols not being done fasttext emb on the fly? why are we separating train_embeddings earlier?        
+            #what is the meaning of symbols in qnlp.model
+            #todo a) read the lambeq documentation on symbols b) read the 2010 discocat and CQM paper onwards up, chronologically
+            #no point turning knobs without deeply understanding what symbols do
+            initial_param_vector.append(train_vocab_embeddings[sym][int(idx)])
 
     qnlp_model.weights = np.array(initial_param_vector)
 
