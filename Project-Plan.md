@@ -25,6 +25,36 @@
 
 
 # Meeting Notes
+## September 5th 2024
+- Meeting with Robert
+	- Dataset has other topics related to education and dance: like "teaching Uspantekan", and other forms of dancing
+ 		- We have more data! 
+ 	- [Link to Slides](https://docs.google.com/presentation/d/1jw9_b55BC4HOMmtOaqbXjDkOR8nn9_Zg8xLjK86KG8w/edit)
+  	   - Robert's update:
+  	   	- Currently: 1800 sentences, 12k tokens, with dependency parsing
+      		- 10k tokens for different discourse types
+      	 	- Plus 5 other languages with spanish dictionary  
+  		- QNLP has its own parser- but throws out a lot of sentences which it can't parse
+  	 		- Super helpful update about pre-parsed sentences!
+      - Target: which NSF project should we consider?
+	      - "Dynamic language infrastructure and Language Documentation" grant currently funds Robert, along with CISA (proposed by NSF).
+	       	- Maybe a good option
+	        - Target date: Feb 18th 2025 [link](https://new.nsf.gov/funding/opportunities/nsf-dynamic-language-infrastructure-neh)
+		- Better than AIU grants, dominated by LLM
+	 	- NSF doesn't like to fund the same grant twice- so keep both projects meaningfully different!
+	  		- Check if QNLP can be imagined as an extension or addition to an NSF grant
+	    		- Extension with more money- check if it's a thing for linguistics-focussed NSF, Robert could also get more funding. 
+       - Moving away from dataset creation grant, to a new theoretical framework (QNLP)
+       	- Work on more languages, so focus is on low-resource languages generally 
+       - What is the ask?
+       	- Personel: funding for Mithun, an RA/postdoc
+       	- Robert's experience: his share is 135k, most of it goes to the collaborator's funding, plus annotators
+       	- 
+      - Another important focus: focussing on why this technology is a good fit for a particular use-case (low resource languages), and target tasks that human annotators are really struggling with
+  	- Ex. automating: morphological analysis, parsing, POS taggging, spell-checkers, word search
+      - Other next steps: check out of the box QNLP can help with tagging
+  	   - Compare how the current AI automatic tagger trained by Robert's collaborator does compared to this
+   	- 
 ## September 4th 2024
 - v4 code running end-to-end. Why?
 	- Code was stuck before `fit()`.
