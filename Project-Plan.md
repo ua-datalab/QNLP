@@ -50,8 +50,8 @@
    		- Uspanteko,
 		- low-resource language LLM research:
   			- https://arxiv.org/pdf/2406.18895
-     			- https://aclanthology.org/2024.americasnlp-1.24.pdf
-        		- https://arxiv.org/pdf/2404.18286  
+     		- https://aclanthology.org/2024.americasnlp-1.24.pdf
+        	- https://arxiv.org/pdf/2404.18286  
   	- Results and methods
   		- Baseline models for Spanish, Uspantekan
   		-  Future: Fasttext embeddings for Spanish model
