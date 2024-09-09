@@ -42,6 +42,7 @@
       			- Computational linguistics
 	 			- SCIL- december 2024
 				- [LSA](https://web.cvent.com/event/40d9411e-b965-4659-b9c3-63046eeed3d4/summary)
+	- update: started writing paper [here](https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4). AIm is for ICLR 2nd october. But mlre importantly, it is an exercise to capture all the thoughts fresh in our head
 
 ## September 5th 2024
 Meeting with Robert
