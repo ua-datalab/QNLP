@@ -25,27 +25,40 @@
 
 
 # Meeting Notes
-## September 9th 2024- internal meeting
-	- Uspantek + spanish
- 		- run more experiments to confirm the results 
-   		- cons: Mithun wants to read more before turning knobs.
-     - write paper:
-     	- reproduce results again?
-	- confirm with robert, 
+## September 9th 2024
+- Uspantek + spanish
+	- run more experiments to confirm the results 
+   	- cons: Mithun wants to read more before turning knobs.
+- write paper:
+	- reproduce results again?
+ 	- confirm with robert, 
  		- we can use the uspantek data.
  		- remind him to connect with his collaborator's phd student.
-	- upcoming deadlines
-		- NLP
-			- COLING: sep 17th 2024  
-			- ICLR: 2nd oct 2024
-			- NAACL: Oct 16th 2024.
-		- Computational linguistics
-			- SCIL- december 2024
-			- [LSA](https://web.cvent.com/event/40d9411e-b965-4659-b9c3-63046eeed3d4/summary)
-	- update: we decided to start writing paper- kept [here](https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4). AIm is for ICLR 2nd october. But mlre importantly, it is an exercise to capture all the thoughts fresh in our head
+- upcoming deadlines
+	- NLP
+		- COLING: sep 17th 2024  
+		- ICLR: 2nd oct 2024
+		- NAACL: Oct 16th 2024.
+	- Computational linguistics
+		- SCIL- december 2024
+		- [LSA](https://web.cvent.com/event/40d9411e-b965-4659-b9c3-63046eeed3d4/summary)
+- update: we decided to start writing paper- kept [here](https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4). AIm is for ICLR 2nd october. But more importantly, it is an exercise to capture all the thoughts fresh in our head
+- Paper to-dos
+	- Write introduction
+	- get a lit review for:
+ 		- QNLP,
+   		- Uspanteko,
+		- low-resource language LLM research:
+  			- https://arxiv.org/pdf/2406.18895
+     			- https://aclanthology.org/2024.americasnlp-1.24.pdf
+        		- https://arxiv.org/pdf/2404.18286  
+  	- Results and methods
+  		- Baseline models for Spanish, Uspantekan
+  		-  Future: Fasttext embeddings for Spanish model
+- Current issues:
+	- Embeddings model has a lot of bugs  
 
-## September 5th 2024
-Meeting with Robert
+## September 5th 2024: Meeting with Robert
 - Dataset has other topics related to education and dance: like "teaching Uspantekan", and other forms of dancing
 	- We have more data! 
 - [Link to Slides](https://docs.google.com/presentation/d/1jw9_b55BC4HOMmtOaqbXjDkOR8nn9_Zg8xLjK86KG8w/edit)
