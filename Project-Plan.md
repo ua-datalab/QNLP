@@ -56,7 +56,12 @@
   		- Baseline models for Spanish, Uspantekan
   		-  Future: Fasttext embeddings for Spanish model
 - Current issues:
-	- Embeddings model has a lot of bugs  
+	- Embeddings model has a lot of bugs
+ - todo
+ 	- wed meeting,
+  		- Mithun will try to push through code of spanish + embeddings, with the aim of: lets have closure/have 3 systems working
+  		- Mithun: find more AI related NSF - QNLP for indigenous languages
+   	- 	 
 
 ## September 5th 2024: Meeting with Robert
 - Dataset has other topics related to education and dance: like "teaching Uspantekan", and other forms of dancing
