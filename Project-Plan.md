@@ -25,6 +25,24 @@
 
 
 # Meeting Notes
+## September 9th 2024- internal meeting
+	- Uspantek + spanish
+ 		- run more experiments to confirm the results 
+   		- cons: Mithun wants to read more before turning knobs.
+     - write paper:
+     	- reproduce results again?
+	- confirm with robert, 
+ 		- we can use the uspantek data.
+ 		- remind him to connect with his collaborator's phd student.
+   		- upcoming deadlines
+     			- NLP
+				-COLING: sep 17th 2024  
+				- ICLR: 2nd oct 20204
+   				- NAACL: Oct 16th 2024.
+      			- Computational linguistics
+	 			- SCIL- december 2024
+				-  [LSA](https://web.cvent.com/event/40d9411e-b965-4659-b9c3-63046eeed3d4/summary)
+
 ## September 5th 2024
 Meeting with Robert
 - Dataset has other topics related to education and dance: like "teaching Uspantekan", and other forms of dancing
