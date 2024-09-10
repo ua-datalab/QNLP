@@ -1,3 +1,7 @@
+#name: v6_*
+# status: this version stops at .fit()- rather some bug. v4 has my code which ran end to end- atleast passes .fit(). s
+#will create a new file v7 which takes best of both worlds.
+
 import torch
 import os
 import lambeq
