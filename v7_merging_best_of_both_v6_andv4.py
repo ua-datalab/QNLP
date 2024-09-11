@@ -114,16 +114,17 @@ Function for assigning the initial phases of the gates
 returns embeddings for all data splits
 """
 def generate_initial_parameterisation(train_circuits, test_circuits, embedding_model, qnlp_model):
-
     # extract the words from the circuits (first string in the symbol)
     # Note that in this vocab, the same word can have multiple types, which each occur separately
+    # a free symbol defines whether the word falls in n or s class, as well as its parameters (matrix)
     train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
     test_vocab = {symb.name.rsplit('_', 1)[0] for d in test_circuits for symb in d.free_symbols}
-
+    
+    #  new words model will be seeing, that it hasn't seen in training
+    # (referred to as OOV, not to be confused with parser output)
     print(len(test_vocab.union(train_vocab)), len(train_vocab), len(test_vocab))
     print(f'OOV word count: {len(test_vocab - train_vocab)} / {len(test_vocab)}')
 
-    # Print ratio of words depccg couldnt parse
     n_oov_symbs = len({symb.name for d in test_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols})
     print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in test_circuits for symb in d.free_symbols})}')
     
