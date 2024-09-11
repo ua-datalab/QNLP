@@ -1,40 +1,46 @@
 # -*- coding: utf-8 -*-
 """v7
-#name: v7_*
-# status: this version stops at .fit()- rather some bug. v4 has my code which ran end to end- atleast passes .fit(). s
-#will create a new file v7 which takes best of both worlds.
+# name: v7_*
+# status: this version stops at .fit()- rather some bug. v4 has my code which ran end to end- atleast passes .fit().
+# will create a new file v7 which takes best of both worlds.
 """
 
+import os
+import numpy as np
 
+# import wandb to connect to weights and biases account
 import wandb
+from lightning.pytorch.loggers import WandbLogger
 # wandb.init(project="v4_uspantekan")
 
+#neural network libraries
 import torch
 from torch import nn
-import wandb
+
+#nlp libraries
 import spacy
-from lambeq import SpacyTokeniser
-import numpy as np
 import fasttext as ft
+
+# Libraries for working with Lambeq
+from lambeq import SpacyTokeniser
 from lambeq import PytorchTrainer
-from lightning.pytorch.loggers import WandbLogger
 from lambeq.backend.tensor import Dim
 from lambeq import AtomicType, SpiderAnsatz
+from lambeq import BobcatParser
 
-ansatz_to_use = SpiderAnsatz
-embedding_model = ft.load_model('./embeddings-l-model.bin')
-
-
+# housekeeping code for assigning values to model variables:
 BATCH_SIZE = 30
 EPOCHS = 2
 LEARNING_RATE = 0.05
 SEED = 0
 DATA_BASE_FOLDER= "data"
 
+################# Data Set up #################
+# code for switching between datasets:
 USE_MRPC_DATA=False
 USE_SPANISH_DATA=True
 USE_USP_DATA=False
-
+ 
 if(USE_USP_DATA):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
@@ -51,40 +57,36 @@ if(USE_MRPC_DATA):
     DEV="mrpc_dev_10_sent.txt"
     TEST="mrpc_test_10sent.txt"
 
+################# Set up tokenizer and ansatz #################
+"""
+specify ansatz library, which take diagrams as input
+and provides quantum circuits as output.
+following lines specify which ansatz we're using:
+"""
+ansatz_to_use = SpiderAnsatz
+embedding_model = ft.load_model('./embeddings-l-model.bin')
 
+"""
+for spanish tokenizer, specify tokenizer and call  spanish language model
+if spacy throws error, remember to download language model
+"""
+# Spanish
 spacy_tokeniser = SpacyTokeniser()
-
 if(USE_SPANISH_DATA) or (USE_USP_DATA):
     spanish_tokeniser=spacy.load("es_core_news_sm")
     spacy_tokeniser.tokeniser = spanish_tokeniser
 
-
-
-#for english tokenizer
+# English
 if(USE_MRPC_DATA):
     english_tokenizer = spacy.load("en_core_web_sm")
     spacy_tokeniser.tokeniser =english_tokenizer
 
+################# Functions for running the QNLP model #################
 
-import os
-from lambeq import BobcatParser
-
-#the initial phases of the gates
-def generate_initial_parameterisation(train_circuits, test_circuits, embedding_model, qnlp_model):
-
-    # extract the words from the circuits
-    # Note that in this vocab, the same word can have multiple types, which each occur separately
-    train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
-    test_vocab = {symb.name.rsplit('_', 1)[0] for d in test_circuits for symb in d.free_symbols}
-
-    print(len(test_vocab.union(train_vocab)), len(train_vocab), len(test_vocab))
-    print(f'OOV word count: {len(test_vocab - train_vocab)} / {len(test_vocab)}')
-
-    #the words i think depccg couldnt parse
-    n_oov_symbs = len({symb.name for d in test_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols})
-    print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in test_circuits for symb in d.free_symbols})}')
-
-    def get_max_word_param_length(input_circuits):
+"""
+Function that uses lambeq symbols to return information about a dataset.
+"""
+def get_max_word_param_length(input_circuits):
         lengths=[]
         for d in input_circuits:
             for symb in d.free_symbols:
@@ -92,13 +94,46 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
                 y = x.split('__')[0]
                 lengths.append(int(y))
         return lengths
+
+"""
+function for creating a dicitionary 
+with embeddings of all entries in the vocab
+"""
+def get_vocab_emb_dict(vocab):
+            embed_dict={}
+            for wrd in vocab:
+                cleaned_wrd=wrd.split('_')[0].replace('\\','').replace(",","")
+                if cleaned_wrd in embed_dict   :
+                    print(f"error.  the word {cleaned_wrd} was already in dict")
+                else:
+                    embed_dict[cleaned_wrd]= embedding_model[cleaned_wrd] 
+            return embed_dict
+
+"""
+Function for assigning the initial phases of the gates
+returns embeddings for all data splits
+"""
+def generate_initial_parameterisation(train_circuits, test_circuits, embedding_model, qnlp_model):
+
+    # extract the words from the circuits (first string in the symbol)
+    # Note that in this vocab, the same word can have multiple types, which each occur separately
+    train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
+    test_vocab = {symb.name.rsplit('_', 1)[0] for d in test_circuits for symb in d.free_symbols}
+
+    print(len(test_vocab.union(train_vocab)), len(train_vocab), len(test_vocab))
+    print(f'OOV word count: {len(test_vocab - train_vocab)} / {len(test_vocab)}')
+
+    # Print ratio of words depccg couldnt parse
+    n_oov_symbs = len({symb.name for d in test_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols})
+    print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in test_circuits for symb in d.free_symbols})}')
     
     max_word_param_length=0
     if(ansatz_to_use==SpiderAnsatz):
         max_word_param_length_train = max(get_max_word_param_length(train_circuits))
         max_word_param_length_test = max(get_max_word_param_length(test_circuits))
         max_word_param_length = max(max_word_param_length_train, max_word_param_length_test) + 1
-
+    
+    #  ensure we actually have words and not an empty entity
     assert max_word_param_length!=0
     
     # max_word_param_length = max(max(int(symb.name.rsplit('_', 1)[1]) for d in train_circuits for symb in d.free_symbols),
@@ -113,17 +148,6 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
     #other ansatz just write it as : _0_ so its standard parsing needed.
     if(ansatz_to_use==SpiderAnsatz):  
         # train_vocab_embeddings={}      
-        def get_vocab_emb_dict(vocab):
-            embed_dict={}
-            for wrd in vocab:
-                cleaned_wrd=wrd.split('_')[0].replace('\\','').replace(",","")
-                if cleaned_wrd in embed_dict   :
-                    print(f"error.  the word {cleaned_wrd} was already in dict")
-                else:
-                    embed_dict[cleaned_wrd]= embedding_model[cleaned_wrd] 
-            return embed_dict
-
-
         train_vocab_embeddings = get_vocab_emb_dict(train_vocab)
         test_vocab_embeddings = get_vocab_emb_dict(test_vocab)
 
@@ -134,52 +158,53 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
         train_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in train_vocab}
         test_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in test_vocab}
 
-
-    #to store all the initial weights
+   
+    # Create list to to store all the initial weights
     initial_param_vector = []
 
     for sym in qnlp_model.symbols:
-        #@sep2nd2024-not sure what idx is supposed to do, am giong to give it the number associated with the word
+        """
+        # @sep2nd2024-not sure what idx is supposed to do, am giong to give it the number associated with the word
+        # @sep2nd2024/ end of day: getting key error for lots of words - 
+        # e.g. aldea..but why are words in qnlpmodel.symbols not being done fasttext emb on the fly?
+        #why are we separating train_embeddings earlier?        
+        """
         if(ansatz_to_use==SpiderAnsatz):  
             wrd =  sym.name.split('_', 1)[0].replace("\\","").replace("(","")
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
-            #@sep2nd2024/ end of day: getting key error for lots of words - e.g. aldea..but why are words in qnlpmodel.symbols not being done fasttext emb on the fly? why are we separating train_embeddings earlier?        
-            #what is the meaning of symbols in qnlp.model
-            #todo a) read the lambeq documentation on symbols b) read the 2010 discocat and CQM paper onwards up, chronologically
-            #no point turning knobs without deeply understanding what symbols do
+            # symbols in qnlp.model: https://cqcl.github.io/lambeq-docs/glossary.html#term-symbol
+            # todo a) read the lambeq documentation on symbols b) read the 2010 discocat and CQM paper onwards up, chronologically
+            # no point turning knobs without deeply understanding what symbols do
             if wrd in train_vocab_embeddings:
                 initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
             else:
-                #todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
-                # my guess is its all the unicode characters. In theory fast text is meant to create zero OOV..since it builds up from 1 gram 2 gram etc
-                '''
+                """
+                todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
+                my guess is its all the unicode characters. In theory fast text is meant to create zero OOV..since it builds up from 1 gram 2 gram etc
                 found that this word verdad, was OOV/not in fasttext emb
                 found that this word vió, was OOV/not in fasttext emb
                 found that this word yo, was OOV/not in fasttext emb
                 found that this word yyyyyy was OOV/not in fasttext emb
-                '''
+                """
                 print(f"found that this word {wrd} was OOV/not in fasttext emb")
 
     qnlp_model.weights = nn.ParameterList(initial_param_vector)
-
     return train_vocab_embeddings, test_vocab_embeddings, max_word_param_length
 
+"""
+Function for creating the model
+and running training
+Read arguments from command line.
 
-
+Args:
+trained_qnlp_model- the trained_qnlp_model
+train_vocab_embeddings- the initial embeddings for words in the vocab got from fasttext
+max_word_param_length- what is the maximum size of a word
+Returns:
+Weights of a NN model which now understands/has weights for each word in fasttext as its original embedding influenced/mapped to the weights in the trained QNLP model
+"""
 def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length):
-    """Read arguments from command line.
-
-    Args:
-    trained_qnlp_model- the trained_qnlp_model
-    train_vocab_embeddings- the initial embeddings for words in the vocab got from fasttext
-    max_word_param_length- what is the maximum size of a word
-
-    Returns:
-    Weights of a NN model which now understands/has weights for each word in fasttext as its original embedding influenced/mapped to the weights in the trained QNLP model
-
-    """
-
     #dictionary that map words in the trained QNLP model to its weights at the end of QNLP training
     #todo: print and confirm if symbol means word
     trained_params_raw = {symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
