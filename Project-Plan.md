@@ -30,6 +30,8 @@
 ## September 11th 2024
 - Code sprint and logging and documenting bugs
 	- Spanish embeddings model:
+ 		- added v7 to `megh_dev` and adding documentation.
+   		- See: [code compare for more](https://github.com/ua-datalab/QNLP/commit/3472a3addd948076677e83c70dfd36892b38c41a) 
 		- 1 AI model + MLP for mapping spanish embeddings with spanish text
   		- Initial model fixed by switching from numpy to pytorch
 
