@@ -8,7 +8,9 @@
 
 import wandb
 # wandb.init(project="v4_uspantekan")
-
+from tensorflow import keras
+from tensorflow.keras import layers
+import matplotlib.pyplot as plt
 import torch
 from torch import nn
 import wandb
@@ -23,6 +25,8 @@ from lambeq import AtomicType, SpiderAnsatz
 
 ansatz_to_use = SpiderAnsatz
 embedding_model = ft.load_model('./embeddings-l-model.bin')
+#todo: find what maxparams is for
+MAXPARAMS = 300
 
 
 BATCH_SIZE = 30
@@ -180,20 +184,6 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
 
     return train_vocab_embeddings, test_vocab_embeddings, max_word_param_length
 
-def retrieve_wrd_from_symbol_for_spider_ansatz(ansatz_to_use,sym):
-    if(ansatz_to_use==SpiderAnsatz):  
-            wrd =  sym.name.split('_', 1)[0].replace("\\","").replace("(","")
-            rest = sym.name.split('_', 1)[1]
-            idx = rest.split('__')[0]      
-            #@sep2nd2024/ end of day: getting key error for lots of words - e.g. aldea..but why are words 
-            # in qnlpmodel.symbols not getting the fasttext emb on the fly? why are we separating train_embeddings earlier?        
-            #what is the meaning of symbols in qnlp.model
-            #todo a) read the lambeq documentation on symbols
-            #  b) read the 2010 discocat and CQM paper onwards up, chronologically
-            #no point turning knobs without deeply understanding what symbols do
-            #todo:compare the format ith mrpc data, and see if he is storing the initial param vector- and symbols with _0_ or not?
-            if wrd in train_vocab_embeddings:
-                initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
 
 def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length):
     """Read arguments from command line.
@@ -243,8 +233,9 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     print(trained_param_vectors)
     
     '''for each such symbol and parameter weight assign the weights
-      to the empty array/array  array created above.-
-    #todo print and confirm, i think they are repeating the same
+      to the empty array/array of zeroes   created above.-
+    #todo 1) am still not sure why he is touching his nose in a circumambulated way
+    # 2)  print and confirm, i think they are repeating the same
     #  weight value for every entry of the array in trained_param_vectors'''
     for symbol, train_val in trained_params_raw.items():
         if(ansatz_to_use==SpiderAnsatz):  
@@ -253,7 +244,13 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             idx = rest.split('__')[0]    
         else:
             wrd, idx = symbol.name.rsplit('_', 1)
-        trained_param_vectors[wrd][int(idx)] = train_val
+        
+        if wrd in trained_param_vectors:
+                trained_param_vectors[wrd][int(idx)] = train_val
+        else:                
+                print(f"inside OOV_generation-found that this word {wrd} was not in trained_param_vectors")
+
+                
 
     wrds_in_order = list(train_vocab_embeddings.keys())
 
@@ -264,6 +261,8 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
 
     print(NN_train_X[0][:5])
     print(NN_train_Y[0][:5])
+
+    
 
     OOV_NN_model = keras.Sequential([
       layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
@@ -464,7 +463,5 @@ train_embeddings, test_embeddings, max_w_param_length = generate_initial_paramet
 
 print('BEGINNING DNN MODEL TRAINING')
 NN_model = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
-
-   
 
 
