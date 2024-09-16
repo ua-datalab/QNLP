@@ -27,6 +27,21 @@
 
 
 # Meeting Notes
+## September 16th 2024
+- Tech Launch Arizona funding
+	- AI + Quantum applications
+- QNLP applications in Megh's dissertation
+	- LLMs are trained on next sentence prediction, entrainment looks for people sharing linguistic features
+- Discussion on QNLP applications:
+	- RAG also a good fit for indegenous languages? May be a low-lying fruit, even if it runs into data issues
+- Sprint: debugging v7 code
+	- What does maxparams do? Spanish Fasttext model provides 300 parameters. So, the number is hard-coded into the code
+ 	- OOV words were an issue, changed max_params to fix this
+  	- Setting up loss code and accuracy code
+- Pytorch vs Keras
+	- Using pytorch for calculating angles in place of numpy
+ 	- But if keras is being used   
+
 ## September 11th 2024
 - Code sprint and logging and documenting bugs
 	- Spanish embeddings model:
@@ -468,6 +483,10 @@ Goal: we want to show Robert a proof of concept that QNLP can work with uspantek
 	- are we trying to beat. Decided we will do the baseline first on LLMs
       
 # General correspondence:
-* why did we decide to go with spanish first and not Uspanthekan?
+- why did we decide to go with spanish first and not Uspanthekan?
 	- Lambeq pipeline seems to have a language model requirements and needs embeddings. We have some for Spanish, none for Uspantekan
 	- We have direct Uspanteqan-Spanish translations, but not English-Uspanteqan. Which means that if things fail, we have no way to examine what happened if we used an English model.
+- How many hours can Megh work on QNLP?
+	- This semester: 5hrs, as workshop is also a responsibility
+ 	- Two 10hr projects may derail dissertation
+- Spring 2025: 12/8 split will work, as fewer hours needed for creating content    
