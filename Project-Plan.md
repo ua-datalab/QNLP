@@ -27,6 +27,19 @@
 
 
 # Meeting Notes
+## September 18th 2024
+- Discussion of code v7
+	- `train.preds()` did not work: Pytorch tensors include the loss values plus the computational graphs, so there would be an issue running them with numpy
+ 	- Solution: `torch.detach()` which creates a copy of the tensor, without the graph
+  - Substitute hard-coded loss function with `torch.nn.loss`
+  - Fixed error that combined train, test and dev for generating training data
+  - what is `embedding_model`- fasttext
+  - ToDo: draw a flow diagram to understand what `qnlp_model` is doing
+  - DNN model: training between word and its embedding
+  - QNLP model: angle and word
+  - ToDo: find difference between symbol and word
+  - ToDo Mithun: refactor code to ensure all functions are in the correct order, based on Khatri et al.
+
 ## September 16th 2024
 - Tech Launch Arizona funding
 	- AI + Quantum applications
