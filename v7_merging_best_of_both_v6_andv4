@@ -55,6 +55,9 @@ if(USE_MRPC_DATA):
     DEV="mrpc_dev_10_sent.txt"
     TEST="mrpc_test_10sent.txt"
 
+loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
+acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
+
 
 spacy_tokeniser = SpacyTokeniser()
 
@@ -184,7 +187,36 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
 
     return train_vocab_embeddings, test_vocab_embeddings, max_word_param_length
 
+def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
 
+    """Read arguments from command line.
+
+     Args:
+    trained_qnlp_model- the trained_qnlp_model
+    train_vocab_embeddings- the initial embeddings for words in the vocab got from fasttext
+    max_word_param_length- what is the maximum size of a wor
+
+    Returns:
+        a map between each word and its latest final weights
+    """
+
+    trained_param_map = { symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
+    trained_parameterisation_map = {wrd: np.zeros(max_word_param_length) for wrd in train_embeddings}
+
+    for symbol, train_val in trained_param_map.items():
+        
+        if(ansatz_to_use==SpiderAnsatz):  
+            wrd =  symbol.name.split('_', 1)[0].replace("\\","").replace("(","")
+            rest = symbol.name.split('_', 1)[1]
+            idx = rest.split('__')[0]    
+        else:
+            wrd, idx = symbol.name.rsplit('_', 1)
+        
+        #this is a hack i.e searching for wrd. Ideally it should be there. (aldea- was equivalent
+        if wrd in trained_parameterisation_map:
+            trained_parameterisation_map[wrd][int(idx)] = train_val
+
+    return trained_parameterisation_map
 def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length):
     """Read arguments from command line.
 
@@ -286,6 +318,32 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     plt.show()
 
     return OOV_NN_model
+def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, test_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
+
+    pred_parameter_map = {}
+
+    # Use the words from train wherever possible, else use DNN prediction
+    for wrd, embedding in test_vocab_embeddings.items():
+        if OOV_strategy == 'model':
+            pred_parameter_map[wrd] = trained_params.get(wrd, OOV_model.predict(np.array([embedding]), verbose=0)[0])
+        elif OOV_strategy == 'embed':
+            pred_parameter_map[wrd] = trained_params.get(wrd, embedding)
+        elif OOV_strategy == 'zeros':
+            pred_parameter_map[wrd] = trained_params.get(wrd, np.zeros(max_word_param_length))
+        else:
+            pred_parameter_map[wrd] = trained_params.get(wrd, 2 * np.random.rand(max_word_param_length)-1)
+
+    pred_weight_vector = []
+
+    for sym in pred_model.symbols:
+        wrd, idx = sym.name.rsplit('_', 1)
+        pred_weight_vector.append(pred_parameter_map[wrd][int(idx)])
+
+    pred_model.weights = pred_weight_vector
+
+    preds = pred_model.get_diagram_output(test_circuits)
+
+    return loss(preds, test_labels), acc(preds, test_labels)
 
 def read_data(filename):
     labels, sentences = [], []
@@ -380,8 +438,8 @@ test_circuits = [ansatz(diagram) for diagram in test_diagrams]
 
 from lambeq import PytorchModel
 
-all_circuits = train_circuits + val_circuits + test_circuits
-qnlp_model = PytorchModel.from_diagrams(all_circuits)
+# all_circuits = train_circuits
+qnlp_model = PytorchModel.from_diagrams(train_circuits)
 
 sig = torch.sigmoid
 
@@ -456,12 +514,37 @@ trainer = PytorchTrainer(
         evaluate_on_train=True,
         verbose='text',
         seed=SEED)
-trainer.fit(train_dataset, val_dataset, eval_interval=1, log_interval=1)
+
+
+
+# train_preds = qnlp_model.get_diagram_output(train_circuits)
+# loss_pyTorch = nn.CrossEntropyLoss()
+# loss_pyTorch(train_preds, train_labels)
+# print(f"TRAIN STATS: {loss_pyTorch}")
+
+# #todo add f1 also
+
+# train_loss = loss(train_preds, train_labels)
+# train_acc = acc(train_preds, train_labels)
+# print(f'TRAIN STATS: {train_loss, train_acc}')
 
 # by here the actual QNLP model is trained. Next is we are going to connect the model which learns relationsihp between fasttext emb and angles
 train_embeddings, test_embeddings, max_w_param_length = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model)
 
+trainer.fit(train_dataset, val_dataset, eval_interval=1, log_interval=1)
+
 print('BEGINNING DNN MODEL TRAINING')
 NN_model = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
+prediction_model = PytorchModel.from_diagrams(test_circuits)
+trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
+
+smart_loss, smart_acc = evaluate_test_set(prediction_model,
+                                              test_circuits,
+                                              test_labels,
+                                              trained_wts,
+                                              test_embeddings,
+                                              max_w_param_length,
+                                              OOV_strategy='model',
+                                              OOV_model=NN_model)
 
 
