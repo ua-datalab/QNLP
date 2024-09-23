@@ -138,6 +138,9 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
         wrd, idx = sym.name.rsplit('_', 1)
         initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
 
+    #todo: in generate_oov_whatever- QNLP operates at a circuit level...i thought weights meant angles of the gates..
+    #normally in any NN, each neuron has a weight, which usually is set to zero...however, in this case he is initiallizing the gate ka angle value with fast text embedding---why?
+
     qnlp_model.weights = np.array(initial_param_vector)
 
     return train_vocab_embeddings, test_vocab_embeddings, max_word_param_length
@@ -158,6 +161,8 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
 
     #dictionary that map words in the trained QNLP model to its weights at the end of QNLP training
     #todo: print and confirm if symbol means word
+
+    #
     trained_params_raw = {symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
 
     print(trained_params_raw)
@@ -174,10 +179,21 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         wrd, idx = symbol.name.rsplit('_', 1)
         trained_param_vectors[wrd][int(idx)] = train_val
 
+
+    ```
+    #we created dictionary by name trained_param_vectors which is mapping between each word in training vocabulary, and has a vector assigned to it...which is key and value
+    #now what is this vector? this vector, are the trained weights coming from our first model, which is the QNLP model.
+    ```
+
+    ################################################# thread 1 related stuff ends.
+
     wrds_in_order = list(train_vocab_embeddings.keys())
 
     #so the value to be trained now are the initial weights of each word from
     #fasttext, which will be trained against  gold label -trained_param_vectors i.e weights from the trained QNLP model
+
+    #create anothre dictionary, with key = every word in training vocabuilary, and value = vector..however this vector is the embedding derived form FastText model (not from QNLP model)
+    #its just that instead of a dictionary he uses an array.
     NN_train_X = np.array([train_vocab_embeddings[wrd] for wrd in wrds_in_order])
     NN_train_Y = np.array([trained_param_vectors[wrd] for wrd in wrds_in_order])
 
@@ -194,6 +210,11 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     # Embedding dim!
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
+    # he is creating yet another model (1st model = QNlp model, 2nd model= fast text ka embedding model , 3rd model=this one) whose job is:
+    #i am giving you two things, find me the relationship between them...standard NN architecgure...eg. we give sentence and its sentiment
+    #just that in this case, these two things are: two vectors
+    # vector 1, for a given word, its embeddings from fast text (e.g. alpha =[0.2,0.5,0.6])
+    # vector 2, for the same  word, its weights learned by QNLP model (i.e model 1 mentioned above) (e.g. alpha =[0.3,0.6,0.5])
     hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=0, epochs=120)
 
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
@@ -207,6 +228,15 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
 
     return OOV_NN_model
 
+
+# evaluate_test_set(prediction_model,
+#                                               test_circs,
+#                                               test_y,
+#                                               trained_wts,
+#                                               test_embeddings,
+#                                               max_w_param_length,
+#                                               OOV_strategy='model',
+#                                               OOV_model=NN_model)
 
 def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, test_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
 
@@ -466,6 +496,7 @@ def run_experiment(nlayers=1, seed=SEED):
 
     np.random.seed(seed)
 
+    lmbq_model.weights=[0,0,0,0,0]
     train_embeddings, test_embeddings, max_w_param_length = generate_initial_parameterisation(train_circs, test_circs, embedding_model, lmbq_model)
 
     print('BEGINNING QNLP MODEL TRAINING')
@@ -479,9 +510,14 @@ def run_experiment(nlayers=1, seed=SEED):
     print('BEGINNING DNN MODEL TRAINING')
     NN_model = generate_OOV_parameterising_model(lmbq_model, train_embeddings, max_w_param_length)
 
+    #4th model
+    #model 1: qnlp model- by now, this is done. its training is done.
+    #model 2: fasttext model - pretrained
+    #model 3: model which learns mapping between qnlp and fasttext- just got trained inside generate_OOV_parameterising_model
+    #Model 4: which is used only for predictions (WTF, WHY?)- as of now is a fresh model
     prediction_model = NumpyModel.from_diagrams(test_circs, use_jit=True)
 
-    trained_wts = trained_params_from_model(lmbq_model, train_embeddings, max_w_param_length)
+    # trained_wts = trained_params_from_model(lmbq_model, train_embeddings, max_w_param_length)
 
     print('Evaluating SMART MODEL')
     smart_loss, smart_acc = evaluate_test_set(prediction_model,
