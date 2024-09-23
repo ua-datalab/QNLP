@@ -27,6 +27,32 @@
 
 
 # Meeting Notes
+## September 23th 2024
+- Created a flowchart explaining Khatri et al.'s code, to understand each process in the model used
+	- Why is there is NN model (MLP) between the input and QNLP model?
+		- Section 62- NN is learning a map from embeddings of vocalbulary in training set to QLP model's trained parameter assignment. This helps "generalise unseen vocalbulary".
+	 - Does the Uspantekan model without embeddings require an NN at all? No, because there are no embeddings to map.  
+	 - What are the input and outputs to the QNLP model with embeddings?
+  - Steps for training:
+  - For every word in training vocabulary:
+  	1. Thread 1:
+   		1. Get embeddings from Fastest
+        	2. Generate vector representations
+         	3. This is a **pre-trained model** 
+	2. Thread 2:
+  		1. Initialize some non-zero weights for the QNLP model
+    		2. In parallel, run the training dataset through lambeq ansatz, and obtain circuits at the sentence level.
+    		3. Use these circuits as training data and **train the model** to get weights
+      		4. Obtain word-level representations from the model weights. TODO: how do we generate word-levels representations from sentence-level trained weights? 
+	3. Bringing it together:
+   		1. Create a dictionary by mapping each word in the vocabulary with weights from the QNLP model (which is also a vector representation). DON'T KNOW HOW
+     		2. Create list of lists mapping each word to a vector representation of its fasstext ebedding. TODO: check how this is done.
+       		3. **Train a model** to find a relationship between word-level vector representation from QNLP model weights, and the embeddings from fasttext
+         	4. **Train another model**: TODO- find out why
+        4. Testing the final model 
+
+
+
 ## September 18th 2024
 - Discussion of code v7
 	- `train.preds()` did not work: Pytorch tensors include the loss values plus the computational graphs, so there would be an issue running them with numpy
