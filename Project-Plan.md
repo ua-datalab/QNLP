@@ -27,6 +27,15 @@
 
 
 # Meeting Notes
+## September 25th 2024
+
+- Potential solution for OOV words in the Spanish model- why is the model not performing well with embeddings?
+	- model is given the word's vector representation. in the case of OOV words,we are providing embeddings
+ 	- Q: are these two types of input in the same format? A NN is multiplying given vector with weights to find correlations 	
+- Unlike English, the load of OOV words is very high, so the model will need to find a solution and rely on embdeddings
+- In QNLP context, we have circuits and a combination of angles. How do we convert embeddings into a combination of angles?
+	- Khartri et al.'s solution- use a neural network model that finds patterns between embeddings and angles, so that this conversion is aided by model making predictions.
+ 	-  Now, we need to test each model to see where the bottleneck is.
 ## September 23th 2024
 - Created a flowchart explaining Khatri et al.'s code, to understand each process in the model used
 	- Why is there is NN model (MLP) between the input and QNLP model?
@@ -37,19 +46,19 @@
   - For every word in training vocabulary:
   	1. Thread 1:
    		1. Get embeddings from Fastest
-        	2. Generate vector representations
-         	3. This is a **pre-trained model** 
-	2. Thread 2:
+   		1. Generate vector representations
+   		1. This is a **pre-trained model** 
+	1. Thread 2:
   		1. Initialize some non-zero weights for the QNLP model
-    		2. In parallel, run the training dataset through lambeq ansatz, and obtain circuits at the sentence level.
-    		3. Use these circuits as training data and **train the model** to get weights
-      		4. Obtain word-level representations from the model weights. TODO: how do we generate word-levels representations from sentence-level trained weights? 
-	3. Bringing it together:
+   		1. In parallel, run the training dataset through lambeq ansatz, and obtain circuits at the sentence level.
+   		1. Use these circuits as training data and **train the model** to get weights
+   		1. Obtain word-level representations from the model weights. TODO: how do we generate word-levels representations from sentence-level trained weights? 
+	1. Bringing it together:
    		1. Create a dictionary by mapping each word in the vocabulary with weights from the QNLP model (which is also a vector representation). DON'T KNOW HOW
-     		2. Create list of lists mapping each word to a vector representation of its fasstext ebedding. TODO: check how this is done.
-       		3. **Train a model** to find a relationship between word-level vector representation from QNLP model weights, and the embeddings from fasttext
-         	4. **Train another model**: TODO- find out why
-        4. Testing the final model 
+   		1. Create list of lists mapping each word to a vector representation of its fasstext ebedding. TODO: check how this is done.
+   		1. **Train a model** to find a relationship between word-level vector representation from QNLP model weights, and the embeddings from fasttext
+   		1. **Train another model**: TODO- find out why
+        1. Testing the final model 
 
 
 
