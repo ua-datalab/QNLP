@@ -4,6 +4,9 @@
 # Code which takes uspantekan or spanish small data (100 sent) about two classes
 education and dancing, runs it through a QNLP model, which is supported by a fasttext model,
 and two neural network models to learn and make prediction.
+#to get blow by blow details of what htis code does, refer to a section named
+"how this code runs" inside the project plan
+https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 """
 
 
@@ -228,6 +231,9 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
     """
     qnlp_model.weights = nn.ParameterList(initial_param_vector)
 
+    #note that he is not explicitly returning qnlp_model
+    #todo- ensure that this qnlp_model is well defined in scope
+    #this is bloody python- it will let all crap sneak through.
     return train_vocab_embeddings, test_vocab_embeddings, max_word_param_length
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
@@ -592,9 +598,14 @@ generate_initial_parameterisation for more specific comments
 
 train_embeddings, test_embeddings, max_w_param_length = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model)
 
+#run ONLY the QNLP model.i.e let it train on the train_dataset. and test on val_dataset
+#todo: bloody somewhere you use val and somehwere you use test. Fix it/use only one everywhere
+
 trainer.fit(train_dataset, val_dataset, eval_interval=1, log_interval=1)
 
-print('BEGINNING DNN MODEL TRAINING')
+
+#now we get into the land of model 3
+# print('BEGINNING DNN MODEL TRAINING')
 NN_model = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
 prediction_model = PytorchModel.from_diagrams(test_circuits)
 trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
