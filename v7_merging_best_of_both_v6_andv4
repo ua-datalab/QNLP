@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """v7
 #name: v7_*
-# status: this version stops at .fit()- rather some bug. v4 has my code which ran end to end- atleast passes .fit(). s
-#will create a new file v7 which takes best of both worlds.
+# Code which takes uspantekan or spanish small data (100 sent) about two classes
+education and dancing, runs it through a QNLP model, which is supported by a fasttext model,
+and two neural network models to learn and make prediction.
 """
 
 
 import wandb
+from tqdm import tqdm
 # wandb.init(project="v4_uspantekan")
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -76,12 +78,18 @@ if(USE_MRPC_DATA):
 import os
 from lambeq import BobcatParser
 
-#the initial phases of the gates
+"""#set the the initial phases of the gates.
+Also note that in this function is where we are walking into OOV land.
+i.e we check if there are any words that are found only in test/val set
+and not in train set.
+mithuns comment @26thsep2024
+"""
 def generate_initial_parameterisation(train_circuits, test_circuits, embedding_model, qnlp_model):
 
     # extract the words from the circuits- i.e the training data
     # Note that in this vocab, the same word can have multiple types, which each occur separately
-    # todo: what did he mean by same word having multiple types. is this the likes vs never example mentione din 1958 lambek paper?
+    # todo: what did he mean by same word having multiple types. 
+    # is this the likes vs never example mentione din 1958 lambek paper?
     train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
     test_vocab = {symb.name.rsplit('_', 1)[0] for d in test_circuits for symb in d.free_symbols}
 
@@ -96,6 +104,10 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
     n_oov_symbs = len({symb.name for d in test_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols})
     print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in test_circuits for symb in d.free_symbols})}')
 
+    """go through all thecircuits in training data, 
+    and pick the one which has highest type value
+    note that they are not using the literal length of the circuit, but
+    the number attached to next to aldea_2...todo : find what exactly that does"""
     def get_max_word_param_length(input_circuits):
         lengths=[]
         for d in input_circuits:
@@ -113,24 +125,36 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
 
     assert max_word_param_length!=0
     
-    # max_word_param_length = max(max(int(symb.name.rsplit('_', 1)[1]) for d in train_circuits for symb in d.free_symbols),
-    #                         max(int(symb.name.rsplit('_', 1)[1]) for d in test_circuits for symb in d.free_symbols)) + 1
     
-
     # max_word_param_length = max(, ) + 1
     print(f'Max params/word: {max_word_param_length}')
 
-    #next , for each word in train and test vocab , we need to get its embedding from fasttext
-    
+    """ # next , for each word in train and test vocab , we need to get its embedding from fasttext
+    # mithuns comment @26thsep2024: 
+    # note that there is some confusion between the input data Khatri used from MRPC
+    # as oposed to the spanish one = rather how spider reader is storing it.
+    # In MRPC and  bobcat parser, they store it in one for mat(i think its two underscore
+    # while spider parser stores it with one underscore or two dashes or something
+    its definitely a bug in their code. However, we bear the brunt since spider ansatz
+    is the only one which didnt give errors for spanish data. So eventually this needs to be
+    replaced/fixed/single format must be stored for all ansatz- evne see if you can
+    create a pull request for this
+    """
     if(ansatz_to_use==SpiderAnsatz):  
         # train_vocab_embeddings={}      
         def get_vocab_emb_dict(vocab):
+            #i.e given a word from training and dev vocab, get the corresponding 
+            # embedding using fast text. 
+            #all this is stored as a key value pair in embed_dict, where the word is
+            #the key and embedding is the value
+            #todo: confirm if this is how Khatri does it too.
             embed_dict={}
             for wrd in vocab:
-                #spider ansatz alone writes the tokens in its vocabulary with a single underscore first and then a double underscore
-                
-                #todo: some words are already in dictionary- i think this is because of the same words having multiple versions- mostly likely we shouldn't split the _1_ thing- i am thinking 
-                #that denotes the nth TYPE of LIKES kinda adverbs.
+                """#spider ansatz alone writes the tokens in its vocabulary with a single underscore first and then a double underscore
+                #so we need to parse accordingly
+                #todo: some words are already in dictionary- i think this is because of the same
+                #  words having multiple versions- mostly likely we shouldn't split the _1_ thing- i am thinking 
+                #that denotes the nth TYPE of LIKES kinda adverbs."""
                 cleaned_wrd=wrd.split('_')[0].replace('\\','').replace(",","")
                 if cleaned_wrd in embed_dict   :
                     print(f"error.  the word {cleaned_wrd} was already in dict")
@@ -138,9 +162,16 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
                     embed_dict[cleaned_wrd]= embedding_model[cleaned_wrd] 
             return embed_dict
 
-        #for each word in train and test vocab get its embedding from fasttext
-        #note that even though the symbols per se have _0_, in the train_vocab_embedding dictionary it is stored in the
-        #format of {wrd: embedding}- i.e only the word aldea out of aldea_0_ is separated out and used.
+            """ #for each word in train and test vocab get its embedding from fasttext
+        #note that even though the symbols per se have _0_, in the train_vocab_embedding 
+        # dictionary it is stored in the
+        #format of {wrd: embedding}- i.e o
+        # nly the word aldea out of aldea_0_ is separated out and used.
+        # mithuns comment @26thsep2024: note that this is a hack, and ideally such data format
+        # based difference shouldnt occur. 
+        # TODO: ran khastri code on MRPC and confirm who is screwing up.
+        # is it spider ansatz which is messing up the data format or is it us?
+        # """
         train_vocab_embeddings = get_vocab_emb_dict(train_vocab)
         test_vocab_embeddings = get_vocab_emb_dict(test_vocab)
     
@@ -172,10 +203,15 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
             if wrd in train_vocab_embeddings:
                 initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
             else:
-                #todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
-                # my guess is its all the unicode characters. In theory fast text is meant to create zero OOV..since it builds up from 1 gram 2 gram etc
-                #update: this might be caused because am removing the _0_ thing from the actual name, without realizing what it is doing.
                 '''
+                #todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
+                # my guess is its all the unicode characters. 
+                # In theory fast text is meant to create zero 
+                # OOV..since it builds up from 1 gram 2 gram etc
+                #update: this might be caused because am 
+                # removing the _0_ thing from the actual name, without
+                #  realizing what it is doing.
+                
                 found that this word verdad, was OOV/not in fasttext emb
                 found that this word vió, was OOV/not in fasttext emb
                 found that this word yo, was OOV/not in fasttext emb
@@ -183,6 +219,13 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
                 '''
                 print(f"found that this word {wrd} was OOV/not in fasttext emb")
 
+    """
+    Set the intialization of QNLP model's weight as that of the embeddings of each word
+    Am not completely convinced about what he is doing here.
+    FOr example in NN world, embedding is separate than weights of neurons.
+    You might initialize the weights of neurons with random shit like Xavier glorot
+    but almost nver initialize it with embedding itself.
+    """
     qnlp_model.weights = nn.ParameterList(initial_param_vector)
 
     return train_vocab_embeddings, test_vocab_embeddings, max_word_param_length
@@ -354,10 +397,15 @@ def read_data(filename):
             sentences.append(line[1:].strip())
     return labels, sentences
 
+#back to the main thread after all functions are defined.
+
+#read the base data, i.e plain text english.
 train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
 val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
 test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
+#setting a flag for TESTING so that it is done only once.
+#  Everything else is done on train and dev
 TESTING = int(os.environ.get('TEST_NOTEBOOKS', '0'))
 
 if TESTING:
@@ -366,20 +414,32 @@ if TESTING:
     test_labels, test_data = test_labels[:2], test_data[:2]
     EPOCHS = 1
 
-train_data[:5]
 
-train_labels[:5]
+"""
+# not using bob cat parser- note: this wasn't compatible with spider ansatz
+
+we are using spiders reader for this code, because pytorch trainer goes well
+#with it. Note that this is being done in SEp 2024 to just get the
+#  code to take off from the ground. However, other than this being a good baseline, 
+spider reader should be soon discareded and switched to bob cat parser+ some
+quantum traineres.
+
+
+
+# """
 
 from lambeq import spiders_reader
-#
 #parser = BobcatParser(verbose='text')
 
-from tqdm import tqdm
+"""spanish_diagrams is a dummy function I had created once when I had to test
+both MRPC and uspantekan/spanish data at the same time. it is very useful in debugging
+especially for converting aldea_0 kinda format issues. But do remove this
+once not needed. Mithun@26th sep 2024"""
 def spanish_diagrams(list_sents,labels):
     list_target = []
     labels_target = []
     for sent, label in tqdm(zip(list_sents, labels),desc="reading sent"):
-        #using bob cat parser- note: this wasn't compatible with spider ansatz
+        
         # tokenized = spacy_spanish_tokeniser.tokenise_sentence(sent)
         # diag =parser.sentence2diagram(tokenized, tokenised= True)
         # diag.draw()
@@ -400,6 +460,7 @@ def spanish_diagrams(list_sents,labels):
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
+#convert the plain text input to ZX diagrams.
 train_diagrams, train_labels_v2 = spanish_diagrams(train_data,train_labels)
 val_diagrams, val_labels_v2 = spanish_diagrams(val_data,val_labels)
 test_diagrams, test_labels_v2 = spanish_diagrams(test_data,test_labels)
@@ -408,37 +469,41 @@ train_labels = train_labels_v2
 val_labels = val_labels_v2
 test_labels = test_labels_v2
 
-"""val_diagrams = spanish_diagrams(val_data)<br>
-test_diagrams = spanish_diagrams(test_data)
 
-rint and assert statements for debugging
+
 """
-
+print and assert statements for debugging
+"""
 assert len(train_diagrams)== len(train_labels_v2)
 print(len(train_diagrams), len(test_diagrams), len(val_diagrams))
 assert len(train_diagrams)== len(train_labels)
 assert len(val_diagrams)== len(val_labels)
 assert len(test_diagrams)== len(test_labels)
-# train_diagrams[0].draw()
-# val_diagrams[0].draw()
-# test_diagrams[0].draw()
 
 
 
+"""mithuns comment @26thsep2024typically spider ansatz only goes with spider reader. 
+like i mentioned earlier, spider was used to just get the code off the ground
+1) we need to definitely test with atleast bobcat parser
+2) Noun should have a higher dimension than sentence? how? 
+- go back and confirm the original 1958 paper by lambek. also how
+ is the code in LAMBEQ deciding the dimensions or even what  data types to use?
+ answer might be in 2010 discocat paper"""
 ansatz = ansatz_to_use({AtomicType.NOUN: Dim(4),
                        AtomicType.SENTENCE: Dim(2)
                     #    AtomicType.PREPOSITIONAL_PHRASE: Dim(2),
                        })
 
+#use the anstax to create circuits from diagrams
 train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
 val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
 test_circuits = [ansatz(diagram) for diagram in test_diagrams]
 
-# train_circuits[0].draw()
 
 from lambeq import PytorchModel
 
-# all_circuits = train_circuits
+#mithuns comment @26thsep2024:pytorch model was the only one going well with spider reader and spider anstaz
+#also todo: should this not contain both val and train circuits as inputz?
 qnlp_model = PytorchModel.from_diagrams(train_circuits)
 
 sig = torch.sigmoid
@@ -465,9 +530,6 @@ print(len(train_circuits), len(val_circuits), len(test_circuits))
 assert len(train_circuits)== len(train_labels)
 assert len(val_circuits)== len(val_labels)
 assert len(test_circuits)== len(test_labels)
-# train_circuits[0].draw()
-# val_circuits[0].draw()
-# test_circuits[0].draw()
 
 sweep_config = {
     'method': 'random'
@@ -493,17 +555,11 @@ parameters_dict.update({
     })
 
 import pprint
-
+#this is wandb crap,comment out if becoming a pain in the butt. MLFlow is better than wandb imho
 pprint.pprint(sweep_config)
 # sweep_id = wandb.sweep(sweep_config, project="uspantekan_spider_tuning")
-
-
-
-
-
-
-
 # wandb_logger = WandbLogger()
+
 trainer = PytorchTrainer(
         model=qnlp_model,
         loss_function=torch.nn.BCEWithLogitsLoss(),
@@ -528,7 +584,12 @@ trainer = PytorchTrainer(
 # train_acc = acc(train_preds, train_labels)
 # print(f'TRAIN STATS: {train_loss, train_acc}')
 
-# by here the actual QNLP model is trained. Next is we are going to connect the model which learns relationsihp between fasttext emb and angles
+"""by here the actual QNLP model is trained. Next is we are going to connect the model which learns
+#  relationsihp between fasttext emb and angles. look inside the function
+generate_initial_parameterisation for more specific comments
+
+"""
+
 train_embeddings, test_embeddings, max_w_param_length = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model)
 
 trainer.fit(train_dataset, val_dataset, eval_interval=1, log_interval=1)
