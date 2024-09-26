@@ -26,6 +26,16 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 
+# How this code (espeically the original [code](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py) from nikhil khatri 
+##sep 26th 2024
+Mithun explaining the work flow of khatri's code in a question answer.
+- Basics:
+- ANy neural network/machine learning model does same thing; i.e given two things a and b, find any patterns that relates a to b. For example if the task is given a ton of emails marked by a human as spam and not spam, train from it so that when the model sees a new email its job is to predict whether it is belonging to spam or not spam. However, during training the model is provided two things, like i just mentioned a, b i.e model(a,b). In this case a will be an email from teh training set, and b will be the corresponding label (spam or not spam) which teh human had decided. Now the job of the model is to find two things a)what is it/what pattern is there in the data that makes this particular email be classified into class spam (for example) b) what is the common patterns i can find inside all the emails which were marked as spam.
+- Now with that knowledge lets get into the details of this project
+- There are 4 models that are being used in this code
+	- the main QNLP model whose job is to find a
+ - 
+
 # Meeting Notes
 ## September 25th 2024
 
