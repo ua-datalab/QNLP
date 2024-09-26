@@ -56,9 +56,9 @@ Mithun explaining the work flow of khatri's code in a question answer.
   -  Ans; Short answer it is yet another NN model which is purely used for prediction
   -  Now consider line [248]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L248)) the first thing they do is, take every word in the test vocabulary, and gets the corresponding embedding of it from model 2 and then gives it to model 3 who returns with the correspondingn weight that model 1 understands.
   -   All these weights/angles which is taken out of model 3, is used to initiate model 4.
-  -   This model 4 is something which takes test_circuits as inmput (just  like  QNLP model) that happens in [line 264](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L264)
+  -   This model 4 is something which takes test_circuits as inmput (just  like  QNLP model) and predicts output (which is which exactly model 1 does- however, now remember there is shit load of embeddings involved, which is hidden from you)  at happens in [line 264](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L264)
   
-  -  
+  -  Thats how the whole system works on 4 models. 
   - 
 
 # Meeting Notes
