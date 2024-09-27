@@ -245,7 +245,7 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
 
-    """Read arguments from command line.
+    """
 
      Args:
     trained_qnlp_model- the trained_qnlp_model
@@ -273,6 +273,7 @@ def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_par
             trained_parameterisation_map[wrd][int(idx)] = train_val
 
     return trained_parameterisation_map
+
 def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length):
     """
     in the previous func `generate_initial_parameterisation` we took model 1 i.e the QNLP model
@@ -626,7 +627,12 @@ i.e model 3=model(a,b) where a = embeddings and b = angles
 todo: find the difference between angles nad weights- why is it per word? """
 
 NN_model = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
+
+#this is model 4, a separate model initialized based only on test_circuits
+#note/todo: differentiate difference between test and val. If it is val here, then make sure we are not passing val inside model1.fit()
+
 prediction_model = PytorchModel.from_diagrams(test_circuits)
+#stopping here at 8.51pm sep 26th 2024. next todo: continue writing line by line comments
 trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
 
 smart_loss, smart_acc = evaluate_test_set(prediction_model,
