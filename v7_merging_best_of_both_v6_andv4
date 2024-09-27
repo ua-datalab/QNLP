@@ -7,6 +7,13 @@ and two neural network models to learn and make prediction.
 #to get blow by blow details of what htis code does, refer to a section named
 "how this code runs" inside the project plan
 https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
+
+4 major models used in this code. 
+1. QNLP model, called model1
+2. Fast text embedding model , called model 2
+3. NN model that learns mapping between fast text embedding and QNLP trained model's weights
+4. Prediction model - which is use ddto predict on test set.
+#todo, find why not just do model1.predict?
 """
 
 
@@ -267,67 +274,72 @@ def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_par
 
     return trained_parameterisation_map
 def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length):
-    """Read arguments from command line.
+    """
+    in the previous func `generate_initial_parameterisation` we took model 1 i.e the QNLP model
+    and initialized its weights with the embeddings of the words
 
+    here we will take the model 1, and create another NN i.e model 3, which will learn the mapping between
+    train_vocab_embeddings and weights of trained_qnlp_model
     Args:
     trained_qnlp_model- the trained_qnlp_model
     train_vocab_embeddings- the initial embeddings for words in the vocab got from fasttext
     max_word_param_length- what is the maximum size of a word
 
     Returns:
-    Weights of a NN model which now understands/has weights for each word in fasttext as its original embedding influenced/mapped to the weights in the trained QNLP model
+    Weights of a NN model which now has learnt
+      for each word in fasttext as its original embedding mapped to the weights in the trained QNLP model
 
     """
 
-    
-    trained_params_raw = {symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
 
-    """explanation of above code:
-    trained_params_raw is dictionary that map words in the trained QNLP model to 
-    its weights at the end of QNLP training. note that currently/initially the weights are 
-    the initial fast text embedding values- we are just initializing it using a standard set of 
-    values /embeddings-which will then be updated as the multi layer perceptron learns the connection
-    or mapping or relationship between fast text embeddings, and the angles learned by the QNLP model
+    """explanation of dict_symbols_vs_qnlp_trained_weights:
+    dict_symbols_vs_qnlp_trained_weights is a dictionary that map words in the trained QNLP model to 
+    its weights at the end of QNLP training i.e the training that happened to model 1 i.e the QNLP model
     
     #todo: print and confirm if symbol means word
     #update@sep 11th 2024 : symbol is not word, it is word+ that idx number- 
     # which i am suspecting is the number of Types a same word can have
     # for example if you read 1958 Lambek paper youc an see that adverb Likes can have two different TYPE representations.
     # but yes, todo: confirm this by comparing it with the original Khatri MRPC code."""
-
-
-    print(trained_params_raw)
     
-    
-    trained_param_vectors = {wrd: np.zeros(max_word_param_length) for wrd in train_vocab_embeddings}
+    dict_training_symbols_vs_qnlp_trained_weights = {symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
+   
+   
     """
-    # train_vocab_embeddings are the initial embeddings 
-    for words in the vocab we got from fasttext- for each such word create an array of zeroes
-    - this array is where the weights of the MLP will be added, i think?
-
-    #i.e for now for each such word in training vocabulary, create a vector filled with zeroes to represent
-    #trained parameters (todo: what exaclty is trained parameters- is it same as weights of the MLP 
-    #neural network?) whose size will be the max size of sentence in training
-    #todo: is this being done for padding?
-
+    train_vocab_embeddings are the initial embeddings 
+    for words in the vocab we got from fasttext-     
+    now for each such word create an array of zeroes called trained_param_vectors
+    - this array is where the weights of the model 3, NN model which maps between embedding and learned weights of 
+    QNLP model will be added.
+    i.e for now for each such word in training vocabulary, create a vector filled with zeroes to represent
+    trained parameters         
     """
-    print(trained_param_vectors)
+    dict_wrd_in_training_vs_weights = {wrd: np.zeros(max_word_param_length) for wrd in train_vocab_embeddings}
     
-    '''for each such symbol and parameter weight assign the weights
+    '''for each such word in training vocabulary, 
       to the empty array/array of zeroes   created above.-
     #todo 1) am still not sure why he is touching his nose in a circumambulated way
     # 2)  print and confirm, i think they are repeating the same
-    #  weight value for every entry of the array in trained_param_vectors'''
-    for symbol, train_val in trained_params_raw.items():
+    #  weight value for every entry of the array in trained_param_vectors.
+    # 
+    # Note that this for loop below is purely done so as to extract word out of symbol.
+    # the dictionary intuition remains same between both dictionaries. i.e dict_training_symbols_vs_qnlp_trained_weights and 
+    # dict_wrd_in_training_vs_weights i.e key is either word/symbol while value is sambe for both, which is the corresponding 
+    # weight of the same word in the trained QNLP model '''
+    
+    for symbol, trained_weights in dict_training_symbols_vs_qnlp_trained_weights.items():
         if(ansatz_to_use==SpiderAnsatz):  
+            #symbol and word are different. e.g. aldea_0. From this extract the word
             wrd =  symbol.name.split('_', 1)[0].replace("\\","").replace("(","")
             rest = symbol.name.split('_', 1)[1]
             idx = rest.split('__')[0]    
         else:
             wrd, idx = symbol.name.rsplit('_', 1)
         
-        if wrd in trained_param_vectors:
-                trained_param_vectors[wrd][int(idx)] = train_val
+        #if that word is in train vocab (from the embedding side)- 99% should be there.
+        #todo: confirm if any words are outside
+        if wrd in dict_wrd_in_training_vs_weights:
+                dict_wrd_in_training_vs_weights[wrd][int(idx)] = trained_weights
         else:                
                 print(f"inside OOV_generation-found that this word {wrd} was not in trained_param_vectors")
 
@@ -335,26 +347,28 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
 
     wrds_in_order = list(train_vocab_embeddings.keys())
 
-    #so the value to be trained now are the initial weights of each word from
-    #fasttext, which will be trained against  gold label -trained_param_vectors i.e weights from the trained QNLP model
+    """#For each word in a ordered list of training vocabulary words, create 2 arrays. 
+    One for embeddings (NN_train_X) and the other for trained weights (NN_train_Y)
+    Note, the goal of model 3 is to learn the mapping between these two things"""
     NN_train_X = np.array([train_vocab_embeddings[wrd] for wrd in wrds_in_order])
-    NN_train_Y = np.array([trained_param_vectors[wrd] for wrd in wrds_in_order])
-
-    print(NN_train_X[0][:5])
-    print(NN_train_Y[0][:5])
-
+    NN_train_Y = np.array([dict_wrd_in_training_vs_weights[wrd] for wrd in wrds_in_order])
     
-
+    #this is model 3. i.e create a simple Keras NN model, which will learn the above mapping
     OOV_NN_model = keras.Sequential([
       layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
       layers.Dense(max_word_param_length, activation='tanh'),
     ])
 
+    #standard keras stuff, initialize and tell what loss function and which optimizer will you be using
     OOV_NN_model.compile(loss='mean_absolute_error', optimizer=keras.optimizers.Adam(0.001))
 
     # Embedding dim!
+    """#todo find why maxparams are hardcoded as 300 (is it the dimension of the fasttext embedding?)
+    #ans: yes. The first layer needs to have the dimension of NN_train_X, which in turn has the dimension of the  
+    Fasttext embedding"""
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
+    #train that model 3
     hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=0, epochs=120)
 
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
@@ -367,6 +381,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     plt.show()
 
     return OOV_NN_model
+
 def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, test_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
 
     pred_parameter_map = {}
@@ -604,8 +619,12 @@ train_embeddings, test_embeddings, max_w_param_length = generate_initial_paramet
 trainer.fit(train_dataset, val_dataset, eval_interval=1, log_interval=1)
 
 
-#now we get into the land of model 3
-# print('BEGINNING DNN MODEL TRAINING')
+"""#now we get into the land of model 3- i.e the model which learns the connection between weights of model 1 
+i.e the QNLP model. 
+and embeddings of model 2
+i.e model 3=model(a,b) where a = embeddings and b = angles
+todo: find the difference between angles nad weights- why is it per word? """
+
 NN_model = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
 prediction_model = PytorchModel.from_diagrams(test_circuits)
 trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
