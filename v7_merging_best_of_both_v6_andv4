@@ -431,14 +431,26 @@ def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, te
         else:
             pred_parameter_map[wrd] = trained_params.get(wrd, 2 * np.random.rand(max_word_param_length)-1)
 
+    
+    #convert the dictionary pred_parameter_map into a list pred_weight_vector
     pred_weight_vector = []
 
     for sym in pred_model.symbols:
         wrd, idx = sym.name.rsplit('_', 1)
         pred_weight_vector.append(pred_parameter_map[wrd][int(idx)])
 
+    """#so he is assigning the weights he picked from model 3's outout (the DNN one)
+    to that of model 4 - i.e the prediction model. I think this is the answer to the question
+    of why is he using two QNLP models (model1 and model 4)- that is because if we could direclty use
+    the trained weights of the original QNLP model model 1- we wouldnt have had to go through this 
+    circumambulated way of finding the mapping between fast text and qnlp weights.
+    The weights here are the new learnings created by model 3- the DNN/NN model specifically trained on
+    model(a,b) where a is the weights from model1 and b is the embeddings from model2 -the fasttextmodel
+    """
     pred_model.weights = pred_weight_vector
 
+    
+    #use the model now to create predictions on the test set.
     preds = pred_model.get_diagram_output(test_circuits)
 
     return loss(preds, test_labels), acc(preds, test_labels)
@@ -689,16 +701,7 @@ print(f'RUNNING WITH {nlayers} layers')
 
 
 
-    # train_preds = qnlp_model.get_diagram_output(train_circuits)
-    # loss_pyTorch = nn.CrossEntropyLoss()
-    # loss_pyTorch(train_preds, train_labels)
-    # print(f"TRAIN STATS: {loss_pyTorch}")
-
-    # #todo add f1 also
-
-    # train_loss = loss(train_preds, train_labels)
-    # train_acc = acc(train_preds, train_labels)
-    # print(f'TRAIN STATS: {train_loss, train_acc}')
+   
 
     
 
@@ -709,6 +712,38 @@ print(f'RUNNING WITH {nlayers} layers')
     #  Fix it/use only one everywhere-bottomline: make val/dev explicitly different than test
 
     trainer.fit(train_dataset, val_dataset, eval_interval=1, log_interval=1)
+
+    """
+    Uncomment this code eventually. Here he is using the model trained above on training circuits 
+    itself, just to get training accuracy
+    todo: do we want to bring in dev here now, and keep testing below as TEST partition? 
+    else what is the point in doing prediction on training data- obviously it will  be 100%
+    -on the bright side_ maybe it is a sanity check to ensure our model is getting trained atleast"""
+
+    train_preds = qnlp_model.get_diagram_output(train_circuits)
+    train_loss = loss(train_preds, train_labels)
+    train_acc = acc(train_preds, train_labels)
+    print(f'TRAIN STATS: {train_loss, train_acc}')
+    
+
+    """
+    These are orphan codes where we use different kind of definition for loss and accuracy
+    for example in the first one we directly use the pytorch definition of crossentropy
+    while in the second one it is hard coded.
+    ##todo: Confirmg both are same and choose one
+    #  #todo add f1 also
+    
+
+     # train_preds = qnlp_model.get_diagram_output(train_circuits)
+    # loss_pyTorch = nn.CrossEntropyLoss()
+    # loss_pyTorch(train_preds, train_labels)
+    # print(f"TRAIN STATS: {loss_pyTorch}")
+
+    
+
+    # train_loss = loss(train_preds, train_labels)
+    # train_acc = acc(train_preds, train_labels)
+    # print(f'TRAIN STATS: {train_loss, train_acc}')"""
 
 
     """by here the actual QNLP model is trained. Next is we are going to connect the model which learns
@@ -748,5 +783,85 @@ print(f'RUNNING WITH {nlayers} layers')
                                                 max_w_param_length,
                                                 OOV_strategy='model',
                                                 OOV_model=NN_model)
+    print('Evaluating EMBED model')
+    #This is where he is directly using the embeddings of fasttext model as the weigh of prediction model- absolute crap/used only for creating random baseline
+    embed_loss, embed_acc = evaluate_test_set(prediction_model,
+                                              test_circuits,
+                                              test_labels,
+                                              trained_wts,
+                                              test_embeddings,
+                                              max_w_param_length,
+                                              OOV_strategy='embed')
+    
+    print('Evaluating ZEROS model')
+    zero_loss, zero_acc = evaluate_test_set(prediction_model,
+                                              test_circuits,
+                                              test_labels,
+                                              trained_wts,
+                                              test_embeddings,
+                                              max_w_param_length,
+                                              OOV_strategy='zeros')
+
+    rand_losses = []
+    rand_accs = []
+
+   
+    print('Evaluating RAND MODEL')
+    """
+    even though random model is yet another random number generator, he is using it 
+    across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
+    crap its called. i.e he is trying to make it as stupid/random as possible.
+
+    """
+    for _ in range(1000):
+
+
+        rl, ra = evaluate_test_set(prediction_model,
+                                   test_circuits,
+                                   test_labels,
+                                   trained_wts,
+                                   test_embeddings,
+                                   max_w_param_length,
+                                   OOV_strategy='random')
+
+        rand_losses.append(rl)
+        rand_accs.append(ra)
+    
+     """#so by now, we have predictions on the test set, using 4 different models. 1 is our trained NN model called 
+    'model' and the rest are all baselines.
+    He collects all the results (loss and accuracy of all 5 experiments)
+    1. training using QNLP/model 1 and am guessing he is evaluating on a part of trained model itself
+    2. using NN (aka model 2 lines above): which is our model 3 trained to learn mapping between fasttext embeddings and qnlp-model-1s weights 
+    #rest are all the baselines models
+    """
+    res =  {'TRAIN': (train_loss, train_acc),
+            'NN': (smart_loss, smart_acc),
+            'EMBED': (embed_loss, embed_acc),
+            'RAND': (rand_losses, rand_accs),
+            'ZERO': (zero_loss, zero_acc)
+           }
+    print(f'ZERO: {res["ZERO"]}')
+    print(f'EMBED: {res["EMBED"]}')
+    print(f'NN: {res["NN"]}')
+
+    return res
+
+
+
+"""####final push-which calls run_experiment function above
+todo: why is he setting random seed, that tooin tensor flow
+- especially since am using a pytorch model.
+"""
+import tensorflow as tf
+compr_results = {}
+
+tf_seeds = [0, 1, 2]
+
+for tf_seed in tf_seeds:
+    tf.random.set_seed(tf_seed)
+    this_seed_results = []
+    for nl in [3,2,1]:
+        this_seed_results.append(run_experiment(nl, tf_seed))
+    compr_results[tf_seed] = this_seed_results
 
 
