@@ -4,7 +4,7 @@
 # Code which takes uspantekan or spanish small data (100 sent) about two classes
 education and dancing, runs it through a QNLP model, which is supported by a fasttext model,
 and two neural network models to learn and make prediction.
-#to get blow by blow details of what htis code does, refer to a section named
+#to get blow by blow details of what this code does, refer to a section named
 "how this code runs" inside the project plan
 https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
@@ -12,7 +12,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 1. QNLP model, called model1
 2. Fast text embedding model , called model 2
 3. NN model that learns mapping between fast text embedding and QNLP trained model's weights
-4. Prediction model - which is use ddto predict on test set.
+4. Prediction model - which is use dto predict on test set.
 #todo, find why not just do model1.predict?
 """
 
@@ -51,6 +51,10 @@ USE_MRPC_DATA=False
 USE_SPANISH_DATA=True
 USE_USP_DATA=False
 
+#setting a flag for TESTING so that it is done only once.
+#  Everything else is done on train and dev
+TESTING = False
+
 if(USE_USP_DATA):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
@@ -61,7 +65,7 @@ if(USE_SPANISH_DATA):
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
 
-
+#todo: MRPC is a NLi kind of task. Use the 2 classes of information technology and food thing dataset instead if you want something for testing
 if(USE_MRPC_DATA):
     TRAIN="mrpc_train_80_sent.txt"
     DEV="mrpc_dev_10_sent.txt"
@@ -120,6 +124,9 @@ def get_vocab_emb_dict(vocab):
                 #that denotes the nth TYPE of LIKES kinda adverbs."""
                 cleaned_wrd=wrd.split('_')[0].replace('\\','').replace(",","")
                 if cleaned_wrd in embed_dict   :
+                    """#this shouldn't happen. a) does it happen for english data b) for 
+                    fucks sake find out what is _0- is this standard protocol, i.e if a word occurs twice
+                    we ignore it? confirm with original khatri code."""
                     print(f"error.  the word {cleaned_wrd} was already in dict")
                 else:
                     embed_dict[cleaned_wrd]= embedding_model[cleaned_wrd] 
@@ -133,19 +140,23 @@ mithuns comment @26thsep2024
 """
 def generate_initial_parameterisation(train_circuits, test_circuits, embedding_model, qnlp_model):
 
-    # extract the words from the circuits- i.e the training data
+    """ extract the words from the circuits- i.e the training data
     # Note that in this vocab, the same word can have multiple types, which each occur separately
     # todo: what did he mean by same word having multiple types. 
     # is this the likes vs never example mentione din 1958 lambek paper?
+    # update@sep29th2024. This is how the free_symbols look like.
+    # distorting_0_s- right now we don't know what 0 or s stands for. My
+    # guess after reading only 1958 paper is that s is sentence, which is part of the 
+    # 2 fundamental units lambek specifices in 1958 paper- n and s"""
     train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
     test_vocab = {symb.name.rsplit('_', 1)[0] for d in test_circuits for symb in d.free_symbols}
 
     
     #todo print: the total number of words in train, and test+ note it down
-    #.answer for spanish henderson there are 463 words in training and 89 in testing
+    #.answer: for spanish henderson there are 463 words in training and 89 in testing
     # out of the 89 words in test, 33 are not present in training, so they are OOV
     print(len(test_vocab.union(train_vocab)), len(train_vocab), len(test_vocab))    
-    print(f"OOV word count: i.e out of {len(test_vocab)} there are  {len(test_vocab - train_vocab)} words that are not found in training. So they are OOV")
+    print(f"OOV word count: i.e out of {len(test_vocab)} words in the testing vocab there are  {len(test_vocab - train_vocab)} words that are not found in training. So they are OOV")
 
     #todo: find the meaning of symbol count- what is the difference between symbol count and OOV or train_vocab
     n_oov_symbs = len({symb.name for d in test_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols})
@@ -169,7 +180,7 @@ def generate_initial_parameterisation(train_circuits, test_circuits, embedding_m
     # mithuns comment @26thsep2024: 
     # note that there is some confusion between the input data Khatri used from MRPC
     # as oposed to the spanish one = rather how spider reader is storing it.
-    # In MRPC and  bobcat parser, they store it in one for mat(i think its two underscore
+    # In MRPC and  bobcat parser, they store it in one format(i think its two underscore
     # while spider parser stores it with one underscore or two dashes or something
     its definitely a bug in their code. However, we bear the brunt since spider ansatz
     is the only one which didnt give errors for spanish data. So eventually this needs to be
@@ -471,9 +482,7 @@ train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
 val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
 test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
-#setting a flag for TESTING so that it is done only once.
-#  Everything else is done on train and dev
-TESTING = int(os.environ.get('TEST_NOTEBOOKS', '0'))
+
 
 if TESTING:
     train_labels, train_data = train_labels[:2], train_data[:2]
@@ -527,12 +536,18 @@ def spanish_diagrams(list_sents,labels):
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
-#convert the plain text input to ZX diagrams.
+"""#convert the plain text input to ZX diagrams
+# #todo: find who does the adding the underscore 0 part. is it ansatz or sentence2diagram?.
+# Ans:value of _0 the 0 part, is extracted in spanish_diagrams. But the attaching it to 
+# the nounc part aldea_0 is done by ansatz.
+# Note that this is a confusion arising on sep 29th 2024: because we don't know what is the meaning of
+# the _0 in aldea. Rather, i am yet to read the 2010 discocat paper. That should explain it
+# Until then taking a guess"""
 train_diagrams, train_labels_v2 = spanish_diagrams(train_data,train_labels)
 val_diagrams, val_labels_v2 = spanish_diagrams(val_data,val_labels)
 test_diagrams, test_labels_v2 = spanish_diagrams(test_data,test_labels)
 
-train_labels = train_labels_v2
+train_labels = train_labels_v2 #doing because didnt want same variable going into th function and returning it. python lets you get away with it, but i dont trust it
 val_labels = val_labels_v2
 test_labels = test_labels_v2
 
@@ -586,7 +601,8 @@ equality_comparator.draw()
 print and assert statements for debugging
 """
 assert len(train_diagrams)== len(train_labels_v2)
-print(len(train_diagrams), len(test_diagrams), len(val_diagrams))
+print(f"count of train, test, val elements respectively are: ")
+print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
 assert len(train_diagrams)== len(train_labels)
 assert len(val_diagrams)== len(val_labels)
 assert len(test_diagrams)== len(test_labels)
@@ -638,7 +654,7 @@ print(f'RUNNING WITH {nlayers} layers')
     qnlp_model = PytorchModel.from_diagrams(train_circuits)
 
     
-
+    print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
     train_dataset = Dataset(
@@ -827,7 +843,7 @@ print(f'RUNNING WITH {nlayers} layers')
         rand_losses.append(rl)
         rand_accs.append(ra)
     
-     """#so by now, we have predictions on the test set, using 4 different models. 1 is our trained NN model called 
+    """#so by now, we have predictions on the test set, using 4 different models. 1 is our trained NN model called 
     'model' and the rest are all baselines.
     He collects all the results (loss and accuracy of all 5 experiments)
     1. training using QNLP/model 1 and am guessing he is evaluating on a part of trained model itself
