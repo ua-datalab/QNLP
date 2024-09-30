@@ -63,32 +63,32 @@ Mithun explaining the work flow of khatri's code in a question answer.
   -  Thats how the whole system works on 4 models.
 
 # Meeting Notes
+
 ## September 30th 2024
-- `sym` explantion- aldea_0__s- word, label, ways in which it can be expressed in lambeq
-- The embeddings from Fasttext model (2nd model initialized) are used as initial parameters of the qnlp model
-	- Get QNLP model initialized with embedding weights
- 	- Trying to assess the issue with assigned weights 
-- Model 3 `.fit()`: 
+- Debug trainer"
+	- `sym` explantion- aldea_0__s- word, label, ways in which it can be expressed in lambeq
+	- The embeddings from Fasttext model (2nd model initialized) are used as initial parameters of the qnlp model
+		- Get QNLP model initialized with embedding weights
+	 	- Trying to assess the issue with assigned weights 
+	- initial parameter shape mismatch, shape of weights array does not match requirement
+ 	- Model 3 `.fit()`:
+ 		- if weights are updated correctly, then there should be no OOV words in train 
+ 	- Current objective- why is the validation code buggy? Khatri et al. is not evaluating at every epoch, but Mithun was trying to do that
+  		- val set has a lot of OOV words, so if it is run along with training set, we will end up with a lot of OOV words and bugs
+- What does khatri et al. mean by "weights"?
+	- ToDo- Mithun  
+-  Readings
+   	- Todo: 1999 lambeq grammar, 2010 (start here)    
 
 ## September 25th 2024
 - Potential solution for OOV words in the Spanish model- why is the model not performing well with embeddings?
 	- model is given the word's vector representation. in the case of OOV words,we are providing embeddings
- 	- Q: are these two types of input in the same format? A NN is multiplying given vector with weights to find correlations 	
+	- Q: are these two types of input in the same format? A NN is multiplying given vector with weights to find correlations 	
 - Unlike English, the load of OOV words is very high, so the model will need to find a solution and rely on embdeddings
 - In QNLP context, we have circuits and a combination of angles. How do we convert embeddings into a combination of angles?
 	- Khartri et al.'s solution- use a neural network model that finds patterns between embeddings and angles, so that this conversion is aided by model making predictions.
- 	-  Now, we need to test each model to see where the bottleneck is.
--  Readings
-	- Mathematical rep of linguistics structure
- 	- 1958
- 	- 1961- lambeq calc
- 	- 1959- logic
-  	- 1971
-   	- 1972- category theory
-   	- 1988- logic
-   	- 1988- categorial grammar- lambeq calculus for linguistics
-   	- Todo: 1999 lambeq grammar, 2010 (start here)    
-
+	-  Now, we need to test each model to see where the bottleneck is.
+	
 ## September 23th 2024
 - Created a flowchart explaining Khatri et al.'s code, to understand each process in the model used
 	- Why is there is NN model (MLP) between the input and QNLP model?
