@@ -26,8 +26,8 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 
-# How this code (espeically the original [code](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py) from nikhil khatri 
-##sep 26th 2024
+# How Khatri et al., (espeically the original [code](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py) works
+## Sep 26th 2024
 Mithun explaining the work flow of khatri's code in a question answer.
 - Basics:
 - ANy neural network/machine learning model does same thing; i.e given two things a and b, find any patterns that relates a to b. For example if the task is given a ton of emails marked by a human as spam and not spam, train from it so that when the model sees a new email its job is to predict whether it is belonging to spam or not spam. However, during training the model is provided two things, like i just mentioned a, b i.e model(a,b). In this case a will be an email from teh training set, and b will be the corresponding label (spam or not spam) which teh human had decided. Now the job of the model is to find two things a)what is it/what pattern is there in the data that makes this particular email be classified into class spam (for example) b) what is the common patterns i can find inside all the emails which were marked as spam.At the end of the training process, this `learning` is usually represented as a huge matrix, called weight vectors or parameters, which if you really want to know are the outgoing weights that a neuron assigns to the outgoing connection between itself and its neighbors.
@@ -49,7 +49,7 @@ Mithun explaining the work flow of khatri's code in a question answer.
   - the author (nikhil khatri) created a simple Neural network based a 3rd model whose only job is to find pattern between embeddings and the angles.
   - Qn) I dont get it. how does that help.
   - Ans; Remember we were saying that by the time the code control executes [line 503]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L503)) only TRAINING part of QNLP model is done. Now say the same model is going to be used for prediction in the test set. What is the meaning of testing. i.e we give same input like in training (e.g. circuits corresponding to a new sentence in test set). Which will inturn be used to multiply with the angles of the gates of the learned model, (equivalent in NN world will be multiplying embedding of a test set ka word with the weights of the learned model), and get a float value, using which the Model decides if the test data point belongs to class A or B 
-  - 
+  
   -  and it encounters an OOV word. So it goes back and asks the 2nd model, the fast text embedding generated model, and asks- here is a new word, can you give me the corresponding angles for it. So the model 2, does exactly that and gives out a vector. So then model 1 asks- WTF am going to with vectors, i only know circuits as inputs. That is where Model 3 comes into picture. So to remind you model 3, is a model which tries to find patterns between model3(a,b) where a is embedding and b is the weight equivalent(mithun todo: Ideally it should have been finding pattern between Embedding and circuit.. am still not completely clear on why model 3 outputs patterns between embeddings and weights/ angles of QNLP model instead of circuits- go find and update here). ANyway what happens is, before model1 does any prediction, we train model 3 between two things, the embeddings coming from fast text for each word in training data set, and the corresponding angles which we get from the TRAINED QNLP model, which is model 1. Specifically, in [line 197 ]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L197))and 198 is where we initialie the inputs a, b to model 3 are created, i.e., the embeddings from fast text and the weights from the QNLP model. Then training of this third model is trained in [line 218]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L218))
   -  Now once the third model is done training
   -  Qn) ok then what does model 4 do
@@ -58,8 +58,7 @@ Mithun explaining the work flow of khatri's code in a question answer.
   -   All these weights/angles which is taken out of model 3, is used to initiate model 4.
   -   This model 4 is something which takes test_circuits as inmput (just  like  QNLP model) and predicts output (which is which exactly model 1 does- however, now remember there is shit load of embeddings involved, which is hidden from you)  at happens in [line 264](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L264)
   
-  -  Thats how the whole system works on 4 models. 
-  - 
+  -  Thats how the whole system works on 4 models.
 
 # Meeting Notes
 ## September 25th 2024
