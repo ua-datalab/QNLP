@@ -66,18 +66,22 @@ import string
 train_X = []
 train_y = []
 
-with open("./spanish_train.txt", encoding='utf-8-sig') as f:
-    for line in f:
-        procd_line = line.strip().split('  ')
-        train_X.append(procd_line[1])
-        train_y.append(int(procd_line[0]))
+train_X = []
+train_y = []
+def read_data(filename):
+
+    with open("./data/mrpc_train_small.txt", encoding='utf-8-sig') as f:
+        for line in f:
+            procd_line = line.split('\t')
+            train_X.append(procd_line[3])
+            train_y.append(int(procd_line[0]))
 
 test_X = []
 test_y = []
 
-with open("./spanish_test.txt", encoding='utf-8-sig') as f:
+with open("./data/mrpc_dev_small.txt", encoding='utf-8-sig') as f:
     for line in f:
-        procd_line = line.strip().split('  ')
+        procd_line = line.strip().split('\t')
         test_X.append(procd_line[1])
         test_y.append(int(procd_line[0]))
 
