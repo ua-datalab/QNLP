@@ -10,7 +10,9 @@
 * Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)     
 * [Miro Whiteboard](https://miro.com/app/board/uXjVKVPCIK4=/?share_link_id=77584526552) 
 * Papers:
-	* 1998 Lambeks paper on math===language: [here](https://www.google.com/url?q=https://drive.google.com/file/d/1BWhs5zOoA2n7y8aUnKoamfift0t9Xdhu/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867016692&usg=AOvVaw3z0FGavJsHiiA0aRD5yFLn)
+	* the most fundamental paper which introduces QNLP is 2010 DISCOCAT [paper](https://drive.google.com/file/d/1T7H5WH1q0mKng-zwqOYrlqEkBpOIcUDR/view?usp=sharing)
+ 	* To undrestand that, you need to understand 1998 Lambeks paper on math===language: [here](https://drive.google.com/file/d/1WmHNND7geQTfO3sRK-NDoOBHtKZL7pAa/view?usp=sharing)
+  	* To understand 1998 lambek's work, you need to understand [1958](https://drive.google.com/file/d/1mXmLMH9NbQgrbB550XIaOph07yRV3INO/view?usp=sharing) lambek's work 	
 	* 2020 bob coecke [QNLP](https://www.google.com/url?q=https://drive.google.com/file/d/15hXA_ecFN31JJdt9E8POdUFT1mlcwssv/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017007&usg=AOvVaw2jRw8msgoQEVE_z5vZxQCa)
 	* Type grammar revisited: [https://link.springer.com/chapter/10.1007/3-540-48975-4\_1](https://www.google.com/url?q=https://link.springer.com/chapter/10.1007/3-540-48975-4_1&sa=D&source=editors&ust=1717607867017296&usg=AOvVaw0T99YvALpGGqp50dAnYxz9)
 	* Khatri et al. thesis: [https://drive.google.com/file/d/141UTEmduZoFhq0-d1peWLGdUhMLpNlho/view?usp=share_link](https://drive.google.com/file/d/141UTEmduZoFhq0-d1peWLGdUhMLpNlho/view?usp=share_link)
