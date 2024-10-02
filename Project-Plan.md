@@ -27,10 +27,42 @@
 - Save code to public repository, so it can be opened on Cyverse and run on colab: [https://github.com/ua-datalab/QNLP/blob/main/](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
 - Cyverse has resource allocations- so all big training done there. Example: 
 
+# Meeting Notes
+## October 2nd 2024
+- Discussion of category theory
+	- Concepts: magma and "pregroups" (set theory)
+- Bug while runing `fit()` on model 1: tensor shape does not match expected shape for `train_embeddings`
+	- weight assignment?
+  	- OOV issue with special symbols?
+	- `qnlp_model.weights`: initial parameter vector= Fastext embeddings. This is a list. But the shape is not matching with expected weights. Issue with pytorch- it is an executable, so cannot open it in debug mode and assess what shape is required.
+ 		- since weight assignment is causing a bug
+ 	- `train.datasets`- has 85 sentencxes with <n words. Length is same as `train_labels`.
+  	- `train_labels`- requires a matrix. Label 0 is [0.0, 1.0] and Label 1 is [1.0,0.0]. Mithun was able to provide the same format.
+  	- Khatri et al. uses an equation to define loss, we replaced it with `torch.nn.loss()`
+- ToDo: what is shape '[2]'? Where is it being defined?
+  	
+ 
+## September 30th 2024
+- Debug trainer"
+	- `sym` explantion- aldea_0__s- word, label, ways in which it can be expressed in lambeq
+	- The embeddings from Fasttext model (2nd model initialized) are used as initial parameters of the qnlp model
+		- Get QNLP model initialized with embedding weights
+	 	- Trying to assess the issue with assigned weights 
+	- initial parameter shape mismatch, shape of weights array does not match requirement
+ 	- Model 1 `.fit()`:
+ 		- if weights are updated correctly, then there should be no OOV words in train 
+ 	- Current objective- why is the validation code buggy? Khatri et al. is not evaluating at every epoch, but Mithun was trying to do that
+  		- val set has a lot of OOV words, so if it is run along with training set, we will end up with a lot of OOV words and bugs
+    	- solution- don't call val dataset, as it has OOV words. Call it later. Optional parameter for `fit()` so no issues
+- What does khatri et al. mean by "weights"?
+	- ToDo- Mithun  
+-  Readings
+   	- Todo: 1999 lambeq grammar, 2010 (start here)    
 
-# How Khatri et al., (espeically the original [code](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py) works
 ## Sep 26th 2024
-Mithun explaining the work flow of khatri's code in a question answer.
+### (Mithun explaining the work flow of khatri's code in a question answer.) How Khatri et al.,works
+- (especially the original [code](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py) 
+
 - Basics:
 - ANy neural network/machine learning model does same thing; i.e given two things a and b, find any patterns that relates a to b. For example if the task is given a ton of emails marked by a human as spam and not spam, train from it so that when the model sees a new email its job is to predict whether it is belonging to spam or not spam. However, during training the model is provided two things, like i just mentioned a, b i.e model(a,b). In this case a will be an email from teh training set, and b will be the corresponding label (spam or not spam) which teh human had decided. Now the job of the model is to find two things a)what is it/what pattern is there in the data that makes this particular email be classified into class spam (for example) b) what is the common patterns i can find inside all the emails which were marked as spam.At the end of the training process, this `learning` is usually represented as a huge matrix, called weight vectors or parameters, which if you really want to know are the outgoing weights that a neuron assigns to the outgoing connection between itself and its neighbors.
 - Now with that knowledge lets get into the details of this project
@@ -50,8 +82,7 @@ Mithun explaining the work flow of khatri's code in a question answer.
   - Ans: Very good questions. This is where model 3 comes up.
   - the author (nikhil khatri) created a simple Neural network based a 3rd model whose only job is to find pattern between embeddings and the angles.
   - Qn) I dont get it. how does that help.
-  - Ans; Remember we were saying that by the time the code control executes [line 503]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L503)) only TRAINING part of QNLP model is done. Now say the same model is going to be used for prediction in the test set. What is the meaning of testing. i.e we give same input like in training (e.g. circuits corresponding to a new sentence in test set). Which will inturn be used to multiply with the angles of the gates of the learned model, (equivalent in NN world will be multiplying embedding of a test set ka word with the weights of the learned model), and get a float value, using which the Model decides if the test data point belongs to class A or B 
-  
+  - Ans; Remember we were saying that by the time the code control executes [line 503]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L503)) only TRAINING part of QNLP model is done. Now say the same model is going to be used for prediction in the test set. What is the meaning of testing. i.e we give same input like in training (e.g. circuits corresponding to a new sentence in test set). Which will inturn be used to multiply with the angles of the gates of the learned model, (equivalent in NN world will be multiplying embedding of a test set ka word with the weights of the learned model), and get a float value, using which the Model decides if the test data point belongs to class A or B  
   -  and it encounters an OOV word. So it goes back and asks the 2nd model, the fast text embedding generated model, and asks- here is a new word, can you give me the corresponding angles for it. So the model 2, does exactly that and gives out a vector. So then model 1 asks- WTF am going to with vectors, i only know circuits as inputs. That is where Model 3 comes into picture. So to remind you model 3, is a model which tries to find patterns between model3(a,b) where a is embedding and b is the weight equivalent(mithun todo: Ideally it should have been finding pattern between Embedding and circuit.. am still not completely clear on why model 3 outputs patterns between embeddings and weights/ angles of QNLP model instead of circuits- go find and update here). ANyway what happens is, before model1 does any prediction, we train model 3 between two things, the embeddings coming from fast text for each word in training data set, and the corresponding angles which we get from the TRAINED QNLP model, which is model 1. Specifically, in [line 197 ]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L197))and 198 is where we initialie the inputs a, b to model 3 are created, i.e., the embeddings from fast text and the weights from the QNLP model. Then training of this third model is trained in [line 218]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L218))
   -  Now once the third model is done training
   -  Qn) ok then what does model 4 do
@@ -59,27 +90,7 @@ Mithun explaining the work flow of khatri's code in a question answer.
   -  Now consider line [248]([url](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L248)) the first thing they do is, take every word in the test vocabulary, and gets the corresponding embedding of it from model 2 and then gives it to model 3 who returns with the correspondingn weight that model 1 understands.
   -   All these weights/angles which is taken out of model 3, is used to initiate model 4.
   -   This model 4 is something which takes test_circuits as inmput (just  like  QNLP model) and predicts output (which is which exactly model 1 does- however, now remember there is shit load of embeddings involved, which is hidden from you)  at happens in [line 264](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py#L264)
-  
   -  Thats how the whole system works on 4 models.
-
-# Meeting Notes
-
-## September 30th 2024
-- Debug trainer"
-	- `sym` explantion- aldea_0__s- word, label, ways in which it can be expressed in lambeq
-	- The embeddings from Fasttext model (2nd model initialized) are used as initial parameters of the qnlp model
-		- Get QNLP model initialized with embedding weights
-	 	- Trying to assess the issue with assigned weights 
-	- initial parameter shape mismatch, shape of weights array does not match requirement
- 	- Model 3 `.fit()`:
- 		- if weights are updated correctly, then there should be no OOV words in train 
- 	- Current objective- why is the validation code buggy? Khatri et al. is not evaluating at every epoch, but Mithun was trying to do that
-  		- val set has a lot of OOV words, so if it is run along with training set, we will end up with a lot of OOV words and bugs
-- What does khatri et al. mean by "weights"?
-	- ToDo- Mithun  
--  Readings
-   	- Todo: 1999 lambeq grammar, 2010 (start here)    
-
 ## September 25th 2024
 - Potential solution for OOV words in the Spanish model- why is the model not performing well with embeddings?
 	- model is given the word's vector representation. in the case of OOV words,we are providing embeddings
