@@ -28,6 +28,19 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+## October 7 2024
+- Production side of QNLP project
+- Prepare production materials and project analysis
+- October 31st deadline for a QNLP product, in order to demonstrate capabilities
+- Status of code
+	- Working setup for English- used the GPT model
+ 	- spanish and english models without embeddings works, but poor performance
+  	- embeddings model stops at `model.fit()`
+- Options:
+	- Try functioning models with actual quantum hardware.
+ 		- Strong chances for English or Spanish
+   		-    
+
 ## October 2nd 2024
 - Discussion of category theory
 	- Concepts: magma and "pregroups" (set theory)
@@ -40,8 +53,7 @@
   	- `train_labels`- requires a matrix. Label 0 is [0.0, 1.0] and Label 1 is [1.0,0.0]. Mithun was able to provide the same format.
   	- Khatri et al. uses an equation to define loss, we replaced it with `torch.nn.loss()`
 - ToDo: what is shape '[2]'? Where is it being defined?
-  	
- 
+
 ## September 30th 2024
 - Debug trainer"
 	- `sym` explantion- aldea_0__s- word, label, ways in which it can be expressed in lambeq
@@ -99,7 +111,7 @@
 - In QNLP context, we have circuits and a combination of angles. How do we convert embeddings into a combination of angles?
 	- Khartri et al.'s solution- use a neural network model that finds patterns between embeddings and angles, so that this conversion is aided by model making predictions.
 	-  Now, we need to test each model to see where the bottleneck is.
-	
+
 ## September 23th 2024
 - Created a flowchart explaining Khatri et al.'s code, to understand each process in the model used
 	- Why is there is NN model (MLP) between the input and QNLP model?
@@ -122,10 +134,8 @@
    		1. Create list of lists mapping each word to a vector representation of its fasstext ebedding. TODO: check how this is done.
    		1. **Train a model** to find a relationship between word-level vector representation from QNLP model weights, and the embeddings from fasttext
    		1. **Train another model**: TODO- find out why
-        1. Testing the final model 
-
-
-
+        1. Testing the final model
+        2. 
 ## September 18th 2024
 - Discussion of code v7
 	- `train.preds()` did not work: Pytorch tensors include the loss values plus the computational graphs, so there would be an issue running them with numpy
