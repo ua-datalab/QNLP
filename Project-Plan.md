@@ -28,6 +28,16 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+
+## October 9 2024
+- Planning for next week
+- Monday: hackathon for analysis and reporting the performance of the no-embeddings model.
+	- Access F1 scores and analysis of the confusion matrix
+ 	- Visualization and a descriptive write-up of the results
+  	- Look at performance of >1 ansatz
+  	- Try the code on the test set
+  	- Make a plan for processing some of the other documents on different topics
+
 ## October 7 2024
 - Production side of QNLP project
 - Prepare production materials and project analysis
@@ -39,7 +49,7 @@
 - Options:
 	- Try functioning models with actual quantum hardware.
  		- Strong chances for English or Spanish
-   		-    
+   
 
 ## October 2nd 2024
 - Discussion of category theory
