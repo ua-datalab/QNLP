@@ -41,7 +41,7 @@ EPOCHS=1000
 SEED=33
 
 # SENTENCES=["cat is on the mat","cat is not on the mat"]
-SENTENCES=["alice loves bob","alice hates bob"]
+SENTENCES=["alice loves bob","Alice has a deep affection for Bob and holds him in a special place in her heart"]
 LABELS=[0,1]
 
 train_data=SENTENCES
@@ -56,7 +56,7 @@ print(len(train_data))
 
 parser=BobcatParser(verbose='text')
 diagrams=parser.sentences2diagrams(train_data)
-diagrams[0].draw()
+# diagrams[0].draw()
 # diagrams[1].draw()
 
 # import warnings
@@ -75,7 +75,7 @@ diagrams[0].draw()
 # diagram.draw()
 
 train_diagrams_simplified = [diagram.normal_form() for diagram in diagrams if diagram is not None]
-train_diagrams_simplified[0].draw()
+# train_diagrams_simplified[0].draw()
 # train_diagrams_simplified[1].draw()
 
 train_labels = [label for (diagram, label) in zip(train_diagrams_simplified, train_labels) if diagram is not None]
@@ -83,7 +83,7 @@ train_labels = [label for (diagram, label) in zip(train_diagrams_simplified, tra
 ansatz=IQPAnsatz({AtomicType.NOUN:1,AtomicType.SENTENCE:1},n_layers=1,n_single_qubit_params=3)
 train_circuits=[ansatz(diagram) for diagram in train_diagrams_simplified]
 
-train_circuits[0].draw(draw_as_nodes=True,figsize=(200,500))
+# train_circuits[0].draw(draw_as_nodes=True,figsize=(200,500))
 # train_circuits[1].draw(draw_as_nodes=True,figsize=(10,5))
 
 
@@ -96,17 +96,30 @@ remove_cups = RemoveCupsRewriter()
 
 train_circuits=[ansatz(remove_cups(diagram)) for diagram in train_diagrams_simplified]
 
-train_circuits[0].draw(figsize=(10,10))
-train_circuits[1].draw(figsize=(10,10))
+# train_circuits[0].draw(figsize=(10,10))
+# train_circuits[1].draw(figsize=(10,10))
 
+def convert_lambeq_circuit_to_tket_to_qasm(circuit, filename):
+    from pytket.circuit.display import render_circuit_jupyter
+    tket_circuit = circuit.to_tk()
+    render_circuit_jupyter(tket_circuit)
+    from pytket.qasm import circuit_to_qasm_str
+    # Convert the PyTKet circuit to QASM format
+    qasm_output = circuit_to_qasm_str(tket_circuit)
+    print(qasm_output)
+    with open(filename, "w") as qasm_file:
+        qasm_file.write(qasm_output)
+
+convert_lambeq_circuit_to_tket_to_qasm(train_circuits[0],"alice1")
+convert_lambeq_circuit_to_tket_to_qasm(train_circuits[1],"alice2")
 import sys
 sys.exit(1)
+# from pytket.extensions.qiskit import tk_to_qiskit
 
-from pytket.circuit.display import render_circuit_jupyter
+# qiskit_circuit = tk_to_qiskit(tket_circuit)
 
-tket_circuit = train_circuits[1].to_tk()
 
-render_circuit_jupyter(tket_circuit)
+
 
 from pytket.extensions.qiskit import AerBackend, IBMQBackend
 from lambeq import TketModel

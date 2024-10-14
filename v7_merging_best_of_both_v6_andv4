@@ -236,14 +236,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
         # is it spider ansatz which is messing up the data format or is it us?
         # """
         train_vocab_embeddings = get_vocab_emb_dict(train_vocab)
-        test_vocab_embeddings = get_vocab_emb_dict(val_vocab)
+        val_vocab_embeddings = get_vocab_emb_dict(val_vocab)
     
         
 
     else:
         #for the words created from other ansatz just write it as : _0_ so we can reuse the parsing from original khatri code. But here recording specifically for this instance
         train_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in train_vocab}
-        test_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in val_vocab}
+        val_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in val_vocab}
 
 
     #to store all the initial weights
@@ -288,13 +288,22 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     FOr example in NN world, embedding is separate than weights of neurons.
     You might initialize the weights of neurons with random shit like Xavier glorot
     but almost nver initialize it with embedding itself.
+    todo: qnlp_model.weights-is a list
+     of size 463 while the np.array is creating a matrix of shape (463,) -which
+     is then again being converted to nn.ParameterList-which is a list.
+     We dont even know how/why we are going to numpy land and then converting it back to nn.parameter
+     rather; there was no np.array initially.- gave some error. So i went to khatri's
+     code - and exactly copy pasted np.array()- the error went away, so i didnt complain.
+     But all this is being caused because we are working on someone else's code without
+     realizing what the code does.
     """
-    qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    # qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
+    qnlp_model.weights = nn.ParameterList((initial_param_vector))
 
     #note that he is not explicitly returning qnlp_model
     #todo- ensure that this qnlp_model is well defined in scope
     #this is bloody python- it will let all crap sneak through.
-    return train_vocab_embeddings, test_vocab_embeddings, max_word_param_length
+    return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
 
@@ -506,6 +515,7 @@ def read_data(filename):
         for line in f:
             t = float(line[0])
             labels.append([t, 1-t])
+            # labels.append(int(t))
             sentences.append(line[1:].strip())
     return labels, sentences
 
@@ -565,6 +575,13 @@ def spanish_diagrams(list_sents,labels):
                 print(f"no of tokens inthis sentence is {len(tokenized)}")
                 continue
         spiders_diagram = spiders_reader.sentence2diagram(sent)
+
+        """was getting error, [2] is not a valid shape for
+         ... this was marked as a soluion on the internet for """
+        # from  lambeq import UnifyCodomainRewriter, AtomicType
+        # rewriter = UnifyCodomainRewriter(AtomicType.SENTENCE)  #  Codomain should be always S
+        # new_diagrams = [rewriter(d) for d in spiders_diagram]
+
         list_target.append(spiders_diagram)
         labels_target.append(label)
     print("no. of items processed= ", len(list_target))
@@ -691,6 +708,7 @@ print(f'RUNNING WITH {nlayers} layers')
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
+    
     train_dataset = Dataset(
                 train_circuits,
                 train_labels,
@@ -748,14 +766,9 @@ print(f'RUNNING WITH {nlayers} layers')
             evaluate_on_train=True,
             verbose='text',
             seed=SEED)
-
-
-
-   
-
     
-
-    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model)
+    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
+        train_circuits, val_circuits, embedding_model, qnlp_model)
 
     #run ONLY the QNLP model.i.e let it train on the train_dataset. and test on val_dataset
     #todo:  somewhere you use the term val and somehwere else you use the term test.
@@ -770,10 +783,10 @@ print(f'RUNNING WITH {nlayers} layers')
     else what is the point in doing prediction on training data- obviously it will  be 100%
     -on the bright side_ maybe it is a sanity check to ensure our model is getting trained atleast"""
 
-    train_preds = qnlp_model.get_diagram_output(train_circuits)
-    train_loss = loss(train_preds, train_labels)
-    train_acc = acc(train_preds, train_labels)
-    print(f'TRAIN STATS: {train_loss, train_acc}')
+    # train_preds = qnlp_model.get_diagram_output(train_circuits)
+    # train_loss = loss(train_preds, train_labels)
+    # train_acc = acc(train_preds, train_labels)
+    # print(f'TRAIN STATS: {train_loss, train_acc}')
     
 
     """
@@ -784,7 +797,7 @@ print(f'RUNNING WITH {nlayers} layers')
     #  #todo add f1 also
     
 
-     # train_preds = qnlp_model.get_diagram_output(train_circuits)
+    # train_preds = qnlp_model.get_diagram_output(train_circuits)
     # loss_pyTorch = nn.CrossEntropyLoss()
     # loss_pyTorch(train_preds, train_labels)
     # print(f"TRAIN STATS: {loss_pyTorch}")
@@ -807,12 +820,13 @@ print(f'RUNNING WITH {nlayers} layers')
     i.e model 3=model(a,b) where a = embeddings and b = angles
     todo: find the difference between angles nad weights- why is it per word? """
 
+    #model 3- i.e nn-model is the model which learns mapping between fasttext ka embeddings and QNlp ka weights
     NN_model = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
 
     #this is model 4, a separate model initialized based only on test_circuits
     #todo: find why does he have two models instead of using the oringal qnlp_model to do .predict()
     #note/todo: differentiate difference between test and val. If it is val here, then make sure we are not passing val inside model1.fit()
-    prediction_model = PytorchModel.from_diagrams(test_circuits)
+    prediction_model = PytorchModel.from_diagrams(val_circuits)
 
     """#Create a dictionary where key is word and weights are the trained weights after QNLP_model was
     trained. 

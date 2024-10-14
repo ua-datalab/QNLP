@@ -63,27 +63,22 @@ import matplotlib.pyplot as plt
 # Ensure data is accessible to notebook
 import string
 
-train_X = []
-train_y = []
 
-train_X = []
-train_y = []
+
+
 def read_data(filename):
-
-    with open("./data/mrpc_train_small.txt", encoding='utf-8-sig') as f:
+    data = []
+    labels = []
+    with open(filename, encoding='utf-8-sig') as f:
         for line in f:
             procd_line = line.split('\t')
-            train_X.append(procd_line[3])
-            train_y.append(int(procd_line[0]))
+            data.append(procd_line[3])
+            labels.append(int(procd_line[0]))
+    return data,labels
 
-test_X = []
-test_y = []
+train_X, train_y = read_data("./data/mrpc_train_small.txt")
 
-with open("./data/mrpc_dev_small.txt", encoding='utf-8-sig') as f:
-    for line in f:
-        procd_line = line.strip().split('\t')
-        test_X.append(procd_line[1])
-        test_y.append(int(procd_line[0]))
+test_X, test_y = read_data("./data/mrpc_dev_small.txt")
 
 
 MAXLEN = 10
@@ -273,8 +268,7 @@ def run_experiment(nlayers=1, seed=SEED):
     print(f"the type of value of of of train_embeddings vocab is {len(train_embeddings)}")
     print(f"type of of test_embeddings vocab is {type(test_embeddings)}")
     print(f"length of of test_embeddings vocab is {len(test_embeddings)}")
-    import sys
-    sys.exit()
+    
 
     print(f"BEGINNING QNLP MODEL TRAINING")
 
