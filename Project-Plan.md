@@ -29,8 +29,8 @@
 
 # Meeting Notes
 
-##october 1th 2024.
-Mithun canceled meeting due to family emergency (dog not well). However Mithun did start the experiments. Results are kept (here)[https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing] inside the tab titled "oct14th2024_noEmb"
+## October 14th 2024.
+- Mithun canceled meeting due to family emergency (dog not well). However Mithun did start the experiments. Results are kept [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) inside the tab titled "oct14th2024_noEmb"
 ## October 9 2024
 - Background story: When megh and mithun met on wed oct 9th 2024- we had two paths we could take. a) there was an investor ready to jump in if we could show that QNLP is great off the shelf for native american languages. Earlier results were conducive. Right now the status of the code is that, it works end to end without embeddings or khatri's 4 model solution. However, we were thinking of give a week of status quo/experiment/parameter search/fine tuning to ensure that out of the box (i.e only 1 off the shelf model in khatri code) works. Goal is between october 14th and 18th, we take the code and run it till plain QNLP model train+dev- spread it across various ansatz and diagram convertor, try it on a)uspantek b) english c) spanish, and find the max dev accuracy. If nothing inteesting shows up (i.e no high accuracyies/above 80%) we will continue with incorporating embedding path, Planning for next week
 - plan for week of oct 14th to 18th 2024
