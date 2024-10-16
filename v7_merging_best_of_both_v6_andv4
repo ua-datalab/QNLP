@@ -250,6 +250,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     initial_param_vector = []
 
     #todo: find what qnlp_model.symbols is- rather how is it different than train vocab?
+    #ans: it is every word in the given list of circuits e.g. únicamente_0__s
     for sym in qnlp_model.symbols:
         #@sep2nd2024-not sure what idx is supposed to do, am giong to give it the number associated with the word
         if(ansatz_to_use==SpiderAnsatz):  
@@ -297,12 +298,29 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
      But all this is being caused because we are working on someone else's code without
      realizing what the code does.
     """
-    qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
+
+    """#update @16th oct 2024. 
+    this below code was through the shape[2] not equal to shape[1]
+    this meant,
+     
+    a) the LHS= qnlp_model.weights is a list of tensors i.e [Tensor([0.9,0.1],req_grad="true"] 
+    but the RHS is giving a simple list i.e initial_param_vectorDont=[1]
+     In short the error is saying the first value is meant to be a tensor over a tuple o
+      of two elements, instead you are giving me a plain as 1 float value.
+       
+    b) I still dont know why he is initializing the weights of QNLP model
+    (which looks like the weights of two classes,..while we are providing
+     just the vector of embeddings- what is the relationship between
+      a vector of embeddings and qnlp.weights? find out from KHatri's initial code )
+    ."""
+    assert len(qnlp_model.symbols) == len(qnlp_model.weights)
+    # qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
     # qnlp_model.weights = nn.ParameterList((initial_param_vector))
 
     #note that he is not explicitly returning qnlp_model
     #todo- ensure that this qnlp_model is well defined in scope
     #this is bloody python- it will let all crap sneak through.
+
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
@@ -773,15 +791,16 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    # train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
-        # train_circuits, val_circuits, embedding_model, qnlp_model)
+    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
+        train_circuits, val_circuits, embedding_model, qnlp_model)
 
     #run ONLY the QNLP model.i.e let it train on the train_dataset. and test on val_dataset
     #todo:  somewhere you use the term val and somehwere else you use the term test.
     #  Fix it/use only one everywhere-bottomline: make val/dev explicitly different than test
 
     
-    trainer.fit(train_dataset, log_interval=1,val_dataset=val_dataset)
+    
+    trainer.fit(train_dataset, log_interval=1)
 
     """#for experiments on october 14th 2024. i.e 
     just use 1 off the shelf model and spread spectrum/parameter search
@@ -795,6 +814,70 @@ print(f'RUNNING WITH {nlayers} layers')
     else what is the point in doing prediction on training data- obviously it will  be 100%
     -on the bright side_ maybe it is a sanity check to ensure our model is getting trained atleast"""
 
+    """error@ 16th 2024- 
+    below code is egiving the error,  i.e when trying to evaluate on val dataset
+
+     File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/lambeq/training/pytorch_model.py", line 142, in get_diagram_output
+    raise KeyError(
+KeyError: 'Unknown symbol: únicamente_0__s
+
+    Note this is only 
+    a) after commenting the qnlp_model.weights ka problem
+    inside the function generate_initial_parameterisation()
+    which means, we kind of ignore/commented out that problem, 
+    and here is the next one. 
+
+    b) when we are trying to evaluate on val dataset
+
+
+    What this error means is that: únicamente_0__s is not found 
+    to get the diagram output for. Mostlikely it is looking
+    for embedding of únicamente_0__s inside train_embeddings.
+
+    "the exact line 143 can be found in this part of the LAMBEQ code:https://github.com/CQCL/lambeq/blob/8109d952d707880b8588e0d04f24f0b5a94c3d59/lambeq/training/pytorch_model.py#L140
+
+    what that line is doing is that, it is going through circuits of val data,
+    extracting each of the root word from it, and 
+    asking for the weights of that word from a dictionary called
+      parameters = {k: v for k, v in zip(self.symbols, self.weights)}
+      which has all symbols as keys and its weights as values
+      i.e self.symbols and self.weights are zipped, and combined as a dictionary
+      
+      todo: 
+      1. find if our self.symbols and self.weights have same size.
+      update; answer =
+      len(qnlp_model.symbols)
+463
+len(qnlp_model.weights)
+463
+(qnlp_model.symbols[0])
+(aldea_0__s
+qnlp_model.weights[0]
+Parameter containing:
+tensor([-0.0098,  0.7008], requires_grad=True)
+
+      2. it is asking for únicamente_0__s- which shouldnt happen because 
+      our dictionaries are all stored as {plain text name: embedding} i.e
+       just "únicamente".
+       3. unicamente is from val data, why are we comparing/asking for its embedding from 
+       model.symbols- which has only training data?
+
+       update: finally figured out what is going on:
+       WE ARE NOT SUPPOSED TO USE THE BASIC QNLP MODEL ON VAL dataset
+       because
+        a) qnlp_model is by definition handicapped. i.e it doesn't know
+         what to do with OOV words.SO using it for prediction on val dataset itself
+         is wrong methodology because Qnlp_model doesn't know how to handle OOV
+          b)  the whole purpose of creating all the models 2, 3,4 and then 
+       the OOV_prediction model is those 4 models below, which KNOW HOW TO 
+       HANDLE OOV
+       I.E the final accuracy calculation on val/dev SHOULD ONLY BE DONE
+       USING THESE 4 models and NEVER using the base qnlp_model.
+
+
+    
+
+    """
     val_preds = qnlp_model.get_diagram_output(val_circuits)
     loss_function = torch.nn.BCEWithLogitsLoss()
     val_labels_pytorch_tensor= torch.Tensor(val_labels)
