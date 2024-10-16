@@ -71,8 +71,8 @@ if(USE_MRPC_DATA):
     DEV="mrpc_dev_10_sent.txt"
     TEST="mrpc_test_10sent.txt"
 
-loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
-acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
+# loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
+# acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
 sig = torch.sigmoid
 
 def accuracy(y_hat, y):
@@ -781,13 +781,12 @@ print(f'RUNNING WITH {nlayers} layers')
     #  Fix it/use only one everywhere-bottomline: make val/dev explicitly different than test
 
     
-    trainer.fit(train_dataset, log_interval=1)
+    trainer.fit(train_dataset, log_interval=1,val_dataset=val_dataset)
 
     """#for experiments on october 14th 2024. i.e 
     just use 1 off the shelf model and spread spectrum/parameter search
       for out of hte box for usp"""
-    import sys
-    sys.exit(1)
+    
 
     """
     Uncomment this code eventually. Here he is using the model trained above on training circuits 
@@ -796,11 +795,16 @@ print(f'RUNNING WITH {nlayers} layers')
     else what is the point in doing prediction on training data- obviously it will  be 100%
     -on the bright side_ maybe it is a sanity check to ensure our model is getting trained atleast"""
 
-    # train_preds = qnlp_model.get_diagram_output(train_circuits)
-    # train_loss = loss(train_preds, train_labels)
-    # train_acc = acc(train_preds, train_labels)
-    # print(f'TRAIN STATS: {train_loss, train_acc}')
+    val_preds = qnlp_model.get_diagram_output(val_circuits)
+    loss_function = torch.nn.BCEWithLogitsLoss()
+    val_labels_pytorch_tensor= torch.Tensor(val_labels)
+    val_loss = loss_function(val_preds, val_labels_pytorch_tensor)
+    val_acc = accuracy(val_preds, val_labels_pytorch_tensor)
+    print(f'Val STATS: {val_loss, val_acc}')
     
+    import sys
+    sys.exit(1)
+
 
     """
     
