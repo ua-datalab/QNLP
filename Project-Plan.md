@@ -29,11 +29,35 @@
 
 # Meeting Notes
 
-## October 14th 2024.
+## October 16th 2024
+### HACKATHON
+- Originally, Mithun fixed the `.fit()` by simply not inputting any embeddings, and only working with the text in the dataset
+	- temporary check 
+	- Is the issue with `numpy` array size? No, `lambeq` is having the problem
+- Running no embeddings model to try permutations and combinations and assess performance
+	- [Commit with working code](https://github.com/ua-datalab/QNLP/commit/c4e56a1746965c4c12876fbf67c4fb0ff463a845)
+ 	- training working, testing did not 
+ 	- Confirming the OOV issue: added all data from val set into train, no OOV issue. Model is able to memorize
+ 	- `nn.loss` bug: numpy doesn't like torch tensor. Switched to `torch.nn.BCEWithLogitsLoss()` instead of custom loss function, so everything is in the same format
+ 	- validation list was not a tensor, but a python list. Wrote a wrapper to fix this: `val_labels_pytorch_tensor= torch.Tensor(val_labels)`
+- Getting the model to print accuracy and run `model.eval`.
+  	- Wrote a wrapper that can calculate the accuracy and outputs a dictionary with metrics
+   	- All sources of bugs during weight assignment ruled out. Only problem is passing OOV words in the format the code needs
+    	- Train vocabulary: to-do. Regex does not remove punctuation and parenthesis in `wrd`. Fix it
+     	- `qnlp_model.weights` is an array. It is asking for a tensor that requires grad.
+     	- However `initian_param_vector` that is passing values to it is a vector.
+     	- So we are facing a mismatch. when trying to append the latter to the former.
+  	- Check if `self.symbols` and `self.weights` have the same dimensions
+- lambeq's code needs a dictionary with word and its weights. Which is an issue for OOV words the way the code is written 
+-  `val_embeddings` are actually not being called anywhere- we need to pass this to the model
+-  FIX: For QNLP model, DO NOT EVALUATE USING THIS THE QNLP MODEL. This is not the model designed by khatri et al, so it is partially trained and not set up to handle OOV words. Khatri et al. predicts using a "SMART" `OOV_prediction` model.
+-  BOTTOM LINE: the training QNLP model gives a 72% accuracy on the test set. It learns, but isn't doing a perfect memorization. We need to complete the pipeline to see performance on the dev set. 
+ 
+## October 14th 2024
 - Mithun canceled meeting due to family emergency (dog not well). However Mithun did start the experiments. Results are kept [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) inside the tab titled "oct14th2024_noEmb"
 - Will be using the version of the code kept [here](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v7_merging_best_of_both_v6_andv4)
-- ## October 9 2024
 
+## October 9 2024
 - Background story: When megh and mithun met on wed oct 9th 2024- we had two paths we could take. a) there was an investor ready to jump in if we could show that QNLP is great off the shelf for native american languages. Earlier results were conducive. Right now the status of the code is that, it works end to end without embeddings or khatri's 4 model solution. However, we were thinking of give a week of status quo/experiment/parameter search/fine tuning to ensure that out of the box (i.e only 1 off the shelf model in khatri code) works. Goal is between october 14th and 18th, we take the code and run it till plain QNLP model train+dev- spread it across various ansatz and diagram convertor, try it on a)uspantek b) english c) spanish, and find the max dev accuracy. If nothing inteesting shows up (i.e no high accuracyies/above 80%) we will continue with incorporating embedding path, Planning for next week
 - plan for week of oct 14th to 18th 2024
 - Monday: hackathon for analysis and reporting the performance of the no-embeddings model.
@@ -63,8 +87,8 @@
 	- weight assignment?
   	- OOV issue with special symbols?
 	- `qnlp_model.weights`: initial parameter vector= Fastext embeddings. This is a list. But the shape is not matching with expected weights. Issue with pytorch- it is an executable, so cannot open it in debug mode and assess what shape is required.
- 		- since weight assignment is causing a bug
- 	- `train.datasets`- has 85 sentencxes with <n words. Length is same as `train_labels`.
+ 		- since weight assignment (for QNLP model?) is causing a bug
+ 	- `train.datasets`- has 85 sentences with <n words. Length is same as `train_labels`.
   	- `train_labels`- requires a matrix. Label 0 is [0.0, 1.0] and Label 1 is [1.0,0.0]. Mithun was able to provide the same format.
   	- Khatri et al. uses an equation to define loss, we replaced it with `torch.nn.loss()`
 - ToDo: what is shape '[2]'? Where is it being defined?
@@ -89,7 +113,6 @@
 ## Sep 26th 2024
 ### (Mithun explaining the work flow of khatri's code in a question answer.) How Khatri et al.,works
 - (especially the original [code](https://github.com/ua-datalab/QNLP/blob/mithun_dev/archive/master_khetri_thesis%20.py) 
-
 - Basics:
 - ANy neural network/machine learning model does same thing; i.e given two things a and b, find any patterns that relates a to b. For example if the task is given a ton of emails marked by a human as spam and not spam, train from it so that when the model sees a new email its job is to predict whether it is belonging to spam or not spam. However, during training the model is provided two things, like i just mentioned a, b i.e model(a,b). In this case a will be an email from teh training set, and b will be the corresponding label (spam or not spam) which teh human had decided. Now the job of the model is to find two things a)what is it/what pattern is there in the data that makes this particular email be classified into class spam (for example) b) what is the common patterns i can find inside all the emails which were marked as spam.At the end of the training process, this `learning` is usually represented as a huge matrix, called weight vectors or parameters, which if you really want to know are the outgoing weights that a neuron assigns to the outgoing connection between itself and its neighbors.
 - Now with that knowledge lets get into the details of this project
