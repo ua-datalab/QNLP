@@ -41,7 +41,7 @@ embedding_model = ft.load_model('./embeddings-l-model.bin')
 MAXPARAMS = 300
 
 
-BATCH_SIZE = 30
+BATCH_SIZE = 3
 EPOCHS = 2
 LEARNING_RATE = 0.05
 SEED = 0
@@ -297,8 +297,8 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
      But all this is being caused because we are working on someone else's code without
      realizing what the code does.
     """
-    # qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
-    qnlp_model.weights = nn.ParameterList((initial_param_vector))
+    qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
+    # qnlp_model.weights = nn.ParameterList((initial_param_vector))
 
     #note that he is not explicitly returning qnlp_model
     #todo- ensure that this qnlp_model is well defined in scope
@@ -767,14 +767,27 @@ print(f'RUNNING WITH {nlayers} layers')
             verbose='text',
             seed=SEED)
     
-    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
-        train_circuits, val_circuits, embedding_model, qnlp_model)
+    #get the embeddings etc to be used in models 2 through 4. Note
+    # that one very interesting thing that happens as far as model 1is considered is that
+    # inside the function generate_initial_parameterisation() the QNLP
+    # model ka weights (i.e the angles of gates)
+    # gets initialized with initial fast text embeddings of each word in training
+
+    # train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
+        # train_circuits, val_circuits, embedding_model, qnlp_model)
 
     #run ONLY the QNLP model.i.e let it train on the train_dataset. and test on val_dataset
     #todo:  somewhere you use the term val and somehwere else you use the term test.
     #  Fix it/use only one everywhere-bottomline: make val/dev explicitly different than test
 
+    
     trainer.fit(train_dataset, log_interval=1)
+
+    """#for experiments on october 14th 2024. i.e 
+    just use 1 off the shelf model and spread spectrum/parameter search
+      for out of hte box for usp"""
+    import sys
+    sys.exit(1)
 
     """
     Uncomment this code eventually. Here he is using the model trained above on training circuits 
@@ -790,11 +803,6 @@ print(f'RUNNING WITH {nlayers} layers')
     
 
     """
-    These are orphan codes where we use different kind of definition for loss and accuracy
-    for example in the first one we directly use the pytorch definition of crossentropy
-    while in the second one it is hard coded.
-    ##todo: Confirmg both are same and choose one
-    #  #todo add f1 also
     
 
     # train_preds = qnlp_model.get_diagram_output(train_circuits)
