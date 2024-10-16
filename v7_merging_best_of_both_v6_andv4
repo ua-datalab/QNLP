@@ -415,14 +415,18 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     for symbol, trained_weights in dict_training_symbols_vs_qnlp_trained_weights.items():
         if(ansatz_to_use==SpiderAnsatz):  
             #symbol and word are different. e.g. aldea_0. From this extract the word
-            wrd =  symbol.name.split('_', 1)[0].replace("\\","").replace("(","")
+            wrd =  clean_wrd_for_spider_ansatz(symbol.name)
             rest = symbol.name.split('_', 1)[1]
-            idx = rest.split('__')[0]    
+            idx = rest.split('__')[0]       
         else:
             wrd, idx = symbol.name.rsplit('_', 1)
         
         #if that word is in train vocab (from the embedding side)- 99% should be there.
         #todo: confirm if any words are outside
+        #stopping here at oct 16th 2024. 2pm- getting a newerror some key value mistake.
+        # i think this has something to do with the wrd splitting thing
+        #todo: in original code of khatri he is not storing aldea with plain english word
+        #but he is doing with aldea_0_s- make sure we revert back to this later.
         if wrd in dict_wrd_in_training_vs_weights:
                 dict_wrd_in_training_vs_weights[wrd][int(idx)] = trained_weights
         else:                
@@ -878,15 +882,15 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     
 
     """
-    val_preds = qnlp_model.get_diagram_output(val_circuits)
-    loss_function = torch.nn.BCEWithLogitsLoss()
-    val_labels_pytorch_tensor= torch.Tensor(val_labels)
-    val_loss = loss_function(val_preds, val_labels_pytorch_tensor)
-    val_acc = accuracy(val_preds, val_labels_pytorch_tensor)
-    print(f'Val STATS: {val_loss, val_acc}')
+    # val_preds = qnlp_model.get_diagram_output(val_circuits)
+    # loss_function = torch.nn.BCEWithLogitsLoss()
+    # val_labels_pytorch_tensor= torch.Tensor(val_labels)
+    # val_loss = loss_function(val_preds, val_labels_pytorch_tensor)
+    # val_acc = accuracy(val_preds, val_labels_pytorch_tensor)
+    # print(f'Val STATS: {val_loss, val_acc}')
     
-    import sys
-    sys.exit(1)
+    # import sys
+    # sys.exit(1)
 
 
     """
