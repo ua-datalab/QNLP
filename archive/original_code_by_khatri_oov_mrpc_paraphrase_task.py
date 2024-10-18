@@ -142,7 +142,7 @@ train_y = []
 
 import os 
 print(f"*******value of current directory is:{os.getcwd()}")
-with open("data/mrpc_train_80_sent.txt", encoding='utf-8-sig') as f:
+with open("data/mrpc_train_small.txt", encoding='utf-8-sig') as f:
     for line in f:
         procd_line = line.strip().split('\t')
         train_X_1.append(procd_line[3])
@@ -156,7 +156,7 @@ test_X_2 = []
 test_y = []
 
 
-with open("data/mrpc_dev_10_sent.txt", encoding='utf-8-sig') as f:
+with open("data/mrpc_dev_small.txt", encoding='utf-8-sig') as f:
     for line in f:
         procd_line = line.strip().split('\t')
         test_X_1.append(procd_line[3])
@@ -202,16 +202,22 @@ import fasttext as ft
 embedding_model = ft.load_model('./embeddings-l-model.bin')
 
 
-from lambeq import DepCCGParser, BobcatParser
-parser = BobcatParser()
+# from lambeq import DepCCGParser, BobcatParser
+# parser = BobcatParser()
+# train_diags1 = parser.sentences2diagrams(filt_train_X1, suppress_exceptions=True)
+# train_diags2 = parser.sentences2diagrams(filt_train_X2, suppress_exceptions=True)
+# test_diags1 = parser.sentences2diagrams(filt_test_X1, suppress_exceptions=True)
+# test_diags2 = parser.sentences2diagrams(filt_test_X2, suppress_exceptions=True)
 
-# parser = DepCCGParser()
 
-train_diags1 = parser.sentences2diagrams(filt_train_X1, suppress_exceptions=True)
-train_diags2 = parser.sentences2diagrams(filt_train_X2, suppress_exceptions=True)
 
-test_diags1 = parser.sentences2diagrams(filt_test_X1, suppress_exceptions=True)
-test_diags2 = parser.sentences2diagrams(filt_test_X2, suppress_exceptions=True)
+from lambeq import spiders_reader
+parser = spiders_reader
+train_diags1 = parser.sentences2diagrams(filt_train_X1)
+train_diags2 = parser.sentences2diagrams(filt_train_X2)
+test_diags1 = parser.sentences2diagrams(filt_test_X1)
+test_diags2 = parser.sentences2diagrams(filt_test_X2)
+
 
 from collections import Counter
 # We omit any case where the 2 phrases are not parsed to the same type
