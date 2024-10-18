@@ -33,7 +33,14 @@
 - in mithun_dev branch
 - Our code (v7_merging_best_of_both_v6_andv4) is still stuck at the dimension mismatch between model.weights, and the parameters he is passing
 - so today to find the expected value, i thought i will debug  khatri's original code. (it is now kept in archive/original_code_by_khatri_oov_mrpc_paraphrase_task.py'.-
-	- #### update: got it to work past initial .fit() of model1 and even started training of DNN model. This is the first time in 3 years...phew..hai esperanza...either his code, or our code one of them will cross till the finish line soon.
+	- #### update: got it to work past initial .fit() of model1 and even started training of DNN model. This is the first time in 3 years...phew..hai esperanza...either his code, or our code one of them will cross till the finish line soon. note that this is using the datasets `"data/mrpc_train_small.txt` and `"data/mrpc_dev_small.txt"`. That after bobcat parser throwing things out has just 1 and 1 in training and test. meanwhile if we use `"data/mrpc_train.txt"` `"data/mrpc_dev.txt"`- getting broadcast error. weird.
+ 	- update: both `*_small` will give good positive count for train and dev if we use `MAXLEN = 20`.
+  	- update: still getting the input mismatch in loss
+    	- update: oh that's because we are using BCELoss from torch. switching back to his custom loss
+  	  - update: getting the old error of `loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
+                                    ~~^~~~~~~~~~~~~~~
+ValueError: operands could not be broadcast together with shapes (30,2) (30,2,2) `
+
 - lots of good findings
 - 	his train_vocab is written as `'meanwhile__s'`
 - 	he is literally taking the idx value of the fasttext embedding in this code. weird 	`initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])` i.e initial_param_vectoris just a list of floats
