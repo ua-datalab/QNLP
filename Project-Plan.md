@@ -35,7 +35,20 @@
 - so today to find the expected value, i thought i will debug  khatri's original code. (it is now kept in archive/original_code_by_khatri_oov_mrpc_paraphrase_task.py'.
 - lots of good findings
 - 	his train_vocab is written as `'meanwhile__s'`
-- todo: debug both code line by line and find if everything matches, including the idx, _s and even the size of weights and params
+- 	he is literally taking the idx value of the fasttext embedding in this code. weird 	`initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])` i.e initial_param_vectoris just a list of floats
+- 	qnlp_model.weights is also a list of numbers...WTF
+- 	`[0.5488135039273248, 0.7151893663724195, ..]`
+- 	Also len(qnlp_model.weights) =48=len(initial_param_vector)
+- 	so why is our qnlp_model giving a list of tuples instead?
+- 	48 is the total number of symbols, which i think in our case is 408 or 463
+- 	its easy if we know what the qnlp_model does when it does .fit(). But that is bottom up reading, which is at 95%
+- 	meanwhile we are approaching it brute force/top down/nasty analytical skills only based coding.
+   
+
+- todo:
+- 	debug both code line by line and find if everything matches, including the idx, _s and even the size of weights and params
+- 	- 	his max param length is 2+1 =3 because there were values like `Thursday__s_2')`. Note that i am even using spider reader. so why is our spider reader not producing _2. i.e parsing different words to same time
+   - 	his wrd= 'Friday__s' while ours is `Friday`
    
 ## October 16th 2024
 ### HACKATHON
