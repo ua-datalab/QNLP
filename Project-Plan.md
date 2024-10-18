@@ -32,7 +32,8 @@
 ### Mithun doing self hackathon 
 - in mithun_dev branch
 - Our code (v7_merging_best_of_both_v6_andv4) is still stuck at the dimension mismatch between model.weights, and the parameters he is passing
-- so today to find the expected value, i thought i will debug  khatri's original code. (it is now kept in archive/original_code_by_khatri_oov_mrpc_paraphrase_task.py'.
+- so today to find the expected value, i thought i will debug  khatri's original code. (it is now kept in archive/original_code_by_khatri_oov_mrpc_paraphrase_task.py'.-
+	- #### update: got it to work past initial .fit() of model1 and even started training of DNN model. This is the first time in 3 years...phew..hai esperanza...either his code, or our code one of them will cross till the finish line soon.
 - lots of good findings
 - 	his train_vocab is written as `'meanwhile__s'`
 - 	he is literally taking the idx value of the fasttext embedding in this code. weird 	`initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])` i.e initial_param_vectoris just a list of floats
@@ -43,6 +44,14 @@
 - 	48 is the total number of symbols, which i think in our case is 408 or 463
 - 	its easy if we know what the qnlp_model does when it does .fit(). But that is bottom up reading, which is at 95%
 - 	meanwhile we are approaching it brute force/top down/nasty analytical skills only based coding.
+- 	next find if qnlp_model using pytorch is different in weights than when using numpy model
+	- 	answer: at initialization both are empty lists
+ 	- 	getting error with numpy model when used with pytorch trainer. its expecting same trainer/compatible trainer like quantum trainer
+  	- 	why not use numpy model and quantum trainer in our class, and some cross .fit()- we just want to see if the weights is any different
+  	- 	update getting the below error in first trainer.fit() ` line 140, in get_diagram_output assert isinstance(d, Circuit)
+AssertionError`. i.e something in the train_dataset is not a good circuit..
+if nothing else this we can do dataset by dataset comparison and find out. what is different between khatri code and our code.
+   - 	
    
 
 - todo:
