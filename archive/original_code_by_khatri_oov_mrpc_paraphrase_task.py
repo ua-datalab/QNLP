@@ -164,7 +164,7 @@ with open("data/mrpc_dev_small.txt", encoding='utf-8-sig') as f:
         test_y.append(int(procd_line[0]))
 
 
-MAXLEN = 10
+MAXLEN = 20
 
 
 filt_train_X1 = []
@@ -287,7 +287,7 @@ def run_experiment(nlayers=1, seed=SEED):
     
     
     lmbq_model = NumpyModel.from_diagrams(train_circs, use_jit=True)
-
+    import torch
     trainer = QuantumTrainer(
         lmbq_model,
         loss_function=loss,
@@ -310,7 +310,7 @@ def run_experiment(nlayers=1, seed=SEED):
     train_embeddings, test_embeddings, max_w_param_length = generate_initial_parameterisation(train_circs, test_circs, embedding_model, lmbq_model)
 
     print('BEGINNING QNLP MODEL TRAINING')
-    trainer.fit(train_dataset, logging_step=100)
+    trainer.fit(train_dataset,log_interval=100)
 
     train_preds = lmbq_model.get_diagram_output(train_circs)
     train_loss = loss(train_preds, train_y)
