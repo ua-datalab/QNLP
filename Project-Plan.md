@@ -28,7 +28,15 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
-
+## Oct 18th 2024
+### Mithun doing self hackathon 
+- in mithun_dev branch
+- Our code (v7_merging_best_of_both_v6_andv4) is still stuck at the dimension mismatch between model.weights, and the parameters he is passing
+- so today to find the expected value, i thought i will debug  khatri's original code. (it is now kept in archive/original_code_by_khatri_oov_mrpc_paraphrase_task.py'.
+- lots of good findings
+- 	his train_vocab is written as `'meanwhile__s'`
+- todo: debug both code line by line and find if everything matches, including the idx, _s and even the size of weights and params
+   
 ## October 16th 2024
 ### HACKATHON
 - Originally, Mithun fixed the `.fit()` by simply not inputting any embeddings, and only working with the text in the dataset
