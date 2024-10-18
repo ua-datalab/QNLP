@@ -37,9 +37,8 @@
  	- update: both `*_small` will give good positive count for train and dev if we use `MAXLEN = 20`.
   	- update: still getting the input mismatch in loss
     	- update: oh that's because we are using BCELoss from torch. switching back to his custom loss
-  	  - update: getting the old error of `loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
-                                    ~~^~~~~~~~~~~~~~~
-ValueError: operands could not be broadcast together with shapes (30,2) (30,2,2) `
+  	  - update: getting the old error of `loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss ValueError: operands could not be broadcast together with shapes (30,2) (30,2,2) `
+  	  - i think its time to read the LAMBEQ documentation again. Had last read it in 2022, when my knowledge/consciousness was much much less. So I think its time to read it all paperback to paperback again.
 
 - lots of good findings
 - 	his train_vocab is written as `'meanwhile__s'`
