@@ -255,7 +255,7 @@ for d in tqdm(test_diags_raw):
 from discopy.quantum.gates import CX, Rx, H, Bra, Id
 
 equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
-equality_comparator.draw()
+# equality_comparator.draw()
 
 from lambeq import AtomicType, IQPAnsatz, Sim14Ansatz, Sim15Ansatz
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
@@ -273,11 +273,19 @@ P = AtomicType.PREPOSITIONAL_PHRASE
 
 def run_experiment(nlayers=1, seed=SEED):
     print(f'RUNNING WITH {nlayers} layers')
-    ansatz = Sim15Ansatz({N: 1, S: 1, P:1}, n_layers=nlayers, n_single_qubit_params=3)
+    ansatz = Sim15Ansatz({N: 1, S: 1, P:1}, n_layers=nlayers, n_single_qubit_params=3)    
+    train_circs = [ansatz(d) for d in train_X]
+    test_circs = [ansatz(d)for d in test_X]
+    # train_circs = [ansatz(d) >> equality_comparator for d in train_X]
+    # test_circs = [ansatz(d) >> equality_comparator for d in test_X]
 
-    train_circs = [ansatz(d) >> equality_comparator for d in train_X]
-    test_circs = [ansatz(d) >> equality_comparator for d in test_X]
 
+    # from lambeq import AtomicType, SpiderAnsatz    
+    # ansatz = SpiderAnsatz({N: 1, S: 1, P:1})    
+    # train_circs =  [ansatz(diagram) for diagram in train_X]
+    # test_circs =  [ansatz(diagram) for diagram in test_X]
+    
+    
     lmbq_model = NumpyModel.from_diagrams(train_circs, use_jit=True)
 
     trainer = QuantumTrainer(
