@@ -215,15 +215,17 @@ test_diags2 = parser.sentences2diagrams(filt_test_X2, suppress_exceptions=True)
 
 from collections import Counter
 # We omit any case where the 2 phrases are not parsed to the same type
-joint_diagrams_train = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
-joint_diagrams_test = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
-
+joint_diagrams_train = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
+joint_diagrams_test = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
 
 train_diags_raw = [d for d in joint_diagrams_train if d is not None]
 train_y = np.array([y for d,y in zip(joint_diagrams_train, filt_train_y) if d is not None])
 
 test_diags_raw = [d for d in joint_diagrams_test if d is not None]
 test_y = np.array([y for d,y in zip(joint_diagrams_test, filt_test_y) if d is not None])
+
+
+
 
 print("FINAL DATASET SIZE:")
 print("-----------------------------------")
