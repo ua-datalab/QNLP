@@ -626,49 +626,48 @@ val_labels = val_labels_v2
 test_labels = test_labels_v2
 
 """
-these are now orphan codes, but in reality, these code were there in khatri's original
-code (https://colab.research.google.com/drive/13W_oktxSFMAB6m5Rfvy8vidxuQDrCWwW#scrollTo=0be9c058)
-Mithun@27thsep2024-I have a bad feeling I might have removed all this an year ago, when it was giving "error"
-Clearly my mental state at that time ws so messed pu that all i was trying to do it, somehow get it to work.
-even if it means removing bug filled code...weird/sad but true.
+tehse are codes from original khatri's code. in his case he was using NLI kinda of setup. so he had 
+to use train_diags1 and train_diags2 and had to zip them up. so that part is useless here/since we are using a clasification task
+.
+even the comparison.
 -- 
 """
 from collections import Counter
 # We omit any case where the 2 phrases are not parsed to the same type
 # todo: update: fixed the bug with these guys. add this and the diagrams below back in
-joint_diagrams_train = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
-joint_diagrams_test = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
+# joint_diagrams_train = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
+# joint_diagrams_test = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
 
 
-train_diags_raw = [d for d in joint_diagrams_train if d is not None]
-train_y = np.array([y for d,y in zip(joint_diagrams_train, train_labels) if d is not None])
+# train_diags_raw = [d for d in joint_diagrams_train if d is not None]
+# train_y = np.array([y for d,y in zip(joint_diagrams_train, train_labels) if d is not None])
 
-test_diags_raw = [d for d in joint_diagrams_test if d is not None]
-test_y = np.array([y for d,y in zip(joint_diagrams_test, val_labels) if d is not None])
+# test_diags_raw = [d for d in joint_diagrams_test if d is not None]
+# test_y = np.array([y for d,y in zip(joint_diagrams_test, val_labels) if d is not None])
 
-print("FINAL DATASET SIZE:")
-print("-----------------------------------")
-print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
-print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
+# print("FINAL DATASET SIZE:")
+# print("-----------------------------------")
+# print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
+# print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
 
-from tqdm import tqdm
-from lambeq import Rewriter, remove_cups
+# from tqdm import tqdm
+# from lambeq import Rewriter, remove_cups
 
-rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'connector', 'prepositional_phrase'])
+# rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'connector', 'prepositional_phrase'])
 
-train_X = []
-test_X = []
+# train_X = []
+# test_X = []
 
-for d in tqdm(train_diags_raw):
-    train_X.append(remove_cups(rewriter(d).normal_form()))
+# for d in tqdm(train_diags_raw):
+#     train_X.append(remove_cups(rewriter(d).normal_form()))
 
-for d in tqdm(test_diags_raw):
-    test_X.append(remove_cups(rewriter(d).normal_form()))
+# for d in tqdm(test_diags_raw):
+#     test_X.append(remove_cups(rewriter(d).normal_form()))
 
-from discopy.quantum.gates import CX, Rx, H, Bra, Id
+# from discopy.quantum.gates import CX, Rx, H, Bra, Id
 
-equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
-equality_comparator.draw()
+# equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
+# equality_comparator.draw()
 
 
 
