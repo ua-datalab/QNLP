@@ -300,7 +300,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     """
 
     """#update @16th oct 2024. 
-    this below code was through the shape[2] not equal to shape[1]
+    this below code was what the error: the shape[2] not equal to shape[1]
     this meant,
      
     a) the LHS= qnlp_model.weights is a list of tensors i.e [Tensor([0.9,0.1],req_grad="true"] 
@@ -311,15 +311,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     b) I still dont know why he is initializing the weights of QNLP model
     (which looks like the weights of two classes,..while we are providing
      just the vector of embeddings- what is the relationship between
-      a vector of embeddings and qnlp.weights? find out from KHatri's initial code )
-    ."""
-    assert len(qnlp_model.symbols) == len(qnlp_model.weights)
-    # qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
-    # qnlp_model.weights = nn.ParameterList((initial_param_vector))
+      a vector of embeddings and qnlp.weights? find out from KHatri's initial code ) 
 
-    #note that he is not explicitly returning qnlp_model
-    #todo- ensure that this qnlp_model is well defined in scope
-    #this is bloody python- it will let all crap sneak through.
+      @octr17th2024
+      commenting the code out until i find what its doing
+    ."""
+    assert len(qnlp_model.symbols) == len(qnlp_model.weights)==  len(train_vocab_embeddings) +len(val)
+    # qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
+    
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
 
@@ -387,7 +386,8 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     # """
 
     
-    dict_training_symbols_vs_qnlp_trained_weights = {symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
+    dict_training_symbols_vs_qnlp_trained_weights = {symbol: param for symbol, param in
+                                                      zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
    
    
     """
@@ -402,7 +402,8 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     dict_wrd_in_training_vs_weights = {wrd: np.zeros(max_word_param_length) for wrd in train_vocab_embeddings}
     
     '''for each such word in training vocabulary, 
-      to the empty array/array of zeroes   created above.-
+      to the empty array/array of zeroes   created above.
+      -get ist weights from the qnlp trained weights
     #todo 1) am still not sure why he is touching his nose in a circumambulated way
     # 2)  print and confirm, i think they are repeating the same
     #  weight value for every entry of the array in trained_param_vectors.
