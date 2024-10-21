@@ -28,6 +28,42 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+
+# Oct 21 2024
+- Response to Gus Han Powell:
+	- Why is this called "quantum" NLP when we don't use quantum computing?
+ 		- Theory of quantum physics is key: qbits, angles
+   		- Lambeq calculus is the mathematical framework, developed along with category
+     		- Complexity of the problem determines whether we use an actual QC or a classical computer. As our sentences become more complex, we need more qbits, thus an actual QC
+       		- LLMs look at probability of a word with its neighbor (a counting machine, bottomup approach), this is not used for predictions in a QNLP context. Can an LLM differenciate between a relative subject vs relative object?   
+	- Why do we need a Lambeq framework?
+ 		- QNLP needs category theory 
+ 		- We do not use Chomskian grammar as it is not compatible with Quantum Computing (because QC needs category theory, which uses sets, groups and functions, dependency frameworks does not map to category theory)
+   		- HCG parsers with long sentences cannot be accomodated with hardware
+         	- Lambeq framework: a sentence can contain items from three categories, S, N (anything identifiable as a noun), N/S. It also needs rules to solve chunks to obtain these categories. A given chunk is solved according to the rules in the framework.
+     		- The sentences are parsed to S and N: every S is broken down to S/N, until no S are left
+       		- Thus, simplifying sentence parsing is possible 
+	- What libraries and code are we using?
+		- We use the python library lambeq for this 
+     		- If we move to QC fully, we would use the lambeq library's BobCat parser, which utilizes this framework: it takes the output of a parser (designed based on Lambeq's N/S framework) and turns them into quantum circuits, which can be used downstream
+       			- Converts sentences to diagrams, and uses a ZX diagrams and simplifies sentence diagrams to reduce no. of qbits needed. 
+       		- While using classical computing, we use lambeq python library's spider ansatz: Very simple framework that connects each word in a sentence, ranked equal, to one label
+         		- It reduces the number of qbits needed, and is linear and grows linearly. Just a test case
+           		- Spider Ansatz works like bag of words, so it can be run with an LLM. It's a classical baseline that we use to test our system and have a baseline to test a quantum computing setup 
+		- We still use PyTorch tensors, and code in python.
+ 	-  What is the "theory" that gives us great results?
+  		- Classical system has only 0s and 1s, so no. of parameters needed to encode and process NLP parses and relationships is in the billions
+ 		- But qbits are a good optimized way to do this, hence lwss data needed for training, and less overhead. As sentence grows, no. of needed qbits grows linearly, rather than exponentionally, as with embeddings
+   	- Why do we use a classical computing system, instead of a quantum computing?
+   		- IQPAnsatz in the lambeq package can give us a complete QC system
+   	 	- Current classical system can process and output the quantum circuits into tensors, it is a vector
+	- How do we know that what we are running is a QNLP ?
+ 		- IBM quantum cloud- runs for free, also provides a simulator
+  	- What is our research problem?
+  		- QNLP uses small datasets, so out of vocabulary problem neds to be resolved
+  	 	- Solve this for other languages
+  		- Actually understanding the results   	  
+
 ## Oct 18th 2024
 ### Mithun doing self hackathon 
 - in mithun_dev branch
