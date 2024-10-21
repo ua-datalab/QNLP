@@ -29,7 +29,7 @@
 
 # Meeting Notes
 
-# Oct 21 2024
+## Oct 21 2024
 - Response to Gus Han Powell:
 	- Why is this called "quantum" NLP when we don't use quantum computing?
  		- Theory of quantum physics is key: qbits, angles
