@@ -29,6 +29,9 @@
 
 # Meeting Notes
 
+## Oct 25 2024
+- Continuing discussion from last time on the basics of lambeq's formulation of language.
+
 ## Oct 21 2024
 - Response to Gus Han Powell:
 	- Why is this called "quantum" NLP when we don't use quantum computing?
