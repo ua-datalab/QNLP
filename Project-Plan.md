@@ -31,6 +31,12 @@
 ## Oct 28th 2024
 khatri code is also breaking at .fit() with the error `raise ValueError('Provided arrays must be of equal shape. Got '
 ValueError: Provided arrays must be of equal shape. Got arrays of shape (30, 2, 2) and (30, 2).`
+update; fixed using the same issue below -i.e using BCE loss
+update: khatri code is breaking still at first .fit saying;
+
+switching to our v7 code: still getting assertion error for not circuit as input. WTF?
+
+
 ## OCt 27 2024 mithun self hacking
 Went through khatri code debug line by line 
 
