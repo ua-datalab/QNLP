@@ -95,7 +95,16 @@ ans: assertion error inside first fit? thought we moved beyond that long time ag
  	- update: both `*_small` will give good positive count for train and dev if we use `MAXLEN = 20`.
   	- update: still getting the input mismatch in loss
     	- update: oh that's because we are using BCELoss from torch. switching back to his custom loss
-  	  - update: getting the old error of `loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss ValueError: operands could not be broadcast together with shapes (30,2) (30,2,2) ` note that the 30 here is batch size. so somewhere the dimension between gold y and preds y_hat are getting mismatched..
+  	  - update: getting the old error of `loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss ValueError: operands could not be broadcast together with shapes (30,2) (30,2,2) ` note that the 30 here is batch size. so somewhere the dimension between gold y and preds y_hat are getting mismatched..update: this is the issue with how khatri is writing the loss funciton. Just use bce from torch instead.
+  	  - update: that fixed the issue. i.e using our own accuracy instead of what khatri defined. Now getting another error
+  	  - `File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/modules/loss.py", line 731, in forward
+    return F.binary_cross_entropy_with_logits(input, target,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/functional.py", line 3223, in binary_cross_entropy_with_logits
+    if not (target.size() == input.size()):
+            ^^^^^^^^^^^^^
+TypeError: 'int' object is not callable`
+Note that all this was fixed in our v7 code, just that we neve documented it.
   	 
   	  - 
   	  - i think its time to read the LAMBEQ documentation again. Had last read it in 2022, when my knowledge/consciousness was much much less. So I think its time to read it all paperback to paperback again.
