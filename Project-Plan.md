@@ -29,6 +29,23 @@
 
 # Meeting Notes
 
+## OCt 27 2024 mithun self hacking
+Went through khatri code debug line by line 
+
+In khatri code, his vocab has friday_s while our code is removing the _s part.
+
+train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
+
+Also max_word_param_length- make sure spider ansatz gives some number- maybe try it out in ipython, or switch to tensoransatz.
+If we are using Quantum trainer, why exactly are we doing classical parsers? why not switch to bobcat?
+
+ max_word_param_length = max(max(int(symb.name.rsplit('_', 1)[1]) for d in train_circuits for symb in d.free_symbols),
+                            max(int(symb.name.rsplit('_', 1)[1]) for d in test_circuits for symb in d.free_symbols)) + 1
+
+Qn) what is the exact status of our v7 code as of now
+ans: assertion error inside first fit? thought we moved beyond that long time ago
+
+   
 ## Oct 25 2024
 - Continuing discussion from last time on the basics of lambeq's formulation of language.
 
