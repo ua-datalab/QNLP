@@ -28,7 +28,9 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
-
+## Oct 28th 2024
+khatri code is also breaking at .fit() with the error `raise ValueError('Provided arrays must be of equal shape. Got '
+ValueError: Provided arrays must be of equal shape. Got arrays of shape (30, 2, 2) and (30, 2).`
 ## OCt 27 2024 mithun self hacking
 Went through khatri code debug line by line 
 
