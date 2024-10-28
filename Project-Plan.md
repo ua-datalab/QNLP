@@ -31,8 +31,17 @@
 ## Oct 28th 2024
 khatri code is also breaking at .fit() with the error `raise ValueError('Provided arrays must be of equal shape. Got '
 ValueError: Provided arrays must be of equal shape. Got arrays of shape (30, 2, 2) and (30, 2).`
-update; fixed using the same issue below -i.e using BCE loss
+
+update; fixed using the same issue below from last week-i.e using BCE loss
+
 update: khatri code is breaking still at first .fit saying;
+`File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/modules/loss.py", line 731, in forward
+    return F.binary_cross_entropy_with_logits(input, target,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/functional.py", line 3223, in binary_cross_entropy_with_logits
+    if not (target.size() == input.size()):
+            ^^^^^^^^^^^^^
+TypeError: 'int' object is not callable`
 
 switching to our v7 code: still getting assertion error for not circuit as input. WTF?
 
