@@ -179,7 +179,17 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     # update@sep29th2024. This is how the free_symbols look like.
     # distorting_0_s- right now we don't know what 0 or s stands for. My
     # guess after reading only 1958 paper is that s is sentence, which is part of the 
-    # 2 fundamental units lambek specifices in 1958 paper- n and s"""
+    # 2 fundamental units lambek specifices in 1958 paper- n and s
+    # 
+    # update@28thoctober: no that is not correct. refer https://cqcl.github.io/lambeq-docs/tutorials/training-symbols.html
+    # 
+    # details: free_symbols are essentially showing how many
+    qbits are tehre per word. Or if its a tensor, what dimension it is in. For example
+    say that in a system we defined the tensor ansatz as having Noun N having 4 and S having 2 dimensions
+    in the sentence "john walks in the park"- john is 4 dimension (since) its plain n,
+    while the preposition in is of size 256. Because it is of type in__s.r@n.r.r@n.r@s@n.l
+    which if you open up the dimensions we get 2.4.4.2.4=256. Note that rarely you will have so many qbits.
+    # """
     # train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
     train_vocab=create_vocab_from_circuits(train_circuits)
     val_vocab=create_vocab_from_circuits(val_circuits)
@@ -600,6 +610,7 @@ def spanish_diagrams(list_sents,labels):
                 print(f"no of tokens inthis sentence is {len(tokenized)}")
                 continue
         spiders_diagram = spiders_reader.sentence2diagram(sent)
+        # spiders_diagram.draw()
 
         """was getting error, [2] is not a valid shape for
          ... this was marked as a soluion on the internet for """
@@ -815,8 +826,8 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
-        train_circuits, val_circuits, embedding_model, qnlp_model)
+    # train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
+    #     train_circuits, val_circuits, embedding_model, qnlp_model)
 
     #run ONLY the QNLP model.i.e let it train on the train_dataset. and test on val_dataset
     #todo:  somewhere you use the term val and somehwere else you use the term test.
