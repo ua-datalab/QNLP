@@ -362,7 +362,8 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       commenting the code out until i find what its doing
     ."""
     # assert len(qnlp_model.symbols) == len(qnlp_model.weights)==  len(train_vocab_embeddings) +len(val_vocab_embeddings)
-    qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
+    assert len( qnlp_model.weights) == len(initial_param_vector)
+    qnlp_model.weights = np.array(initial_param_vector)
     
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
@@ -582,8 +583,8 @@ def read_data(filename):
     with open(filename) as f:
         for line in f:
             t = float(line[0])
-            labels.append([t, 1-t])
-            # labels.append(int(t))
+            # labels.append([t, 1-t])
+            labels.append(int(t))
             sentences.append(line[1:].strip())
     return labels, sentences
 
@@ -770,7 +771,11 @@ print(f'RUNNING WITH {nlayers} layers')
     #mithuns comment @26thsep2024:pytorch model was the only one going well
     #  with spider reader and spider anstaz
     #also todo: should this not contain both val and train circuits as inputz?
-    qnlp_model = PytorchModel.from_diagrams(train_circuits)
+    # qnlp_model = PytorchModel.from_diagrams(train_circuits)
+
+    from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
+    qnlp_model = NumpyModel.from_diagrams(train_circuits)
+    
 
     
     print("length of each circuit in train is:")
@@ -824,17 +829,29 @@ print(f'RUNNING WITH {nlayers} layers')
     # sweep_id = wandb.sweep(sweep_config, project="uspantekan_spider_tuning")
     # wandb_logger = WandbLogger()"""
 
-    trainer = PytorchTrainer(
-            model=qnlp_model,
-            loss_function=torch.nn.BCEWithLogitsLoss(),
-            optimizer=torch.optim.AdamW,
-            learning_rate=LEARNING_RATE,
-            epochs=EPOCHS,
-            evaluate_functions=eval_metrics,
-            evaluate_on_train=True,
-            verbose='text',
-            seed=SEED)
+    # trainer = PytorchTrainer(
+    #         model=qnlp_model,
+    #         loss_function=torch.nn.BCEWithLogitsLoss(),
+    #         optimizer=torch.optim.AdamW,
+    #         learning_rate=LEARNING_RATE,
+    #         epochs=EPOCHS,
+    #         evaluate_functions=eval_metrics,
+    #         evaluate_on_train=True,
+    #         verbose='text',
+    #         seed=SEED)
     
+    trainer = QuantumTrainer(
+        qnlp_model,        
+        loss_function=torch.nn.BCEWithLogitsLoss(),
+        epochs=EPOCHS,
+        optimizer=SPSAOptimizer,
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
+        evaluate_functions=eval_metrics,
+        evaluate_on_train=True,
+        verbose = 'text',
+        seed=seed
+    )
+
     #get the embeddings etc to be used in models 2 through 4. Note
     # that one very interesting thing that happens as far as model 1is considered is that
     # inside the function generate_initial_parameterisation() the QNLP
