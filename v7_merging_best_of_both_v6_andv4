@@ -139,15 +139,31 @@ So creating a separate function itself which will be called only
 for spider ansatz
 todo: either raise a pull request with LAMBEQ guys or find out 
 if they are doing this deliebrately and its my understanding which is lacking.
-spider ansatz: aldea_\\_0_s or así_0__s
-other ansatz:aldea_s_0 #so we can use cleaned_wrd= symb.name.rsplit('_', 1)[0]
+spider ansatz does: aldea_0__s or así_0__s
+
+while other ansatz:aldea_s_0 #so we can use cleaned_wrd= symb.name.rsplit('_', 1)[0]
+
 also todo: confirm if its a spider ansatz thing only. or are there any other ansatz that does that
 Khatri's code uses IQP, Sim14 and Sim15, so we know that doesn't
-todo: clean up accents/utf-8 eventually
+
+update @oct29th2024. 
+- Found that in khatri code he retains the __s i.e aldea_0__s becomes
+aldea__s. So going to put that back in
+
+- And also confirmed. Spider ansatz is messing up the order
+In khatri's code using sim 15 he uses the format aldea__s_2 
+i.e the s comes first and then 2
+
+todo: clean up accents/utf-8 eventually?
 """
 def clean_wrd_for_spider_ansatz(wrd):
-    cleaned_wrd=wrd.lower().split('_')[0].replace("(","").replace(")","").replace('\\','').replace(",","")
-    return cleaned_wrd
+    split_word= wrd.lower().split('_')
+    cleaned_wrd=split_word[0].replace("(","").replace(")","").replace('\\','').replace(",","")
+
+#     //-update @oct29th2024.  Found that in khatri code he retains the __s i.e aldea_0__s becomes
+# aldea__s. So going to put that back in
+    wrd_with__s= cleaned_wrd+"__" +split_word[3]
+    return wrd_with__s
 
 """given a set of circuits (e.g. train_circuit) extract the word from the 
 symbol and create a dictionary full of it
@@ -190,11 +206,20 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     # out of the 89 words in test, 33 are not present in training, so they are OOV
     print(len(val_vocab.union(train_vocab)), len(train_vocab), len(val_vocab))    
     print(f"OOV word count: i.e out of {len(val_vocab)} words in the testing vocab there are  {len(val_vocab - train_vocab)} words that are not found in training. So they are OOV")
-    print(f"list of OOV words are {val_vocab - train_vocab}")     
+    oov_words=val_vocab - train_vocab
+    print(f"list of OOV words are {oov_words}")     
 
     #todo: find the meaning of symbol count- what is the difference between symbol count and OOV or train_vocab
-    n_oov_symbs = len({symb.name for d in val_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols})
+    """update @29thOct2024- Symbol is the term used for the word + number of qbits or dimension
+    e.g aldea_0__s means, that symbol is for the word aldea for for its 1st qbit/dimension
+    similarly aldea_1__s means it is the symbol for the 2nd qbit etc.
+    So ideally the count of OOV symbols must be more than that of oov words.
+    that is because most of the words will have more than 1 symbols.
+    """
+    oov_symbols={symb.name for d in val_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols}
+    n_oov_symbs = len(oov_symbols)
     print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in val_circuits for symb in d.free_symbols})}')
+    print(f"the symbols that are in symbol count but not in word count are:{oov_symbols-oov_words}")
 
     #######note that everything to do with OOV ends here. So far it was just FYI, there is OOV in this dataset's test partition
     
@@ -228,12 +253,17 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
         """ #for each word in train and test vocab get its embedding from fasttext
         #note that even though the symbols per se have _0_, in the train_vocab_embedding 
         # dictionary it is stored in the
-        #format of {wrd: embedding}- i.e o
-        # nly the word aldea out of aldea_0_ is separated out and used.
+        #format of {wrd: embedding}- i.e only the word aldea out of aldea_0_ is separated out and used.
         # mithuns comment @26thsep2024: note that this is a hack, and ideally such data format
         # based difference shouldnt occur. 
-        # TODO: ran khastri code on MRPC and confirm who is screwing up.
+        # TODO: run khastri code on MRPC and confirm who is screwing up.
         # is it spider ansatz which is messing up the data format or is it us?
+
+        update@october29th2024: so in khatri code when he is giving the word
+        to the embedding model he is using plain text word i.e "aldea"
+        but when he is storing it in the dict train_vocab_embeddings, the key
+        goes back to "aldea__s" while the value is the vector/embedding you got from
+        fasttext
         # """
         train_vocab_embeddings = get_vocab_emb_dict(train_vocab)
         val_vocab_embeddings = get_vocab_emb_dict(val_vocab)
