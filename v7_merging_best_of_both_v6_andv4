@@ -78,7 +78,6 @@ sig = torch.sigmoid
 def accuracy(y_hat, y):
         return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  # half due to double-counting
 
-
 eval_metrics = {"acc": accuracy}
 spacy_tokeniser = SpacyTokeniser()
 
@@ -179,17 +178,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     # update@sep29th2024. This is how the free_symbols look like.
     # distorting_0_s- right now we don't know what 0 or s stands for. My
     # guess after reading only 1958 paper is that s is sentence, which is part of the 
-    # 2 fundamental units lambek specifices in 1958 paper- n and s
-    # 
-    # update@28thoctober: no that is not correct. refer https://cqcl.github.io/lambeq-docs/tutorials/training-symbols.html
-    # 
-    # details: free_symbols are essentially showing how many
-    qbits are tehre per word. Or if its a tensor, what dimension it is in. For example
-    say that in a system we defined the tensor ansatz as having Noun N having 4 and S having 2 dimensions
-    in the sentence "john walks in the park"- john is 4 dimension (since) its plain n,
-    while the preposition in is of size 256. Because it is of type in__s.r@n.r.r@n.r@s@n.l
-    which if you open up the dimensions we get 2.4.4.2.4=256. Note that rarely you will have so many qbits.
-    # """
+    # 2 fundamental units lambek specifices in 1958 paper- n and s"""
     # train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
     train_vocab=create_vocab_from_circuits(train_circuits)
     val_vocab=create_vocab_from_circuits(val_circuits)
@@ -327,9 +316,8 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       @octr17th2024
       commenting the code out until i find what its doing
     ."""
-    # assert len(qnlp_model.symbols) == len(qnlp_model.weights)==  len(train_vocab_embeddings) +len(val)
-    qnlp_model.weights = np.array(initial_param_vector)
-    
+    # assert len(qnlp_model.symbols) == len(qnlp_model.weights)==  len(train_vocab_embeddings) +len(val_vocab_embeddings)
+    # qnlp_model.weights = nn.ParameterList(np.array(initial_param_vector))
     
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
@@ -610,7 +598,6 @@ def spanish_diagrams(list_sents,labels):
                 print(f"no of tokens inthis sentence is {len(tokenized)}")
                 continue
         spiders_diagram = spiders_reader.sentence2diagram(sent)
-        # spiders_diagram.draw()
 
         """was getting error, [2] is not a valid shape for
          ... this was marked as a soluion on the internet for """
@@ -639,60 +626,60 @@ val_labels = val_labels_v2
 test_labels = test_labels_v2
 
 """
-tehse are codes from original khatri's code. in his case he was using NLI kinda of setup. so he had 
-to use train_diags1 and train_diags2 and had to zip them up. so that part is useless here/since we are using a clasification task
-.
-even the comparison.
+these are now orphan codes, but in reality, these code were there in khatri's original
+code (https://colab.research.google.com/drive/13W_oktxSFMAB6m5Rfvy8vidxuQDrCWwW#scrollTo=0be9c058)
+Mithun@27thsep2024-I have a bad feeling I might have removed all this an year ago, when it was giving "error"
+Clearly my mental state at that time ws so messed pu that all i was trying to do it, somehow get it to work.
+even if it means removing bug filled code...weird/sad but true.
 -- 
-"""
 from collections import Counter
 # We omit any case where the 2 phrases are not parsed to the same type
-# todo: update: fixed the bug with these guys. add this and the diagrams below back in
-# joint_diagrams_train = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
-# joint_diagrams_test = [d1 @ d2.r if d1 and d2 and d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
+joint_diagrams_train = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
+joint_diagrams_test = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
 
 
-# train_diags_raw = [d for d in joint_diagrams_train if d is not None]
-# train_y = np.array([y for d,y in zip(joint_diagrams_train, train_labels) if d is not None])
+train_diags_raw = [d for d in joint_diagrams_train if d is not None]
+train_y = np.array([y for d,y in zip(joint_diagrams_train, filt_train_y) if d is not None])
 
-# test_diags_raw = [d for d in joint_diagrams_test if d is not None]
-# test_y = np.array([y for d,y in zip(joint_diagrams_test, val_labels) if d is not None])
+test_diags_raw = [d for d in joint_diagrams_test if d is not None]
+test_y = np.array([y for d,y in zip(joint_diagrams_test, filt_test_y) if d is not None])
 
-# print("FINAL DATASET SIZE:")
-# print("-----------------------------------")
-# print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
-# print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
+print("FINAL DATASET SIZE:")
+print("-----------------------------------")
+print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
+print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
 
-# from tqdm import tqdm
-# from lambeq import Rewriter, remove_cups
+from tqdm import tqdm
+from lambeq import Rewriter, remove_cups
 
-# rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'connector', 'prepositional_phrase'])
+rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'connector', 'prepositional_phrase'])
 
-# train_X = []
-# test_X = []
+train_X = []
+test_X = []
 
-# for d in tqdm(train_diags_raw):
-#     train_X.append(remove_cups(rewriter(d).normal_form()))
+for d in tqdm(train_diags_raw):
+    train_X.append(remove_cups(rewriter(d).normal_form()))
 
-# for d in tqdm(test_diags_raw):
-#     test_X.append(remove_cups(rewriter(d).normal_form()))
+for d in tqdm(test_diags_raw):
+    test_X.append(remove_cups(rewriter(d).normal_form()))
 
-# from discopy.quantum.gates import CX, Rx, H, Bra, Id
+from discopy.quantum.gates import CX, Rx, H, Bra, Id
 
-# equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
-# equality_comparator.draw()
+equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
+equality_comparator.draw()
 
+"""
 
 
 """
 print and assert statements for debugging
+"""
 assert len(train_diagrams)== len(train_labels_v2)
 print(f"count of train, test, val elements respectively are: ")
 print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
 assert len(train_diagrams)== len(train_labels)
 assert len(val_diagrams)== len(val_labels)
 assert len(test_diagrams)== len(test_labels)
-"""
 
 def run_experiment(nlayers=1, seed=SEED):
 
@@ -703,7 +690,6 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-
     ansatz = ansatz_to_use({AtomicType.NOUN: Dim(4),
                         AtomicType.SENTENCE: Dim(2)
                         #    AtomicType.PREPOSITIONAL_PHRASE: Dim(2),
@@ -740,10 +726,6 @@ print(f'RUNNING WITH {nlayers} layers')
     #  with spider reader and spider anstaz
     #also todo: should this not contain both val and train circuits as inputz?
     qnlp_model = PytorchModel.from_diagrams(train_circuits)
-
-    from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
-    qnlp_model = NumpyModel.from_diagrams(train_circuits)
-      
 
     
     print("length of each circuit in train is:")
@@ -797,28 +779,16 @@ print(f'RUNNING WITH {nlayers} layers')
     # sweep_id = wandb.sweep(sweep_config, project="uspantekan_spider_tuning")
     # wandb_logger = WandbLogger()"""
 
-    # trainer = PytorchTrainer(
-    #         model=qnlp_model,
-    #         loss_function=torch.nn.BCEWithLogitsLoss(),
-    #         optimizer=torch.optim.AdamW,
-    #         learning_rate=LEARNING_RATE,
-    #         epochs=EPOCHS,
-    #         evaluate_functions=eval_metrics,
-    #         evaluate_on_train=True,
-    #         verbose='text',
-    #         seed=SEED)
-    
-    trainer = QuantumTrainer(
-        qnlp_model,        
-        loss_function=torch.nn.BCEWithLogitsLoss(),
-        epochs=EPOCHS,
-        optimizer=SPSAOptimizer,
-        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
-        evaluate_functions=eval_metrics,
-        evaluate_on_train=True,
-        verbose = 'text',
-        seed=seed
-    )
+    trainer = PytorchTrainer(
+            model=qnlp_model,
+            loss_function=torch.nn.BCEWithLogitsLoss(),
+            optimizer=torch.optim.AdamW,
+            learning_rate=LEARNING_RATE,
+            epochs=EPOCHS,
+            evaluate_functions=eval_metrics,
+            evaluate_on_train=True,
+            verbose='text',
+            seed=SEED)
     
     #get the embeddings etc to be used in models 2 through 4. Note
     # that one very interesting thing that happens as far as model 1is considered is that
@@ -826,8 +796,8 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    # train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
-    #     train_circuits, val_circuits, embedding_model, qnlp_model)
+    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
+        train_circuits, val_circuits, embedding_model, qnlp_model)
 
     #run ONLY the QNLP model.i.e let it train on the train_dataset. and test on val_dataset
     #todo:  somewhere you use the term val and somehwere else you use the term test.
@@ -1057,5 +1027,4 @@ for tf_seed in tf_seeds:
     for nl in [3,2,1]:
         this_seed_results.append(run_experiment(nl, tf_seed))
     compr_results[tf_seed] = this_seed_results
-
 
