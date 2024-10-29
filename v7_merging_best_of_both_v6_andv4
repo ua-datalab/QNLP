@@ -297,15 +297,20 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
-            #@sep2nd2024/ end of day: getting key error for lots of words - e.g. aldea..but why are words 
+            """#@sep2nd2024/ end of day: getting key error for lots of words - e.g. aldea..but why are words 
             # in qnlpmodel.symbols not getting the fasttext emb on the fly? why are we separating train_embeddings earlier?        
             #what is the meaning of symbols in qnlp.model
             #todo a) read the lambeq documentation on symbols
             #  b) read the 2010 discocat and CQM paper onwards up, chronologically
             #no point turning knobs without deeply understanding what symbols do
+            
             #todo:compare the format ith mrpc data, and see if he is storing the initial param vector- and symbols with _0_ or not?
-            if wrd.lower() in train_vocab_embeddings:
-                initial_param_vector.append(train_vocab_embeddings[wrd.lower()][int(idx)])
+            # update@29th 0ct 2024. a) done
+            #  b) done. Refer definition of symbol in comments near line 223
+            # b) yes he is appending just the first element of the embedding as an entry to 
+            # initial params."""
+            if cleaned_wrd_with_type in train_vocab_embeddings:
+                initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
             else:
                 '''
                 #todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
@@ -321,7 +326,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 found that this word yo, was OOV/not in fasttext emb
                 found that this word yyyyyy was OOV/not in fasttext emb
                 '''
-                print(f"found that this word {wrd} was OOV/not in fasttext emb")
+                print(f"found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
 
     """
     Set the intialization of QNLP model's weight as that of the embeddings of each word
