@@ -137,7 +137,7 @@ Note that all this was fixed in our v7 code, just that we neve documented it.
 - 	next find if qnlp_model using pytorch is different in weights than when using numpy model
 	- 	answer: at initialization both are empty lists
  	- 	getting error with numpy model when used with pytorch trainer. its expecting same trainer/compatible trainer like quantum trainer
-  	- 	why not use numpy model and quantum trainer in our class, and some cross .fit()- we just want to see if the weights is any different
+  	- 	why not use numpy model and quantum trainer in our class, and some cross .fit()- we just want to see if the weights is any different. answer: yes that fixed the shape[2] error. But now getting assert circuit error.
   	- 	update getting the below error in first trainer.fit() ` line 140, in get_diagram_output assert isinstance(d, Circuit)
 AssertionError`. i.e something in the train_dataset is not a good circuit..
 if nothing else this we can do dataset by dataset comparison and find out. what is different between khatri code and our code.
