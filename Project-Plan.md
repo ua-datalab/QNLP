@@ -27,7 +27,13 @@
 - Save code to public repository, so it can be opened on Cyverse and run on colab: [https://github.com/ua-datalab/QNLP/blob/main/](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
 - Cyverse has resource allocations- so all big training done there. Example: 
 
+
+
 # Meeting Notes
+
+## Oct 30th 2024
+- got code to train on OOV model also. First time ever. Now trying to use it to predict on val set.
+
 ## Oct 28th 2024
 khatri code is also breaking at .fit() with the error `raise ValueError('Provided arrays must be of equal shape. Got '
 ValueError: Provided arrays must be of equal shape. Got arrays of shape (30, 2, 2) and (30, 2).`
@@ -137,7 +143,7 @@ Note that all this was fixed in our v7 code, just that we neve documented it.
 - 	next find if qnlp_model using pytorch is different in weights than when using numpy model
 	- 	answer: at initialization both are empty lists
  	- 	getting error with numpy model when used with pytorch trainer. its expecting same trainer/compatible trainer like quantum trainer
-  	- 	why not use numpy model and quantum trainer in our class, and some cross .fit()- we just want to see if the weights is any different. answer: yes that fixed the shape[2] error. But now getting assert circuit error.
+  	- 	why not use numpy model and quantum trainer in our class, and some cross .fit()- we just want to see if the weights is any different. answer: yes that fixed the shape[2] error. But now getting assert circuit error. update. Shape[2] error almost always means the weights of the qnlp.model is expecting a tuple of 2 and you are giving it just 1. or vice versa
   	- 	update getting the below error in first trainer.fit() ` line 140, in get_diagram_output assert isinstance(d, Circuit)
 AssertionError`. i.e something in the train_dataset is not a good circuit..
 if nothing else this we can do dataset by dataset comparison and find out. what is different between khatri code and our code.
