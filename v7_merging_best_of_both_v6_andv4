@@ -547,7 +547,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
 
     return OOV_NN_model
 
-def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, test_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
+def evaluate_val_set(pred_model, val_circuits, val_labels, trained_params, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
     """
     So this is where we do the final testing (even if its over dev)
     Here they are sending 
@@ -555,7 +555,7 @@ def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, te
     b) test circuits, test_labels- what it says
     c) trained_params: trained_wts from the model 1- qnlp model (my guess is he is going to assign these weights to the 
     newly created model. Though why he is doing it in a circumambulated way while he could have directly 
-    used qnlp_model is beyond me)
+    used qnlp_model i.e model 1 is beyond me)
     d) test_vocab_embeddings: Take every word in test/val set, give it to fasttext, and get their embeddings
     e) max_word_param_length: refer function get_max_word_param_length
     f) oov_strategy= picking one hardcoded one from [zero,embed, model,random etc]- basically this is where you 
@@ -567,7 +567,7 @@ def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, te
 
     pred_parameter_map = {}
     #Use the words from train wherever possible, else use DNN prediction
-    for wrd, embedding in test_vocab_embeddings.items():
+    for wrd, embedding in val_vocab_embeddings.items():
         if OOV_strategy == 'model':
             """
             for each word in test/dev vocabulary, give the word as input to model 3 (the NN model also called DNN here)
@@ -609,7 +609,7 @@ def evaluate_test_set(pred_model, test_circuits, test_labels, trained_params, te
     #use the model now to create predictions on the test set.
     preds = pred_model.get_diagram_output(test_circuits)
 
-    return loss(preds, test_labels), acc(preds, test_labels)
+    return loss(preds, val_labels), acc(preds, val_labels)
 
 def read_data(filename):
     labels, sentences = [], []
@@ -1035,9 +1035,9 @@ tensor([-0.0098,  0.7008], requires_grad=True)
 
 
     
-    smart_loss, smart_acc = evaluate_test_set(prediction_model,
-                                                test_circuits,
-                                                test_labels,
+    smart_loss, smart_acc = evaluate_val_set(prediction_model,
+                                                val_circuits,
+                                                val_labels,
                                                 trained_wts,
                                                 val_embeddings,
                                                 max_w_param_length,
@@ -1045,18 +1045,18 @@ tensor([-0.0098,  0.7008], requires_grad=True)
                                                 OOV_model=NN_model)
     print('Evaluating EMBED model')
     #This is where he is directly using the embeddings of fasttext model as the weigh of prediction model- absolute crap/used only for creating random baseline
-    embed_loss, embed_acc = evaluate_test_set(prediction_model,
-                                              test_circuits,
-                                              test_labels,
+    embed_loss, embed_acc = evaluate_val_set(prediction_model,
+                                              val_circuits,
+                                                val_labels,
                                               trained_wts,
                                               val_embeddings,
                                               max_w_param_length,
                                               OOV_strategy='embed')
     
     print('Evaluating ZEROS model')
-    zero_loss, zero_acc = evaluate_test_set(prediction_model,
-                                              test_circuits,
-                                              test_labels,
+    zero_loss, zero_acc = evaluate_val_set(prediction_model,
+                                              val_circuits,
+                                                val_labels,
                                               trained_wts,
                                               val_embeddings,
                                               max_w_param_length,
@@ -1076,7 +1076,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     for _ in range(1000):
 
 
-        rl, ra = evaluate_test_set(prediction_model,
+        rl, ra = evaluate_val_set(prediction_model,
                                    test_circuits,
                                    test_labels,
                                    trained_wts,
