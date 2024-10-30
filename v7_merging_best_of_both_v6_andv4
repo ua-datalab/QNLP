@@ -33,9 +33,17 @@ import fasttext as ft
 from lambeq import PytorchTrainer
 from lightning.pytorch.loggers import WandbLogger
 from lambeq.backend.tensor import Dim
-from lambeq import AtomicType, SpiderAnsatz
+from lambeq import AtomicType
 from lambeq import Dataset
-ansatz_to_use = SpiderAnsatz
+from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
+from lambeq import TensorAnsatz,SpiderAnsatz
+from lambeq import BobcatParser,spiders_reader
+
+parser_to_use = spiders_reader  #[BobcatParser(verbose='text'), spiders_reader]
+ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15,TensorAnsatz ]
+model_to_use=  PytorchModel #[numpy, pytorch]
+trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+
 embedding_model = ft.load_model('./embeddings-l-model.bin')
 #todo: find what maxparams is for
 MAXPARAMS = 300
@@ -94,7 +102,7 @@ if(USE_MRPC_DATA):
 
 
 import os
-from lambeq import BobcatParser
+
 
 """go through all thecircuits in training data, 
     and pick the one which has highest type value
@@ -310,7 +318,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
             # b) yes he is appending just the first element of the embedding as an entry to 
             # initial params."""
             if cleaned_wrd_with_type in train_vocab_embeddings:
-                initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
+                if model_to_use == PytorchModel:
+                    # initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx),1-int(idx)])
+                    val1= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)]
+                    val2= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)+1]
+                    tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding
+                    initial_param_vector.append(tup)
+                else:
+                    initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
             else:
                 '''
                 #todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
@@ -363,7 +378,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     ."""
     # assert len(qnlp_model.symbols) == len(qnlp_model.weights)==  len(train_vocab_embeddings) +len(val_vocab_embeddings)
     assert len( qnlp_model.weights) == len(initial_param_vector)
-    qnlp_model.weights = np.array(initial_param_vector)
+    qnlp_model.weights = nn.ParameterList(initial_param_vector)
     
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
@@ -583,8 +598,10 @@ def read_data(filename):
     with open(filename) as f:
         for line in f:
             t = float(line[0])
-            # labels.append([t, 1-t])
-            labels.append(int(t))
+            if model_to_use == PytorchModel:
+                labels.append([t, 1-t])
+            else:
+                labels.append(int(t))
             sentences.append(line[1:].strip())
     return labels, sentences
 
@@ -617,8 +634,6 @@ quantum traineres.
 
 # """
 
-from lambeq import spiders_reader
-#parser = BobcatParser(verbose='text')
 
 """spanish_diagrams is a dummy function I had created once when I had to test
 both MRPC and uspantekan/spanish data at the same time. it is very useful in debugging
@@ -643,7 +658,7 @@ def spanish_diagrams(list_sents,labels):
             if len(tokenized)> 30:
                 print(f"no of tokens inthis sentence is {len(tokenized)}")
                 continue
-        spiders_diagram = spiders_reader.sentence2diagram(sent)
+        spiders_diagram = parser_to_use.sentence2diagram(sent)
 
         """was getting error, [2] is not a valid shape for
          ... this was marked as a soluion on the internet for """
@@ -766,7 +781,7 @@ print(f'RUNNING WITH {nlayers} layers')
     test_circuits = [ansatz(diagram) for diagram in test_diagrams]
 
 
-    from lambeq import PytorchModel
+    
 
     #mithuns comment @26thsep2024:pytorch model was the only one going well
     #  with spider reader and spider anstaz
@@ -774,7 +789,8 @@ print(f'RUNNING WITH {nlayers} layers')
     # qnlp_model = PytorchModel.from_diagrams(train_circuits)
 
     from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
-    qnlp_model = NumpyModel.from_diagrams(train_circuits)
+    # qnlp_model = NumpyModel.from_diagrams(train_circuits)
+    qnlp_model = model_to_use.from_diagrams(train_circuits)
     
 
     
@@ -829,28 +845,28 @@ print(f'RUNNING WITH {nlayers} layers')
     # sweep_id = wandb.sweep(sweep_config, project="uspantekan_spider_tuning")
     # wandb_logger = WandbLogger()"""
 
-    # trainer = PytorchTrainer(
-    #         model=qnlp_model,
-    #         loss_function=torch.nn.BCEWithLogitsLoss(),
-    #         optimizer=torch.optim.AdamW,
-    #         learning_rate=LEARNING_RATE,
-    #         epochs=EPOCHS,
-    #         evaluate_functions=eval_metrics,
-    #         evaluate_on_train=True,
-    #         verbose='text',
-    #         seed=SEED)
+    trainer = trainer_to_use(
+            model=qnlp_model,
+            loss_function=torch.nn.BCEWithLogitsLoss(),
+            optimizer=torch.optim.AdamW,
+            learning_rate=LEARNING_RATE,
+            epochs=EPOCHS,
+            evaluate_functions=eval_metrics,
+            evaluate_on_train=True,
+            verbose='text',
+            seed=SEED)
     
-    trainer = QuantumTrainer(
-        qnlp_model,        
-        loss_function=torch.nn.BCEWithLogitsLoss(),
-        epochs=EPOCHS,
-        optimizer=SPSAOptimizer,
-        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
-        evaluate_functions=eval_metrics,
-        evaluate_on_train=True,
-        verbose = 'text',
-        seed=seed
-    )
+    # trainer = QuantumTrainer(
+    #     qnlp_model,        
+    #     loss_function=torch.nn.BCEWithLogitsLoss(),
+    #     epochs=EPOCHS,
+    #     optimizer=SPSAOptimizer,
+    #     optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
+    #     evaluate_functions=eval_metrics,
+    #     evaluate_on_train=True,
+    #     verbose = 'text',
+    #     seed=seed
+    # )
 
     #get the embeddings etc to be used in models 2 through 4. Note
     # that one very interesting thing that happens as far as model 1is considered is that
