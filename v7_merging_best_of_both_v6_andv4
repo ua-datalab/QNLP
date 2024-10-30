@@ -620,15 +620,19 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     """
 
     assert len(pred_model.symbols) == len(pred_weight_vector)
-    assert type(pred_model.weights) == type(pred_weight_vector)
-    # assert len(pred_model.weights) == len(pred_weight_vector)
-    pred_model.weights = pred_weight_vector
+    assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
+    # assert len(pred_model.weights) == len(pred_weight_vector)    
+    pred_model.weights = nn.ParameterList(pred_weight_vector)
 
     
     #use the model now to create predictions on the test set.
     preds = pred_model.get_diagram_output(val_circuits)
+    loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+    l= loss_pyTorch(preds, torch.tensor(val_labels))
+    print(f"val loss: {l}")
+    a=accuracy(preds, val_labels)
 
-    return loss(preds, val_labels), accuracy(preds, val_labels)
+    return l, a
 
 def read_data(filename):
     labels, sentences = [], []
@@ -1008,14 +1012,17 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     # import sys
     # sys.exit(1)
 
+    train_preds = qnlp_model.get_diagram_output(train_circuits)
+    # loss_pyTorch = nn.CrossEntropyLoss()
+    loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+    l= loss_pyTorch(train_preds, torch.tensor(train_labels))
+    print(f"TRAIN STATS: {l}")
+
 
     """
     
 
-    # train_preds = qnlp_model.get_diagram_output(train_circuits)
-    # loss_pyTorch = nn.CrossEntropyLoss()
-    # loss_pyTorch(train_preds, train_labels)
-    # print(f"TRAIN STATS: {loss_pyTorch}")
+  
 
     
 
@@ -1062,6 +1069,17 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     
     #note/todo: differentiate difference between test and val. If it is val here, then make sure we are not passing val inside model1.fit()--done
     prediction_model = model_to_use.from_diagrams(val_circuits)
+
+    trainer = trainer_to_use(
+            model=prediction_model,
+            loss_function=torch.nn.BCEWithLogitsLoss(),
+            optimizer=torch.optim.AdamW,
+            learning_rate=LEARNING_RATE,
+            epochs=EPOCHS,
+            evaluate_functions=eval_metrics,
+            evaluate_on_train=True,
+            verbose='text',
+            seed=SEED)
 
     """#Create a dictionary where key is word and weights are the trained weights after QNLP_model was
     trained. 
