@@ -399,18 +399,19 @@ def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_par
     trained_param_map = { symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
     trained_parameterisation_map = {wrd: np.zeros(max_word_param_length) for wrd in train_embeddings}
 
-    for symbol, train_val in trained_param_map.items():
-        
-        if(ansatz_to_use==SpiderAnsatz):  
-            wrd =  symbol.name.split('_', 1)[0].replace("\\","").replace("(","")
+    cleaned_wrd_with_type=""
+    for symbol, train_val in trained_param_map.items():        
+        if(ansatz_to_use==SpiderAnsatz):              
+            cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symbol.name)
             rest = symbol.name.split('_', 1)[1]
-            idx = rest.split('__')[0]    
+            idx = rest.split('__')[0]      
         else:
             wrd, idx = symbol.name.rsplit('_', 1)
         
-        #this is a hack i.e searching for wrd. Ideally it should be there. (aldea- was equivalent
-        if wrd in trained_parameterisation_map:
-            trained_parameterisation_map[wrd][int(idx)] = train_val
+        
+        assert cleaned_wrd_with_type != ""
+        if cleaned_wrd_with_type in trained_parameterisation_map:
+            trained_parameterisation_map[cleaned_wrd_with_type][int(idx)] = train_val
 
     return trained_parameterisation_map
 
@@ -545,18 +546,18 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     plt.legend()
     plt.show()
 
-    return OOV_NN_model
+    return OOV_NN_model,dict_wrd_in_training_vs_weights
 
-def evaluate_val_set(pred_model, val_circuits, val_labels, trained_params, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
+def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
     """
     So this is where we do the final testing (even if its over dev)
     Here they are sending 
     a) pred_model:the newly created prediction model - which is same as the original QNLP model fundamentally.
-    b) test circuits, test_labels- what it says
+    b) val_circuits , val_labels- what it says
     c) trained_params: trained_wts from the model 1- qnlp model (my guess is he is going to assign these weights to the 
     newly created model. Though why he is doing it in a circumambulated way while he could have directly 
-    used qnlp_model i.e model 1 is beyond me)
-    d) test_vocab_embeddings: Take every word in test/val set, give it to fasttext, and get their embeddings
+    used qnlp_model i.e model 1 is beyond me)- update@oct30th2024. This is all zeroes. find and fix why
+    d) val_vocab_embeddings: Take every word in test/val set, give it to fasttext, and get their embeddings
     e) max_word_param_length: refer function get_max_word_param_length
     f) oov_strategy= picking one hardcoded one from [zero,embed, model,random etc]- basically this is where you 
     decide what baseline model do you want to use for your model 3- rather, do you want to use any model at all
@@ -575,13 +576,13 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_params, val_v
             the mapping between these two things. REfer: generate_oov_* function above.
             Note that all other strategies below are time pass/ boring hard coded baseline stuff
             """
-            pred_parameter_map[wrd] = trained_params.get(wrd, OOV_model.predict(np.array([embedding]), verbose=0)[0])
+            pred_parameter_map[wrd] = trained_weights.get(wrd, OOV_model.predict(np.array([embedding]), verbose=0)[0])
         elif OOV_strategy == 'embed':
-            pred_parameter_map[wrd] = trained_params.get(wrd, embedding)
+            pred_parameter_map[wrd] = trained_weights.get(wrd, embedding)
         elif OOV_strategy == 'zeros':
-            pred_parameter_map[wrd] = trained_params.get(wrd, np.zeros(max_word_param_length))
+            pred_parameter_map[wrd] = trained_weights.get(wrd, np.zeros(max_word_param_length))
         else:
-            pred_parameter_map[wrd] = trained_params.get(wrd, 2 * np.random.rand(max_word_param_length)-1)
+            pred_parameter_map[wrd] = trained_weights.get(wrd, 2 * np.random.rand(max_word_param_length)-1)
 
     
     #convert the dictionary pred_parameter_map into a list pred_weight_vector
@@ -592,8 +593,19 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_params, val_v
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
-            # wrd, idx = sym.name.rsplit('_', 1)
-            pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
+            if cleaned_wrd_with_type in pred_parameter_map:
+                if model_to_use == PytorchModel:
+                    val1= pred_parameter_map[cleaned_wrd_with_type][int(idx)]
+                    """# todo: there are some cleaned_wrd_with_type in pred_parameter_map which is empty. i.e size of tuple =1
+                    #figure that out,. commenting this line until then and forcing val2 to be zero                
+                    # val2= pred_parameter_map[cleaned_wrd_with_type][int(idx)+1]"""
+
+                    if len(pred_parameter_map[cleaned_wrd_with_type])>1:
+                        val2= pred_parameter_map[cleaned_wrd_with_type][int(idx)+1]
+                    else:
+                        val2 = np.float64(0.0)
+                    tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding            
+                    pred_weight_vector.append(tup)
 
     """#so he is assigning the weights he picked from model 3's outout (the DNN one)
     to that of model 4 - i.e the prediction model. I think this is the answer to the question
@@ -602,14 +614,21 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_params, val_v
     circumambulated way of finding the mapping between fast text and qnlp weights.
     The weights here are the new learnings created by model 3- the DNN/NN model specifically trained on
     model(a,b) where a is the weights from model1 and b is the embeddings from model2 -the fasttextmodel
+
+    todo: a) why is the pred_model.weights zero
+    b) why is it not a parameter list, like that of model 1?
     """
+
+    assert len(pred_model.symbols) == len(pred_weight_vector)
+    assert type(pred_model.weights) == type(pred_weight_vector)
+    # assert len(pred_model.weights) == len(pred_weight_vector)
     pred_model.weights = pred_weight_vector
 
     
     #use the model now to create predictions on the test set.
-    preds = pred_model.get_diagram_output(test_circuits)
+    preds = pred_model.get_diagram_output(val_circuits)
 
-    return loss(preds, val_labels), acc(preds, val_labels)
+    return loss(preds, val_labels), accuracy(preds, val_labels)
 
 def read_data(filename):
     labels, sentences = [], []
@@ -1016,13 +1035,33 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     i.e model 3=model(a,b) where a = embeddings and b = angles
     todo: find the difference between angles nad weights- why is it per word? """
 
-    #model 3- i.e nn-model is the model which learns mapping between fasttext ka embeddings and QNlp ka weights
-    NN_model = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
+    """"#model 3- i.e nn-model is the model which learns mapping between fasttext ka embeddings and QNlp model (i.e model 1) ka learned weights
+    or in other words , if you give the embedding of a new sentence model 3 (NN_model) will
+    give you the corresponding weights of model 1 (i.e QNLP model) which can then be used for
+    predicting class of the new sentence"""
+    NN_model,trained_wts = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
 
-    #this is model 4, a separate model initialized based only on test_circuits
-    #todo: find why does he have two models instead of using the oringal qnlp_model to do .predict()
-    #note/todo: differentiate difference between test and val. If it is val here, then make sure we are not passing val inside model1.fit()
-    prediction_model = PytorchModel.from_diagrams(val_circuits)
+    """#this is model 4, a separate model1 like model used only for predicting 
+    on the test/dev data based only on test_circuits. Now you might have a qn why 
+    cant we simply use model 1 itself for predicting the class of val/dev 
+    data. This is the OOV problem. remember, Model 1 the way it predicts is
+    if you give the circuits, it will multiply by its weights and tell you
+    the exact class the circuit belongs to. however, remember, it has no idea how 
+    to convert an OOV word to circuit. Which is why we went back to fasttext
+    embeddings. But then we realized, just having fast tet embeddings of thew new
+    dev/val data is not alone enough, but we want to instead get the corresponding
+    weights of it from model 1. That is why we trained another NN model called
+    model3 (aka NN_model) which gives you the corresponding weights of the new sentences.
+    Now coming back to your question of why not use model 1. as of now model 1 has learned
+    weights for only KNOWN words,. If you give the weights of UNKNOWN words , like those
+    found in dev, it is WRONG. So the best way is, create a new QNLP model (exactly like
+    model 1) called model4, assign its weights to be what model 3 (the OOV_NN) model predicted
+    and now give the corresponding circuits of dev data (just like model 1 would have done
+    if it could) and ask it to multiply circuitsx weights and give a class prediction.
+    """
+    
+    #note/todo: differentiate difference between test and val. If it is val here, then make sure we are not passing val inside model1.fit()--done
+    prediction_model = model_to_use.from_diagrams(val_circuits)
 
     """#Create a dictionary where key is word and weights are the trained weights after QNLP_model was
     trained. 
@@ -1031,10 +1070,16 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     a) check if this is my mistake or its same in his original code
     b) debug and check if values are same. i.e in generate_oov_* and here. if yes, return from generate_oov_* 
     """
-    trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
+    # trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
 
 
-    
+    """ now that we have 2 models ready, the OOV model, i.e model 3 (of 
+    which there are 3 different types as shown below) and the
+    original QNLP model 1, both well trained, let's evaluate it on the dev (and
+    eventually test) set
+    """
+
+
     smart_loss, smart_acc = evaluate_val_set(prediction_model,
                                                 val_circuits,
                                                 val_labels,
