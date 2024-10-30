@@ -630,7 +630,6 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     preds = pred_model.get_diagram_output(val_circuits)
     loss_pyTorch =torch.nn.BCEWithLogitsLoss()
     l= loss_pyTorch(preds, torch.tensor(val_labels))
-    print(f"val loss: {l}")
     a=accuracy(preds, torch.tensor(val_labels))
 
     return l, a
@@ -1140,22 +1139,22 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
     crap its called. i.e he is trying to make it as stupid/random as possible.
 
+    update@oct30th2024. Random model is giving some semaphore shit. commenting out for now
     """
-    for _ in range(1000):
+    # for _ in range(10):
+    #     rl, ra  = evaluate_val_set(prediction_model,
+    #                                           val_circuits,
+    #                                             val_labels,
+    #                                           trained_wts,
+    #                                           val_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='random')
+        
 
-
-        rl, ra = evaluate_val_set(prediction_model,
-                                   test_circuits,
-                                   test_labels,
-                                   trained_wts,
-                                   val_embeddings,
-                                   max_w_param_length,
-                                   OOV_strategy='random')
-
-        rand_losses.append(rl)
-        rand_accs.append(ra)
+    #     rand_losses.append(rl)
+    #     rand_accs.append(ra)
     
-    """#so by now, we have predictions on the test set, using 4 different models. 1 is our trained NN model called 
+    """#so by now, we have predictions on the test/dev/val set, using 4 different models. 1 is our trained NN model called 
     'model' and the rest are all baselines.
     He collects all the results (loss and accuracy of all 5 experiments)
     1. training using QNLP/model 1 and am guessing he is evaluating on a part of trained model itself
@@ -1165,12 +1164,11 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     res =  {'TRAIN': (train_loss, train_acc),
             'NN': (smart_loss, smart_acc),
             'EMBED': (embed_loss, embed_acc),
-            'RAND': (rand_losses, rand_accs),
             'ZERO': (zero_loss, zero_acc)
            }
-    print(f'ZERO: {res["ZERO"]}')
-    print(f'EMBED: {res["EMBED"]}')
-    print(f'NN: {res["NN"]}')
+    print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
+    print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
+    print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
 
     return res
 
@@ -1191,4 +1189,6 @@ for tf_seed in tf_seeds:
     for nl in [3,2,1]:
         this_seed_results.append(run_experiment(nl, tf_seed))
     compr_results[tf_seed] = this_seed_results
+
+print(f"value of all evaluation metrics across all seeds is {compr_results}")
 
