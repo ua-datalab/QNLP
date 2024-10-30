@@ -595,15 +595,15 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
             idx = rest.split('__')[0]      
             if cleaned_wrd_with_type in pred_parameter_map:
                 if model_to_use == PytorchModel:
-                    val1= pred_parameter_map[cleaned_wrd_with_type][int(idx)]
+                    val1= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
                     """# todo: there are some cleaned_wrd_with_type in pred_parameter_map which is empty. i.e size of tuple =1
                     #figure that out,. commenting this line until then and forcing val2 to be zero                
                     # val2= pred_parameter_map[cleaned_wrd_with_type][int(idx)+1]"""
 
                     if len(pred_parameter_map[cleaned_wrd_with_type])>1:
-                        val2= pred_parameter_map[cleaned_wrd_with_type][int(idx)+1]
+                        val2= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)+1])
                     else:
-                        val2 = np.float64(0.0)
+                        val2 = np.float32(0.0)
                     tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding            
                     pred_weight_vector.append(tup)
 
