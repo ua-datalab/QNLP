@@ -45,14 +45,14 @@ model_to_use=  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
 embedding_model = ft.load_model('./embeddings-l-model.bin')
+
 #todo: find what maxparams is for
+#update: answer: it is the maximum qbits (or dimensions of the tensor, as your case be)
 MAXPARAMS = 300
-
-
-BATCH_SIZE = 3
+BATCH_SIZE = 32
 EPOCHS = 2
-LEARNING_RATE = 0.05
-SEED = 0
+LEARNING_RATE = 0.1
+SEED = 43434
 DATA_BASE_FOLDER= "data"
 
 USE_MRPC_DATA=False
@@ -900,6 +900,7 @@ print(f'RUNNING WITH {nlayers} layers')
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
+            use_tensorboard=True,
             epochs=EPOCHS,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
