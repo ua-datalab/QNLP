@@ -56,9 +56,9 @@ SEED = 43434
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA=False
+USE_SPANISH_DATA=True
 USE_USP_DATA=False
-USE_FOOD_IT_DATA = True
+USE_FOOD_IT_DATA = False
 USE_MRPC_DATA=False
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
