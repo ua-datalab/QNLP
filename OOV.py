@@ -39,9 +39,9 @@ from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz
 from lambeq import BobcatParser,spiders_reader
 
-parser_to_use = spiders_reader  #[BobcatParser(verbose='text'), spiders_reader]
+parser_to_use = BobcatParser  #[BobcatParser(verbose='text'), spiders_reader]
 ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15,TensorAnsatz ]
-model_to_use=  PytorchModel #[numpy, pytorch]
+model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
 embedding_model = ft.load_model('./embeddings-l-model.bin')
@@ -55,10 +55,11 @@ LEARNING_RATE = 0.1
 SEED = 43434
 DATA_BASE_FOLDER= "data"
 
-USE_MRPC_DATA=False
-USE_SPANISH_DATA=True
-USE_USP_DATA=False
 
+USE_SPANISH_DATA=False
+USE_USP_DATA=False
+USE_FOOD_IT_DATA = True
+USE_MRPC_DATA=False
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
@@ -79,6 +80,11 @@ if(USE_MRPC_DATA):
     DEV="mrpc_dev_10_sent.txt"
     TEST="mrpc_test_10sent.txt"
 
+if(USE_FOOD_IT_DATA):
+    TRAIN="mc_train_data.txt"
+    DEV="mc_dev_data.txt"
+    TEST="mc_test_data.txt"
+
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
 # acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
 sig = torch.sigmoid
@@ -97,7 +103,7 @@ if(USE_SPANISH_DATA) or (USE_USP_DATA):
 
 
 #for english tokenizer
-if(USE_MRPC_DATA):
+if(USE_MRPC_DATA) or USE_FOOD_IT_DATA:
     english_tokenizer = spacy.load("en_core_web_sm")
     spacy_tokeniser.tokeniser =english_tokenizer
 
@@ -699,16 +705,15 @@ def spanish_diagrams(list_sents,labels):
         # diag.draw()
         # list_target.append(diag)
         
-        if( USE_MRPC_DATA):
+        if(USE_MRPC_DATA):
             sent = sent.split('\t')[2]
         tokenized = spacy_tokeniser.tokenise_sentence(sent)
-        
-        
+              
         if(not USE_MRPC_DATA):
             if len(tokenized)> 30:
                 print(f"no of tokens inthis sentence is {len(tokenized)}")
                 continue
-        spiders_diagram = parser_to_use.sentence2diagram(sent)
+        spiders_diagram = parser_to_use.sentence2diagram(sentence=sent)
 
         """was getting error, [2] is not a valid shape for
          ... this was marked as a soluion on the internet for """
