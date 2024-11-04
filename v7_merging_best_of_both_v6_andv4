@@ -531,7 +531,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
 
     callback = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss',
-        min_delta=0.003,
+        min_delta=0.01,
         patience=10,
         verbose=1,
         mode='auto',
@@ -546,7 +546,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
     #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=1, epochs=120,callbacks=[callback])
+    hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=1, epochs=100,callbacks=[callback])
     print(hist.history.keys())
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
     plt.plot(hist.history['loss'], label='loss')
