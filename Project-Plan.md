@@ -28,8 +28,18 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 
-
 # Meeting Notes
+
+## Nov 4
+- Model breakdown:
+	- Model 1: trains on circuits (QNLP model)
+ 	- Model 2: fasttext model for OOV tokens
+  	- Model 3: simple feedforward model with early stopping
+  	- Model 4: runs the actual classification task
+- October 31st deadline met. Now need to continue with hyperparameter tuning
+- English data results
+	- MRPC corpus: maps a large chunk of text to a summary. Needs code modification
+ - English data:  
 
 ## Oct 30th 2024
 - got code to train on OOV model also. First time ever. Now trying to use it to predict on val set.
