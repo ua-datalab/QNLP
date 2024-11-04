@@ -529,6 +529,16 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     #standard keras stuff, initialize and tell what loss function and which optimizer will you be using
     OOV_NN_model.compile(loss='mean_absolute_error', optimizer=keras.optimizers.Adam(0.001))
 
+    callback = tf.keras.callbacks.EarlyStopping(
+        monitor='val_loss',
+        min_delta=0.003,
+        patience=10,
+        verbose=1,
+        mode='auto',
+        baseline=None,
+        restore_best_weights=True,
+        start_from_epoch=0
+    )
     # Embedding dim!
     """#todo find why maxparams are hardcoded as 300 (is it the dimension of the fasttext embedding?)
     #ans: yes. The first layer needs to have the dimension of NN_train_X, which in turn has the dimension of the  
@@ -536,16 +546,15 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
     #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=0, epochs=120)
-
+    hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=1, epochs=120,callbacks=[callback])
+    print(hist.history.keys())
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
-
     plt.plot(hist.history['loss'], label='loss')
     plt.plot(hist.history['val_loss'], label='val_loss')
     plt.xlabel('Epoch')
     plt.ylabel('Error')
     plt.legend()
-    # plt.show()
+    plt.show()
 
     return OOV_NN_model,dict_wrd_in_training_vs_weights
 
@@ -1181,12 +1190,12 @@ todo: why is he setting random seed, that tooin tensor flow
 import tensorflow as tf
 compr_results = {}
 
-tf_seeds = [0, 1, 2]
+tf_seeds = [2]
 
 for tf_seed in tf_seeds:
     tf.random.set_seed(tf_seed)
     this_seed_results = []
-    for nl in [3,2,1]:
+    for nl in [3]:
         this_seed_results.append(run_experiment(nl, tf_seed))
     compr_results[tf_seed] = this_seed_results
 
