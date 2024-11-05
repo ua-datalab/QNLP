@@ -29,7 +29,6 @@ from lambeq import SpacyTokeniser
 import numpy as np
 import fasttext as ft
 from lambeq import PytorchTrainer
-from lightning.pytorch.loggers import WandbLogger
 from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
 from lambeq import Dataset
@@ -47,7 +46,7 @@ embedding_model = ft.load_model('./embeddings-l-model.bin')
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 MAXPARAMS = 300
 BATCH_SIZE = 32
-EPOCHS = 20
+EPOCHS = 2
 LEARNING_RATE = 0.1
 SEED = 43434
 DATA_BASE_FOLDER= "data"

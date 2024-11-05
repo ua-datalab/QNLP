@@ -1,9 +1,16 @@
 # QNLP
 Requirements:
 - minimum 16 GB ram to load the fasttext model and lambeq models
-
+- Python 3.11.10
+- pip 24.3.1
 steps to run this code
 - download data files  (e.g. spanish_test.txt)from [this](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)  repo to the same location where this code is
+  ```
+  conda create --name qnlp_temp6 python==3.11.10
+  conda activate qnlp_temp 
+chmod 700 run_me_first.sh
+./run_me_first.sh
+  ```
 - pip install -r requirements.txt
 - python -m spacy download es_core_news_sm
 - install fasttext embedding model
