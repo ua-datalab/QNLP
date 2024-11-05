@@ -23,7 +23,6 @@ from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 import torch
 from torch import nn
-import wandb
 import spacy
 from lambeq import SpacyTokeniser
 import numpy as np
