@@ -10,7 +10,7 @@
 * Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)     
 * [Miro Whiteboard]
 	* history of QNLP (https://miro.com/app/board/uXjVKVPCIK4=/?share_link_id=77584526552)
-	* our workspace (https://miro.com/app/board/uXjVLa_6Ec0=/?share_link_id=264348382425)
+	* our [workspace](https://miro.com/welcomeonboard/ajBQR05rQ0VZL1BEVDJHQTdxOXdmVHJqYzRWZ09QS1BGWEQ2OWgwbHU0dk5wRTVJRnZWWk5LU3p6bW5xZkxRMDdpTytpWndrTHMrNTFjUWpFM1NiYUhCQjRNQVY0U2MzcU9wcXY5ZWtlbXRhUTR5dnpVT3FsMkt6ZFF2Mi94cEEhZQ==?share_link_id=42173029695)
 * Papers:
 	* the most fundamental paper which introduces QNLP is 2010 DISCOCAT [paper](https://drive.google.com/file/d/1T7H5WH1q0mKng-zwqOYrlqEkBpOIcUDR/view?usp=sharing)
  	* To undrestand that, you need to understand 1998 Lambeks paper on math===language: [here](https://drive.google.com/file/d/1WmHNND7geQTfO3sRK-NDoOBHtKZL7pAa/view?usp=sharing)
