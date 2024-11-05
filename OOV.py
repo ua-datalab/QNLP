@@ -16,10 +16,8 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 #todo, find why not just do model1.predict?
 """
 
-
-import wandb
+from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
-# wandb.init(project="v4_uspantekan")
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
@@ -39,18 +37,17 @@ from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz
 from lambeq import BobcatParser,spiders_reader
 
-parser_to_use = BobcatParser  #[BobcatParser(verbose='text'), spiders_reader]
+parser_to_use = spiders_reader  #[BobcatParser(verbose='text'), spiders_reader]
 ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
 embedding_model = ft.load_model('./embeddings-l-model.bin')
 
-#todo: find what maxparams is for
-#update: answer: it is the maximum qbits (or dimensions of the tensor, as your case be)
+# maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 MAXPARAMS = 300
 BATCH_SIZE = 32
-EPOCHS = 2
+EPOCHS = 20
 LEARNING_RATE = 0.1
 SEED = 43434
 DATA_BASE_FOLDER= "data"
@@ -60,6 +57,7 @@ USE_SPANISH_DATA=True
 USE_USP_DATA=False
 USE_FOOD_IT_DATA = False
 USE_MRPC_DATA=False
+
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
@@ -74,7 +72,11 @@ if(USE_SPANISH_DATA):
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
 
-#todo: MRPC is a NLi kind of task. Use the 2 classes of information technology and food thing dataset instead if you want something for testing
+# #todo: actual MRPC is a NLi kind of task.- the below MRPC is a hack which has only the 
+# premise mapped to a lable of standard MRPC
+# # Use the 2 classes of information technology and food 
+# # thing dataset instead if you want something for testing one class alone
+
 if(USE_MRPC_DATA):
     TRAIN="mrpc_train_80_sent.txt"
     DEV="mrpc_dev_10_sent.txt"
@@ -91,7 +93,9 @@ sig = torch.sigmoid
 
 def accuracy(y_hat, y):
         assert type(y_hat)== type(y)
-        return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  # half due to double-counting
+        # half due to double-counting
+        #todo/confirm what does he mean by double counting
+        return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  
 
 eval_metrics = {"acc": accuracy}
 spacy_tokeniser = SpacyTokeniser()
@@ -653,11 +657,20 @@ def read_data(filename):
     labels, sentences = [], []
     with open(filename) as f:
         for line in f:
+
+            # todo: find why this is float- i think unlike classicalNLP they are not taking lables
+            #but are taking the logits in QNLP - which can translate to weights of words...IMHO but do confirm
             t = float(line[0])
-            if model_to_use == PytorchModel:
-                labels.append([t, 1-t])
-            else:
-                labels.append(int(t))
+            """#todo find why pytorch model needs labels in [a, 1-a] format.
+            answer/update: in all examples of lambeq they use this format, classical or quantum            
+            Todo: uncomment the plain 0 or 1 code if and when this gives issue- which usually shows up as size mismatch in
+            .fit()
+            # if model_to_use == PytorchModel:              
+            # else:
+            #     labels.append(int(t))
+            
+            """
+            labels.append([t, 1-t])            
             sentences.append(line[1:].strip())
     return labels, sentences
 
@@ -669,60 +682,61 @@ val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
 test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
 
-
-if TESTING:
-    train_labels, train_data = train_labels[:2], train_data[:2]
-    val_labels, val_data = val_labels[:2], val_data[:2]
-    test_labels, test_data = test_labels[:2], test_data[:2]
-    EPOCHS = 1
+# todo: not sure what am doing here. need to figure out as and when we get to testing
+# if TESTING:
+#     train_labels, train_data = train_labels[:2], train_data[:2]
+#     val_labels, val_data = val_labels[:2], val_data[:2]
+#     test_labels, test_data = test_labels[:2], test_data[:2]
+#     EPOCHS = 1
 
 
 """
 # not using bob cat parser- note: this wasn't compatible with spider ansatz
 
-we are using spiders reader for this code, because pytorch trainer goes well
+history: we are using spiders reader for spanish/uspantek, because pytorch trainer goes well
 #with it. Note that this is being done in SEp 2024 to just get the
 #  code to take off from the ground. However, other than this being a good baseline, 
 spider reader should be soon discareded and switched to bob cat parser+ some
-quantum traineres.
-
-
-
-# """
+quantum trainers asap. """
 
 
 """spanish_diagrams is a dummy function I had created once when I had to test
 both MRPC and uspantekan/spanish data at the same time. it is very useful in debugging
 especially for converting aldea_0 kinda format issues. But do remove this
 once not needed. Mithun@26th sep 2024"""
-def spanish_diagrams(list_sents,labels):
+def convert_to_diagrams(list_sents,labels):
     list_target = []
     labels_target = []
+    sent_count_longer_than_32=0
     for sent, label in tqdm(zip(list_sents, labels),desc="reading sent"):
         
         # tokenized = spacy_spanish_tokeniser.tokenise_sentence(sent)
         # diag =parser.sentence2diagram(tokenized, tokenised= True)
         # diag.draw()
         # list_target.append(diag)
+        # #this is 
+        # if(USE_MRPC_DATA):
+        #     sent = sent.split('\t')[2]
         
-        if(USE_MRPC_DATA):
-            sent = sent.split('\t')[2]
-        tokenized = spacy_tokeniser.tokenise_sentence(sent)
-              
-        if(not USE_MRPC_DATA):
-            if len(tokenized)> 30:
-                print(f"no of tokens inthis sentence is {len(tokenized)}")
+        tokenized = spacy_tokeniser.tokenise_sentence(sent)              
+
+        """if the length of sentences is more than 32, ignore it
+        doing this to avoid this error
+        (ValueError: maximum supported dimension for an ndarray is 32, found 33)
+        Todo: find if this is a very spanish tokenizer only issue or like pytorchmodel only issue"""
+        
+        if( USE_SPANISH_DATA or USE_USP_DATA):
+            if len(tokenized)> 32:
+                print(f"no of tokens in this sentence is {len(tokenized)}")
+                sent_count_longer_than_32+=1
                 continue
         spiders_diagram = parser_to_use.sentence2diagram(sentence=sent)
 
-        """was getting error, [2] is not a valid shape for
-         ... this was marked as a soluion on the internet for """
-        # from  lambeq import UnifyCodomainRewriter, AtomicType
-        # rewriter = UnifyCodomainRewriter(AtomicType.SENTENCE)  #  Codomain should be always S
-        # new_diagrams = [rewriter(d) for d in spiders_diagram]
-
+       
         list_target.append(spiders_diagram)
         labels_target.append(label)
+    
+    print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
@@ -733,58 +747,69 @@ def spanish_diagrams(list_sents,labels):
 # Note that this is a confusion arising on sep 29th 2024: because we don't know what is the meaning of
 # the _0 in aldea. Rather, i am yet to read the 2010 discocat paper. That should explain it
 # Until then taking a guess"""
-train_diagrams, train_labels_v2 = spanish_diagrams(train_data,train_labels)
-val_diagrams, val_labels_v2 = spanish_diagrams(val_data,val_labels)
-test_diagrams, test_labels_v2 = spanish_diagrams(test_data,test_labels)
+train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
+val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
+test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
 
-train_labels = train_labels_v2 #doing because didnt want same variable going into th function and returning it. python lets you get away with it, but i dont trust it
+"""#assignign teh labels back to s`ame old lable
+# doing because didnt want same variable going into th function and returning it.
+#  python lets you get away with it, but i dont trust it"""
+train_labels = train_labels_v2 
 val_labels = val_labels_v2
 test_labels = test_labels_v2
 
 """
-these are now orphan codes, but in reality, these code were there in khatri's original
+these d1.cod=d2.code are now orphan codes, but in reality, these code were there in khatri's original
 code (https://colab.research.google.com/drive/13W_oktxSFMAB6m5Rfvy8vidxuQDrCWwW#scrollTo=0be9c058)
 Mithun@27thsep2024-I have a bad feeling I might have removed all this an year ago, when it was giving "error"
 Clearly my mental state at that time ws so messed pu that all i was trying to do it, somehow get it to work.
 even if it means removing bug filled code...weird/sad but true.
--- 
-from collections import Counter
-# We omit any case where the 2 phrases are not parsed to the same type
-joint_diagrams_train = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
-joint_diagrams_test = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
+
+update@5thnov2024- the d1.cod==d2.code is a very specific thing for datasets which have pairs of
+inputs. eg mrpc or NLI. for plain single sentence classification shouldnt matter"""
+
+# from collections import Counter
+# # We omit any case where the 2 phrases are not parsed to the same type
+# joint_diagrams_train = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
+# joint_diagrams_test = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
 
 
-train_diags_raw = [d for d in joint_diagrams_train if d is not None]
-train_y = np.array([y for d,y in zip(joint_diagrams_train, filt_train_y) if d is not None])
+# train_diags_raw = [d for d in joint_diagrams_train if d is not None]
+# train_y = np.array([y for d,y in zip(joint_diagrams_train, filt_train_y) if d is not None])
 
-test_diags_raw = [d for d in joint_diagrams_test if d is not None]
-test_y = np.array([y for d,y in zip(joint_diagrams_test, filt_test_y) if d is not None])
+# test_diags_raw = [d for d in joint_diagrams_test if d is not None]
+# test_y = np.array([y for d,y in zip(joint_diagrams_test, filt_test_y) if d is not None])
 
-print("FINAL DATASET SIZE:")
-print("-----------------------------------")
-print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
-print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
+# print("FINAL DATASET SIZE:")
+# print("-----------------------------------")
+# print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
+# print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
 
-from tqdm import tqdm
-from lambeq import Rewriter, remove_cups
 
-rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'connector', 'prepositional_phrase'])
 
 train_X = []
-test_X = []
+val_X = []
 
-for d in tqdm(train_diags_raw):
-    train_X.append(remove_cups(rewriter(d).normal_form()))
+"""# Note: removing cups and normalizing is more useful in bobcat parser, not in spiders
+#but leaving it here since eventually we want everything to go through bobcat
+# refer: https://cqcl.github.io/lambeq-docs/tutorials/trainer-quantum.html"""
+remove_cups = RemoveCupsRewriter()
 
-for d in tqdm(test_diags_raw):
-    test_X.append(remove_cups(rewriter(d).normal_form()))
+for d in tqdm(train_diagrams):
+    train_X.append(remove_cups(d).normal_form())
 
-from discopy.quantum.gates import CX, Rx, H, Bra, Id
+for d in tqdm(val_diagrams):    
+    val_X.append(remove_cups(d).normal_form())
 
-equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
-equality_comparator.draw()
+train_diagrams  = train_X
+val_diagrams    = val_X
 
-"""
+# this is used only when there are a pair of sentences
+# from discopy.quantum.gates import CX, Rx, H, Bra, Id
+# equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
+# equality_comparator.draw()
+
+
 
 
 """
