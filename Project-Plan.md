@@ -33,6 +33,18 @@
 
 
 # Meeting Notes
+## Nov 5
+- ToDo Megh:
+	- set up ML flow for the project
+	- Start working on the NAACL draft
+ 	- Work on a for-loop of model requirements
+  	- Find english embeddings for testing the english model
+  - Tested `requirements.txt` setup in a new environment
+  	- Code uses cached `numpy`, and fails to install spaCy.
+   	- `matplotlib` issues
+    	- Solution: created a shell script to install all requirements in python 3.11.10
+     	- Merged all changes into `main`
+    - ToDo English embeddings: find them online, and if not, figure out how to incorporate english vector files into our code. 
 
 ## Nov 4
 - Model breakdown:
