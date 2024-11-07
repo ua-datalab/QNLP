@@ -113,50 +113,50 @@ ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
 test_acc = accuracy(model(test_circuits), torch.tensor(test_labels))
 print('Test accuracy:', test_acc.item())
 
-class MyCustomModel(PytorchModel):
-    def __init__(self):
-        super().__init__()
-        self.net = torch.nn.Linear(2, 2)
+# class MyCustomModel(PytorchModel):
+#     def __init__(self):
+#         super().__init__()
+#         self.net = torch.nn.Linear(2, 2)
 
-    def forward(self, input):
-        """define a custom forward pass here"""
-        preds = self.get_diagram_output(input)
-        preds = self.net(preds.float())
-        return preds
+#     def forward(self, input):
+#         """define a custom forward pass here"""
+#         preds = self.get_diagram_output(input)
+#         preds = self.net(preds.float())
+#         return preds
 
-custom_model = MyCustomModel.from_diagrams(all_circuits)
-custom_model_trainer = PytorchTrainer(
-        model=custom_model,
-        loss_function=torch.nn.BCEWithLogitsLoss(),
-        optimizer=torch.optim.AdamW,
-        learning_rate=LEARNING_RATE,
-        epochs=EPOCHS,
-        evaluate_functions=eval_metrics,
-        evaluate_on_train=True,
-        verbose='text',
-        seed=SEED)
+# custom_model = MyCustomModel.from_diagrams(all_circuits)
+# custom_model_trainer = PytorchTrainer(
+#         model=custom_model,
+#         loss_function=torch.nn.BCEWithLogitsLoss(),
+#         optimizer=torch.optim.AdamW,
+#         learning_rate=LEARNING_RATE,
+#         epochs=EPOCHS,
+#         evaluate_functions=eval_metrics,
+#         evaluate_on_train=True,
+#         verbose='text',
+#         seed=SEED)
 
-custom_model_trainer.fit(train_dataset, val_dataset, log_interval=5)
+# custom_model_trainer.fit(train_dataset, val_dataset, log_interval=5)
 
-import matplotlib.pyplot as plt
-import numpy as np
+# import matplotlib.pyplot as plt
+# import numpy as np
 
-fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
+# fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
 
-ax_tl.set_title('Training set')
-ax_tr.set_title('Development set')
-ax_bl.set_xlabel('Epochs')
-ax_br.set_xlabel('Epochs')
-ax_bl.set_ylabel('Accuracy')
-ax_tl.set_ylabel('Loss')
+# ax_tl.set_title('Training set')
+# ax_tr.set_title('Development set')
+# ax_bl.set_xlabel('Epochs')
+# ax_br.set_xlabel('Epochs')
+# ax_bl.set_ylabel('Accuracy')
+# ax_tl.set_ylabel('Loss')
 
-colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-range_ = np.arange(1, trainer.epochs+1)
-ax_tl.plot(range_, custom_model_trainer.train_epoch_costs, color=next(colours))
-ax_bl.plot(range_, custom_model_trainer.train_eval_results['acc'], color=next(colours))
-ax_tr.plot(range_, custom_model_trainer.val_costs, color=next(colours))
-ax_br.plot(range_, custom_model_trainer.val_eval_results['acc'], color=next(colours))
+# colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+# range_ = np.arange(1, trainer.epochs+1)
+# ax_tl.plot(range_, custom_model_trainer.train_epoch_costs, color=next(colours))
+# ax_bl.plot(range_, custom_model_trainer.train_eval_results['acc'], color=next(colours))
+# ax_tr.plot(range_, custom_model_trainer.val_costs, color=next(colours))
+# ax_br.plot(range_, custom_model_trainer.val_eval_results['acc'], color=next(colours))
 
-# print test accuracy
-test_acc = accuracy(model(test_circuits), torch.tensor(test_labels))
-print('Test accuracy:', test_acc.item())
+# # print test accuracy
+# test_acc = accuracy(model(test_circuits), torch.tensor(test_labels))
+# print('Test accuracy:', test_acc.item())
