@@ -34,6 +34,8 @@ from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz
 from lambeq import BobcatParser,spiders_reader
+from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
+
 
 parser_to_use = spiders_reader  #[BobcatParser(verbose='text'), spiders_reader]
 ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15,TensorAnsatz ]
@@ -194,14 +196,13 @@ def clean_wrd_for_spider_ansatz_coming_from_vocab(wrd):
 
 """given a set of circuits (e.g. train_circuit) extract the word from the 
 symbol and create a dictionary full of it
-Todo: This works only for SpiderAnsatz. So modify code for other ansatz."""
+Todo: the format in which spider ansatz creates the circuits i.e the naming convention of aldea_0_s
+is different than others. so This works only for SpiderAnsatz. So modify code for other ansatz."""
 def create_vocab_from_circuits(circuits):
     vocab=set()
     if(ansatz_to_use==SpiderAnsatz):  
         for d in circuits:
-            for symb in d.free_symbols: 
-                if "aldea" in symb.name:
-                    print("found aldea")               
+            for symb in d.free_symbols:                  
                 cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
                 vocab.add(cleaned_wrd_with_type)
     return vocab
@@ -222,7 +223,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     # distorting_0_s- right now we don't know what 0 or s stands for. My
     # guess after reading only 1958 paper is that s is sentence, which is part of the 
     # 2 fundamental units lambek specifices in 1958 paper- n and s"""
-    # train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
+    
     train_vocab=create_vocab_from_circuits(train_circuits)
     val_vocab=create_vocab_from_circuits(val_circuits)
 
@@ -236,8 +237,8 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     oov_words=val_vocab - train_vocab
     print(f"list of OOV words are {oov_words}")     
 
-    #todo: find the meaning of symbol count- what is the difference between symbol count and OOV or train_vocab
-    """update @29thOct2024- Symbol is the term used for the word + number of qbits or dimension
+    """todo: find the meaning of symbol count- what is the difference between symbol count and OOV or train_vocab
+    update @29thOct2024- Symbol is the term used for the word + number of qbits or dimension
     e.g aldea_0__s means, that symbol is for the word aldea for for its 1st qbit/dimension
     similarly aldea_1__s means it is the symbol for the 2nd qbit etc.
     So ideally the count of OOV symbols must be more than that of oov words.
@@ -249,7 +250,10 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     print(f"the symbols that are in symbol count but not in word count are:{oov_symbols-oov_words}")
 
     #######note that everything to do with OOV ends here. So far it was just FYI, there is OOV in this dataset's test partition
-    
+    """max word param length is the maximum qbits needed anywhere,
+      train or val- not too significant in spider, since it allocates 
+      1 qbit/dimension to all (technically 0th dimension so maxword param length=1)
+      todo: confirm for other ansatz if this value is more than 1"""
     max_word_param_length=0
     if(ansatz_to_use==SpiderAnsatz):
         max_word_param_length_train = max(get_max_word_param_length(train_circuits))
@@ -259,12 +263,12 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     assert max_word_param_length!=0
 
     
-    # max_word_param_length = max(, ) + 1
+    
     print(f'Max params/word: {max_word_param_length}')
 
     """ # next , for each word in train and test vocab , we need to get its embedding from fasttext
     # mithuns comment @26thsep2024: 
-    # note that there is some confusion between the input data Khatri used from MRPC
+    # todo: note that there is some confusion between the input data Khatri used from MRPC
     # as oposed to the spanish one = rather how spider reader is storing it.
     # In MRPC and  bobcat parser, they store it in one format(i think its two underscore
     # while spider parser stores it with one underscore or two dashes or something
@@ -273,32 +277,24 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     replaced/fixed/single format must be stored for all ansatz- evne see if you can
     create a pull request for this
     """
-    if(ansatz_to_use==SpiderAnsatz):  
-        # train_vocab_embeddings={}      
-        
+    if(ansatz_to_use==SpiderAnsatz):               
 
         """ #for each word in train and test vocab get its embedding from fasttext
-        #note that even though the symbols per se have _0_, in the train_vocab_embedding 
-        # dictionary it is stored in the
-        #format of {wrd: embedding}- i.e only the word aldea out of aldea_0_ is separated out and used.
-        # mithuns comment @26thsep2024: note that this is a hack, and ideally such data format
-        # based difference shouldnt occur. 
-        # TODO: run khastri code on MRPC and confirm who is screwing up.
-        # is it spider ansatz which is messing up the data format or is it us?
-
-        update@october29th2024: so in khatri code when he is giving the word
-        to the embedding model he is using plain text word i.e "aldea"
+        #note that in the train_vocab_embedding dictionary it is stored in the
+        #format of {wrd: embedding}-i.e the word given 
+        to the embedding model below  is using plain text word i.e "aldea"
         but when he is storing it in the dict train_vocab_embeddings, the key
         goes back to "aldea__s" while the value is the vector/embedding you got from
         fasttext
         # """
         train_vocab_embeddings = get_vocab_emb_dict(train_vocab)
         val_vocab_embeddings = get_vocab_emb_dict(val_vocab)
-    
-        
-
+            
     else:
-        #for the words created from other ansatz just write it as : _0_ so we can reuse the parsing from original khatri code. But here recording specifically for this instance
+        """#for the words created from other ansatz other than spider reuse 
+        the parsing from original khatri code. 
+        # todo: confirm manually 
+        # """
         train_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in train_vocab}
         val_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in val_vocab}
 
@@ -307,9 +303,15 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     initial_param_vector = []
 
     #todo: find what qnlp_model.symbols is- rather how is it different than train vocab?
-    #ans: it is every word in the given list of circuits e.g. únicamente_0__s
+    #ans: it is every word in the given list of circuits with its qbits
+    # and data type e.g. únicamente_0__s
     for sym in qnlp_model.symbols:
-        #@sep2nd2024-not sure what idx is supposed to do, am giong to give it the number associated with the word
+        """#for each qbit, the initial parameter size changes.
+        # i.e if aldea had both aldea_0_s and aldea_1_s
+        # its initial param will have two difference entries in the initial param vector
+        Note that this is coming from deep qnlp_model.symbols where each qbit in a given
+        word is stored separately. REmebmer connection to functors+ refer this symbols lambeq
+        documentation:https://cqcl.github.io/lambeq-docs/tutorials/training-symbols.html"""
         if(ansatz_to_use==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
@@ -321,36 +323,29 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
             #  b) read the 2010 discocat and CQM paper onwards up, chronologically
             #no point turning knobs without deeply understanding what symbols do
             
-            #todo:compare the format ith mrpc data, and see if he is storing the initial param vector- and symbols with _0_ or not?
-            # update@29th 0ct 2024. a) done
+            #answers:
+            # a) done. refer link above
             #  b) done. Refer definition of symbol in comments near line 223
             # b) yes he is appending just the first element of the embedding as an entry to 
-            # initial params."""
+            # initial params- for first qbit, second one to second qbit etc. Its a little weird
+            # but considering xavier glorot random initialization this can be pardoned i guess 
+            # todo: this will be a nice improvement if you can initialize with the whole
+            # vector- or even sum of it will make a difference as we have seen in classical world"""
             if cleaned_wrd_with_type in train_vocab_embeddings:
-                if model_to_use == PytorchModel:
-                    # initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx),1-int(idx)])
+                if model_to_use == PytorchModel:                    
+                    #pytorch model likes the param vector in [a,1-a] format. Just like that of the labels
+                    #todo: confirm if this happens for other models/do we really need to have an if else here
+                    # todo: what is the connection between initial param vectors and labels? oh remember in QNLP labels directly are logits/confidence in predictions?
                     val1= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)]
                     val2= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)+1]
                     tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding
                     initial_param_vector.append(tup)
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
-            else:
-                '''
-                #todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
-                # my guess is its all the unicode characters. 
-                # In theory fast text is meant to create zero 
-                # OOV..since it builds up from 1 gram 2 gram etc
-                #update: this might be caused because am 
-                # removing the _0_ thing from the actual name, without
-                #  realizing what it is doing.
-                
-                found that this word verdad, was OOV/not in fasttext emb
-                found that this word vió, was OOV/not in fasttext emb
-                found that this word yo, was OOV/not in fasttext emb
-                found that this word yyyyyy was OOV/not in fasttext emb
-                '''
-                print(f"found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
+            else:                            
+                print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
+                import sys
+                sys.exit()
 
     """
     Set the intialization of QNLP model's weight as that of the embeddings of each word
@@ -358,14 +353,10 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     FOr example in NN world, embedding is separate than weights of neurons.
     You might initialize the weights of neurons with random shit like Xavier glorot
     but almost nver initialize it with embedding itself.
-    todo: qnlp_model.weights-is a list
-     of size 463 while the np.array is creating a matrix of shape (463,) -which
-     is then again being converted to nn.ParameterList-which is a list.
-     We dont even know how/why we are going to numpy land and then converting it back to nn.parameter
-     rather; there was no np.array initially.- gave some error. So i went to khatri's
-     code - and exactly copy pasted np.array()- the error went away, so i didnt complain.
-     But all this is being caused because we are working on someone else's code without
-     realizing what the code does.
+    update/answer: read 2010 discocat paper. It explains why every single WORD itself has a entry in QNLP land, as opposed to embedddings
+    #todo: it will be really cool enhancement if we can have a combined training of model1 and model 4, with the embeddings
+    being updated on the fly.- and not training model4 offline after model 1
+
     """
 
     """#update @16th oct 2024. 
@@ -385,11 +376,9 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       @octr17th2024
       commenting the code out until i find what its doing
     ."""
-    # assert len(qnlp_model.symbols) == len(qnlp_model.weights)==  len(train_vocab_embeddings) +len(val_vocab_embeddings)
+    
     assert len( qnlp_model.weights) == len(initial_param_vector)
     qnlp_model.weights = nn.ParameterList(initial_param_vector)
-    
-
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
@@ -562,7 +551,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     plt.xlabel('Epoch')
     plt.ylabel('Error')
     plt.legend()
-    plt.show()
+    # plt.show()
 
     return OOV_NN_model,dict_wrd_in_training_vs_weights
 
@@ -698,10 +687,6 @@ spider reader should be soon discareded and switched to bob cat parser+ some
 quantum trainers asap. """
 
 
-"""spanish_diagrams is a dummy function I had created once when I had to test
-both MRPC and uspantekan/spanish data at the same time. it is very useful in debugging
-especially for converting aldea_0 kinda format issues. But do remove this
-once not needed. Mithun@26th sep 2024"""
 def convert_to_diagrams(list_sents,labels):
     list_target = []
     labels_target = []
@@ -853,7 +838,7 @@ print(f'RUNNING WITH {nlayers} layers')
     test_circs = [ansatz(d) >> equality_comparator for d in test_X]
     """
 
-    #use the anstax to create circuits from diagrams
+    #use the anstaz to create circuits from diagrams
     train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
     val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
     test_circuits = [ansatz(diagram) for diagram in test_diagrams]
@@ -861,13 +846,8 @@ print(f'RUNNING WITH {nlayers} layers')
 
     
 
-    #mithuns comment @26thsep2024:pytorch model was the only one going well
-    #  with spider reader and spider anstaz
-    #also todo: should this not contain both val and train circuits as inputz?
-    # qnlp_model = PytorchModel.from_diagrams(train_circuits)
 
-    from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
-    # qnlp_model = NumpyModel.from_diagrams(train_circuits)
+    
     qnlp_model = model_to_use.from_diagrams(train_circuits)
     
 
@@ -890,62 +870,19 @@ print(f'RUNNING WITH {nlayers} layers')
     assert len(val_circuits)== len(val_labels)
     assert len(test_circuits)== len(test_labels)
 
-    """
-    #this is a;;wandb crap,- i was trying to automate a sweep across parameters. 
-    Turned out to be more  hurting than helping. Will think about this as and when we get to expt running stage
-    # comment out if becoming a pain in the butt. MLFlow is better than wandb imho
-    sweep_config = {
-        'method': 'random'
-        }
-    metric = {
-        'name': 'loss',
-        'goal': 'minimize'
-        }
-
-    sweep_config['metric'] = metric
-
-    parameters_dict = {
-        'LEARNING_RATE': {
-            'values': [0.3, 0.03, 0.003,0.0003]
-            },
-        }
-
-    sweep_config['parameters'] = parameters_dict
-
-    parameters_dict.update({
-        'epochs': {
-            'value': 1}
-        })
-
-    import pprint
-    
-    pprint.pprint(sweep_config)
-    # sweep_id = wandb.sweep(sweep_config, project="uspantekan_spider_tuning")
-    # wandb_logger = WandbLogger()"""
 
     trainer = trainer_to_use(
             model=qnlp_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
-            use_tensorboard=True,
+            use_tensorboard=True, #todo: why isnt any visualization shown despite use_tensorboard=True
             epochs=EPOCHS,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
             seed=SEED)
     
-    # trainer = QuantumTrainer(
-    #     qnlp_model,        
-    #     loss_function=torch.nn.BCEWithLogitsLoss(),
-    #     epochs=EPOCHS,
-    #     optimizer=SPSAOptimizer,
-    #     optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
-    #     evaluate_functions=eval_metrics,
-    #     evaluate_on_train=True,
-    #     verbose = 'text',
-    #     seed=seed
-    # )
 
     #get the embeddings etc to be used in models 2 through 4. Note
     # that one very interesting thing that happens as far as model 1is considered is that
