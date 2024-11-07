@@ -36,8 +36,8 @@ from lambeq import TensorAnsatz,SpiderAnsatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 
-
-parser_to_use = spiders_reader  #[BobcatParser(verbose='text'), spiders_reader]
+bobCatParser=BobcatParser()
+parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
 ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
@@ -47,15 +47,15 @@ embedding_model = ft.load_model('./embeddings-l-model.bin')
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 MAXPARAMS = 300
 BATCH_SIZE = 32
-EPOCHS = 2
+EPOCHS = 30
 LEARNING_RATE = 0.1
 SEED = 43434
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA=True
+USE_SPANISH_DATA=False
 USE_USP_DATA=False
-USE_FOOD_IT_DATA = False
+USE_FOOD_IT_DATA = True
 USE_MRPC_DATA=False
 
 #setting a flag for TESTING so that it is done only once.
@@ -103,11 +103,7 @@ spacy_tokeniser = SpacyTokeniser()
 if(USE_SPANISH_DATA) or (USE_USP_DATA):
     spanish_tokeniser=spacy.load("es_core_news_sm")
     spacy_tokeniser.tokeniser = spanish_tokeniser
-
-
-
-#for english tokenizer
-if(USE_MRPC_DATA) or USE_FOOD_IT_DATA:
+else:
     english_tokenizer = spacy.load("en_core_web_sm")
     spacy_tokeniser.tokeniser =english_tokenizer
 
@@ -379,7 +375,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     
     assert len( qnlp_model.weights) == len(initial_param_vector)
     qnlp_model.weights = nn.ParameterList(initial_param_vector)
-    return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
+    return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
 
@@ -895,7 +891,7 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
         train_circuits, val_circuits, embedding_model, qnlp_model)
 
     """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
@@ -978,12 +974,47 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     """#TAKE THE TRAINED model (i.e end of all epochs of early stopping and run it on train_circuits.
     #note:this is being done More for a sanity check since ideally you will see the values
     # printed during training in .fit() itself."""
-    train_preds = qnlp_model.get_diagram_output(train_circuits)    
+    val_preds = qnlp_model.get_diagram_output(train_circuits)    
     loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    train_loss= loss_pyTorch(train_preds, torch.tensor(train_labels))
-    train_acc =accuracy(train_preds, torch.tensor(train_labels))
+    train_loss= loss_pyTorch(val_preds, torch.tensor(train_labels))
+    train_acc =accuracy(val_preds, torch.tensor(train_labels))
     print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
 
+
+    """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
+    if oov_word_count==0:
+    #     import matplotlib.pyplot as plt
+    #     import numpy as np
+
+    #     fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
+
+    #     ax_tl.set_title('Training set')
+    #     ax_tr.set_title('Development set')
+    #     ax_bl.set_xlabel('Epochs')
+    #     ax_br.set_xlabel('Epochs')
+    #     ax_bl.set_ylabel('Accuracy')
+    #     ax_tl.set_ylabel('Loss')
+
+    #     colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+    #     range_ = np.arange(1, trainer.epochs+1)
+    #     ax_tl.plot(range_, trainer.train_epoch_costs, color=next(colours))
+    #     ax_bl.plot(range_, trainer.train_eval_results['acc'], color=next(colours))
+    #     ax_tr.plot(range_, trainer.val_costs, color=next(colours))
+    #     ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
+
+
+        val_preds = qnlp_model.get_diagram_output(val_circuits)    
+        loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+        val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
+        val_acc =accuracy(val_preds, torch.tensor(val_labels))
+        print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
+
+        # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
+        val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+        print('Val accuracy:', val_acc.item())
+        
+        import sys
+        sys.exit()
 
     """So by nowthe actual QNLP model (i.e model 1) is trained. Next is we are going to connect the model which learns
     #  relationsihp between fasttext emb and angles. look inside the function
