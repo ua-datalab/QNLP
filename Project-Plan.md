@@ -71,8 +71,10 @@ ans
 - 4) they pass val_dataset during .fit() function itself. TODO: Nothing. Our code will barf due to OOV. SO its better we keep training and evaluation separate
 - 5) they use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
 - 6) todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.
-- 7) use their data+ manually added new words in val- and try to run on our code.
-  8) their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally
+- 7) after that/doing 6 above use their data+ and try to run on our code. this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding
+  8) after that/doing 6 above use their data+ manually added new words in val- and try to run on our code. note down accuracy.
+  
+  10) their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally
 converted using lambek calculus. i.e if there is just one basic type n or s it will use 2 dimensions (since everything in foodIT code is in tensor level) while coplex ones get more
 for example:
 """
