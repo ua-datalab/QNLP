@@ -33,6 +33,10 @@
 
 
 # Meeting Notes
+## Nov 7
+- Discussion on Fasttext embeddings
+	- For spanish, we have an executable `.bin` file. It can't be opened, but when we execute it and provide it a word, it will return an embedding.
+ 	- English has word-level embeddings, Spanish has n-gram level embeddings
 ## Nov 5
 - ToDo Megh:
 	- set up ML flow for the project
@@ -44,7 +48,10 @@
    	- `matplotlib` issues
     	- Solution: created a shell script to install all requirements in python 3.11.10
      	- Merged all changes into `main`
-    - ToDo English embeddings: find them online, and if not, figure out how to incorporate english vector files into our code. 
+    - ToDo English embeddings: find them online, and if not, figure out how to incorporate english vector files into our code.
+    - Chronology: word2vec, BERT, Fasttext, Byte-Pair (used by GPT). We would ultimately need the n-gram embeddings. Fasttext is used to build words, by training on natural language, n-grams, and thus creating relations between words. Richer because it has seen more data
+    	- Why do we need gpt embeddings- they have learnt word meanings after a level of training on the sub-word embeddings.
+     	- 	 
 
 ## Nov 4
 - Model breakdown:
