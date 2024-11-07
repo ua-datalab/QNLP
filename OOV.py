@@ -1172,6 +1172,7 @@ for tf_seed in tf_seeds:
     compr_results[tf_seed] = this_seed_results
 
 print(f"\nvalue of all evaluation metrics across all seeds is :")
+#todo: cleanly print this dict below
 for k,v in compr_results.items():
     print(f"\n{k}: {v}\n")
 
