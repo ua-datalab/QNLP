@@ -37,6 +37,32 @@
 - Discussion on Fasttext embeddings
 	- For spanish, we have an executable `.bin` file. It can't be opened, but when we execute it and provide it a word, it will return an embedding.
  	- English has word-level embeddings, Spanish has n-gram level embeddings
+- details from Mithuns coding
+	- able to replicate the Food IT classification using our code.
+ -	however few things to note
+ -	Qn) Does their code barf if we provide a new unknown word in dev or tst
+ -	ans: No
+ -	Qn) Why
+ -	Ans: because they are "smartly" using circuits of val and test data during initialization of the model
+ -	i.e `all_circuits = train_circuits + val_circuits + test_circuits`
+ -	`model = PytorchModel.from_diagrams(all_circuits)`
+
+_ Qn) will their model barf/complain about OOV if we initialize it only on train_circuits.
+Ans: yes
+Qn) does Khatri initialize it with only train_circuits or all?
+ans: only train_circuits
+
+Qn) what other major changes/differences are there between their code and ours
+ans
+- 1) they use sentences2diagrams while we use sentence2diagram. todo: Use their method. Our way was giving arrow/cod/dom level errors.
+- 2) in ansatz definition they give dim 2 for both noun and sentence. we were giving 4. If I gave 4 in their code, error occurs. weird. todo: read more on this. Thought sentences were supposed to live in a dimension higher than nouns as per lambek
+- 3) they initialize their model on all_circuits like shown above. TODO: Nothing in our code/continue initializing only on training
+- 4) they pass val_dataset during .fit() function itself. TODO: Nothing. Our code will barf due to OOV. SO its better we keep training and evaluation separate
+- 5) they use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
+- 6) todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.
+- 7) use their data+ manually added new words in val- and try to run on our code.
+
+
 ## Nov 5
 - ToDo Megh:
 	- set up ML flow for the project
