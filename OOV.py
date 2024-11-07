@@ -1129,9 +1129,11 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     #     rand_losses.append(rl)
     #     rand_accs.append(ra)
     
-    """#so by now, we have predictions on the test/dev/val set, using 4 different models. 1 is our trained NN model called 
+    """#so by now, we have predictions on the test/dev/val set,
+      using 4 different models. 1 is our trained NN model called 
     'model' and the rest are all baselines.
-    He collects all the results (loss and accuracy of all 5 experiments)
+    He collects all the results (loss and accuracy of all
+      5 experiments including training using model1) into a dictionary called res
     1. training using QNLP/model 1 and am guessing he is evaluating on a part of trained model itself
     2. using NN (aka model 2 lines above): which is our model 3 trained to learn mapping between fasttext embeddings and qnlp-model-1s weights 
     #rest are all the baselines models
@@ -1169,7 +1171,7 @@ for tf_seed in tf_seeds:
         this_seed_results.append(run_experiment(nl, tf_seed))
     compr_results[tf_seed] = this_seed_results
 
-print(f"value of all evaluation metrics across all seeds is :")
-for k,v in compr_results:
-    print(f"{k}:{v}")
+print(f"\nvalue of all evaluation metrics across all seeds is :")
+for k,v in compr_results.items():
+    print(f"\n{k}: {v}\n")
 
