@@ -46,10 +46,10 @@ embedding_model = ft.load_model('./embeddings-l-model.bin')
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 MAXPARAMS = 300
-BATCH_SIZE = 32
+BATCH_SIZE = 30
 EPOCHS = 30
-LEARNING_RATE = 0.1
-SEED = 43434
+LEARNING_RATE = 3e-2
+SEED = 0
 DATA_BASE_FOLDER= "data"
 
 
@@ -842,21 +842,12 @@ print(f'RUNNING WITH {nlayers} layers')
     #use the anstaz to create circuits from diagrams
     train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
     val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
-    test_circuits = [ansatz(diagram) for diagram in test_diagrams]
-
-
-    
-
-
-    
-    qnlp_model = model_to_use.from_diagrams(train_circuits)
-    
-
-    
+    test_circuits = [ansatz(diagram) for diagram in test_diagrams]        
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
-    
+    qnlp_model = model_to_use.from_diagrams(train_circuits)
+
     train_dataset = Dataset(
                 train_circuits,
                 train_labels,
