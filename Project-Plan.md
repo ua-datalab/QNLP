@@ -39,10 +39,21 @@ Mithun's coding log
 
 Todo: 
 - add their differences 1,2,5,6 (from yesterday's notes) to our code --done
+- does it replicate an accuracy of one , even though the model is initlized with train, dev and test circuits. i.e dont test on val during training but instead let it run for 30 epochs,and use that model to instead test on val- Ans: yes, gives 100% accuracy
 - english
-	- add our OOV trick and see what accuracy you get for food IT (without all circuits)
+	- add our OOV trick and see what accuracy you get for food IT (without all circuits initialized inside model 1)
  		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding
-   		- update: getting this error:  `shape [2, 2] is invalid for input of size 2 ` inside trainer.fit()	 - sounds like label vs dimension issue
+   		- update: getting this error:  `shape [2, 2] is invalid for input of size 2 ` inside trainer.fit()	 - sounds like label vs dimension issue. update: found out what the issue is. The dimension for each of the entry in qnlp.weights, must exactly match that of initial param vector. Infact that dimension is  decided by a) how many qbits/dimensions you assigned to
+                    n and s during the ansatz creationg an b) how complex the word's representation is.
+                    for example let's say you gave n=2 and s=4 qbits. So john_n will have a dimension of 2
+                    since it has only one noun. however, now look at prepares_0_n.r@s. This will have a dimension of 8 because
+                    it is the product of a nount and a sentence. therefore 2x4=8. Therefore the initial param vector
+                    also should have a tensor of dimension 8. i.e in the below code, am hard coding exactly 2 dimensions
+                    for all words. THAT IS WRONG. the number of dimensions must be picked from qnlp.weights 
+                    and the a initial parameter prepared, by that size. Now note that khatri is simply picking the 
+                    first n cells of the embedding vector- it is as good as initializing randomly. that's ok
+                    he has to start somewhere and this is a good experiment to mix and match. However, first and
+                    foremost the dimensions hs to match
 	-  inject oov words in val to their data and try above
  	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
   	-  reading
