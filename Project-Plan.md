@@ -56,10 +56,9 @@ Qn) what accuracy will we get on val data, if we initialize only on train_circui
 ans: hits lots of OOV, but this time at an interesting level. person_0_n was a symbol present in the trained qnlp_model.symbols and had a weight corresponding inside qnlp_model.weights. However, the word person in val was n@n.l...or something complex. and that was called as OOV...fucking ma ka lavda. their code is dumb as fuck.
 
 Qn) same above scenario what accuracy do you get at the end of 30 epochs on training data?
-ans: 92.86 percentage (obviously, overfitting)- Todo: why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
+ans: 92.86 percentage (obviously, overfitting)- 
 
-Todo: add our OOV trick and see what accuracy you get
-Todo: inject oov words in val and try above
+
 
 
 
@@ -70,10 +69,6 @@ ans
 - 3) they initialize their model on all_circuits like shown above. TODO: Nothing in our code/continue initializing only on training
 - 4) they pass val_dataset during .fit() function itself. TODO: Nothing. Our code will barf due to OOV. SO its better we keep training and evaluation separate
 - 5) they use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
-- 6) todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.
-- 7) after that/doing 6 above use their data+ and try to run on our code. this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding
-  8) after that/doing 6 above use their data+ manually added new words in val- and try to run on our code. note down accuracy.
-  
   10) their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally
 converted using lambek calculus. i.e if there is just one basic type n or s it will use 2 dimensions (since everything in foodIT code is in tensor level) while coplex ones get more
 for example:
@@ -89,6 +84,17 @@ qnlp_model.weights[23]
 Parameter containing:
 tensor([-0.4763, -1.8438], requires_grad=True)
 """
+
+Todo: 
+- add their differences 1,2,6 to our code
+- english
+	- add our OOV trick and see what accuracy you get for food IT (without all circuits)
+ 		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding	 
+	-  inject oov words in val to their data and try above
+ 	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
+ -  Spanish
+ 	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.  	
+-  
 
 ## Nov 5
 - ToDo Megh:
