@@ -33,12 +33,33 @@
 
 
 # Meeting Notes
+
+## Nov 8th 2024
+Mithun's coding log
+
+Todo: 
+- add their differences 1,2,5,6 (from yesterday's notes) to our code --done
+- english
+	- add our OOV trick and see what accuracy you get for food IT (without all circuits)
+ 		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding
+   		- update: getting this error:  `shape [2, 2] is invalid for input of size 2 ` inside trainer.fit()	 - sounds like label vs dimension issue
+	-  inject oov words in val to their data and try above
+ 	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
+  	-  reading
+  		- todo of 1: read more on sentences2diagram
+  	 	-  todo of 2: why ansatz dimension 2 and 2
+  	  	-  todo of 5 above: why no remove cups
+  	   	- todo of 7 above: why staggered weights  	
+ -  Spanish
+ 	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.  	
+- 
 ## Nov 7
 - Discussion on Fasttext embeddings
 	- For spanish, we have an executable `.bin` file. It can't be opened, but when we execute it and provide it a word, it will return an embedding.
  	- English has word-level embeddings, Spanish has n-gram level embeddings
 - details from Mithuns coding
-	- able to replicate the Food IT classification using our code.
+  
+	- able to replicate the Food IT classification using our code.- the file is called: replicating_food_it.py
  -	however few things to note
  -	Qn) Does their code barf if we provide a new unknown word in dev or tst
  -	ans: No
@@ -83,21 +104,7 @@ Parameter containing:
 tensor([-0.4763, -1.8438], requires_grad=True)
 """
 
-Todo: 
-- add their differences 1,2,5,6 to our code
-- english
-	- add our OOV trick and see what accuracy you get for food IT (without all circuits)
- 		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding	 
-	-  inject oov words in val to their data and try above
- 	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
-  	-  reading
-  		- todo of 1: read more on sentences2diagram
-  	 	-  todo of 2: why ansatz dimension 2 and 2
-  	  	-  todo of 5 above: why no remove cups
-  	   	- todo of 7 above: why staggered weights  	
- -  Spanish
- 	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.  	
--  
+ 
 
 ## Nov 5
 - ToDo Megh:
