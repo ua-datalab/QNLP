@@ -54,6 +54,7 @@ Todo:
                     first n cells of the embedding vector- it is as good as initializing randomly. that's ok
                     he has to start somewhere and this is a good experiment to mix and match. However, first and
                     foremost the dimensions hs to match
+       		- manually look at the corresponding weights and pass this bug. this is a band aid. Ideally, todo: understand deeply dimensions and qbit assignments
 	-  inject oov words in val to their data and try above
  	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
   	-  reading
