@@ -332,6 +332,22 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                     #pytorch model likes the param vector in [a,1-a] format. Just like that of the labels
                     #todo: confirm if this happens for other models/do we really need to have an if else here
                     # todo: what is the connection between initial param vectors and labels? oh remember in QNLP labels directly are logits/confidence in predictions?
+
+                    """update@nov8th 2024. While this was copied from Khatri's code, this is wrong. Your initial_param_vector
+                    and inturn the corresponding qnlp.weight's dimension, is decided by a) how many qbits you assigned to
+                    n and s during the ansatz creationg an b) how complex the word's representation is.
+                    for example let's say you gave n=2 and s=4 qbits. So john_n will have a dimension of 2
+                    since it has only one noun. however, now look at prepares_0_n.r@s. This will have a dimension of 8 because
+                    it is the product of a nount and a sentence. therefore 2x4=8. Therefore the initial param vector
+                    also should have a tensor of dimension 8. i.e in the below code, am hard coding exactly 2 dimensions
+                    for all words. THAT IS WRONG. the number of dimensions must be picked from qnlp.weights 
+                    and the a initial parameter prepared, by that size. Now note that khatri is simply picking the 
+                    first n cells of the embedding vector- it is as good as initializing randomly. that's ok
+                    he has to start somewhere and this is a good experiment to mix and match. However, first and
+                    foremost the dimensions hs to match.
+                    todo: find if its just a spider ansatz thing that the 2x4=8 is created of does it happen for IQPansatz
+                    also. because khatri uses IQPansatz, so we need to ensure that is not having a problem before declaring
+                    his code to be blindly wrong."""
                     val1= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)]
                     val2= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)+1]
                     tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding
@@ -820,7 +836,7 @@ def run_experiment(nlayers=1, seed=SEED):
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
     ansatz = ansatz_to_use({AtomicType.NOUN: Dim(2),
-                    AtomicType.SENTENCE: Dim(2)                        
+                    AtomicType.SENTENCE: Dim(4)                        
                     })
     
     """
@@ -849,7 +865,7 @@ print(f'RUNNING WITH {nlayers} layers')
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
-    qnlp_model = model_to_use.from_diagrams(train_circuits+val_circuits+test_circuits)
+    qnlp_model = model_to_use.from_diagrams(train_circuits)
 
     train_dataset = Dataset(
                 train_circuits,
@@ -885,8 +901,8 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    # train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
-    #     train_circuits, val_circuits, embedding_model, qnlp_model)
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
+        train_circuits, val_circuits, embedding_model, qnlp_model)
 
     """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
     # and test on val_dataset. todo: find out how to add early stopping.
