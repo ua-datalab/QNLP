@@ -32,13 +32,13 @@ from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
 from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
-from lambeq import TensorAnsatz,SpiderAnsatz
+from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 
 bobCatParser=BobcatParser()
 parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15,TensorAnsatz ]
+ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
@@ -301,7 +301,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     #todo: find what qnlp_model.symbols is- rather how is it different than train vocab?
     #ans: it is every word in the given list of circuits with its qbits
     # and data type e.g. únicamente_0__s
-    for sym in qnlp_model.symbols:
+    for sym,weight in zip(qnlp_model.symbols, qnlp_model.weights):
         """#for each qbit, the initial parameter size changes.
         # i.e if aldea had both aldea_0_s and aldea_1_s
         # its initial param will have two difference entries in the initial param vector
@@ -348,9 +348,19 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                     todo: find if its just a spider ansatz thing that the 2x4=8 is created of does it happen for IQPansatz
                     also. because khatri uses IQPansatz, so we need to ensure that is not having a problem before declaring
                     his code to be blindly wrong."""
-                    val1= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)]
-                    val2= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)+1]
-                    tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding
+                    
+                    # val1= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)]
+                    # val2= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)+1]
+                    # tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding
+                    # initial_param_vector.append(tup)
+
+                    #better version where dimension of initial param vector is decided by the actual dimension assigned in qnlp. weights for htat word
+                    list_of_params_for_this_word=[]
+                    for i in range(len(weight)):
+                        assert len(train_vocab_embeddings[cleaned_wrd_with_type]) > i
+                        val= train_vocab_embeddings[cleaned_wrd_with_type][int(i)]
+                        list_of_params_for_this_word.append(val)
+                    tup= torch.tensor (list_of_params_for_this_word, requires_grad=True) #initializing with first two values of the embedding
                     initial_param_vector.append(tup)
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
@@ -389,7 +399,11 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       commenting the code out until i find what its doing
     ."""
     
-    assert len( qnlp_model.weights) == len(initial_param_vector)
+    assert len(qnlp_model.weights) == len(initial_param_vector)
+    #also assert dimension of every single symbol/weight matches that of initial_para_vector
+    for x,y in zip(qnlp_model.weights, initial_param_vector):
+        assert len(x) == len(y)
+
     qnlp_model.weights = nn.ParameterList(initial_param_vector)
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
@@ -836,9 +850,11 @@ def run_experiment(nlayers=1, seed=SEED):
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
     ansatz = ansatz_to_use({AtomicType.NOUN: Dim(2),
-                    AtomicType.SENTENCE: Dim(4)                        
+                    AtomicType.SENTENCE: Dim(2)                        
                     })
     
+    
+
     """
     todo: his original code for ansatz is as below. Todo find out: why we switched to the above.
     I think it had something do with spider ansatz-
@@ -978,19 +994,17 @@ tensor([-0.0098,  0.7008], requires_grad=True)
        the OOV_prediction model is those 4 models below, which KNOW HOW TO 
        HANDLE OOV
        I.E the final accuracy calculation on val/dev SHOULD ONLY BE DONE
-       USING THESE 4 models and NEVER using the base qnlp_model.
+       USING THESE 4 models and NEVER using the base qnlp_model.- unless oov count ==0
     """
 
     """#TAKE THE TRAINED model (i.e end of all epochs of early stopping and run it on train_circuits.
     #note:this is being done More for a sanity check since ideally you will see the values
     # printed during training in .fit() itself."""
 
-    # print test accuracy
-    val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
-    print('validation accuracy:', val_acc.item())
+    # print val accuracy
+    # val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+    # print('validation accuracy:', val_acc.item())
 
-    import sys
-    sys.exit()
 
     # train_preds = qnlp_model.get_diagram_output(train_circuits)    
     # loss_pyTorch =torch.nn.BCEWithLogitsLoss()
@@ -1000,39 +1014,39 @@ tensor([-0.0098,  0.7008], requires_grad=True)
 
 
     """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
-    # if oov_word_count==0:
-    #     import matplotlib.pyplot as plt
-    #     import numpy as np
+    if oov_word_count==0:
+        import matplotlib.pyplot as plt
+        import numpy as np
 
-    #     fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
+        fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
 
-    #     ax_tl.set_title('Training set')
-    #     ax_tr.set_title('Development set')
-    #     ax_bl.set_xlabel('Epochs')
-    #     ax_br.set_xlabel('Epochs')
-    #     ax_bl.set_ylabel('Accuracy')
-    #     ax_tl.set_ylabel('Loss')
+        ax_tl.set_title('Training set')
+        ax_tr.set_title('Development set')
+        ax_bl.set_xlabel('Epochs')
+        ax_br.set_xlabel('Epochs')
+        ax_bl.set_ylabel('Accuracy')
+        ax_tl.set_ylabel('Loss')
 
-    #     colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-    #     range_ = np.arange(1, trainer.epochs+1)
-    #     ax_tl.plot(range_, trainer.train_epoch_costs, color=next(colours))
-    #     ax_bl.plot(range_, trainer.train_eval_results['acc'], color=next(colours))
-    #     ax_tr.plot(range_, trainer.val_costs, color=next(colours))
-    #     ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
+        colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+        range_ = np.arange(1, trainer.epochs+1)
+        ax_tl.plot(range_, trainer.train_epoch_costs, color=next(colours))
+        ax_bl.plot(range_, trainer.train_eval_results['acc'], color=next(colours))
+        ax_tr.plot(range_, trainer.val_costs, color=next(colours))
+        ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
 
 
-    val_preds = qnlp_model.get_diagram_output(val_circuits)    
-    loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
-    val_acc =accuracy(val_preds, torch.tensor(val_labels))
-    print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
+        val_preds = qnlp_model.get_diagram_output(val_circuits)    
+        loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+        val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
+        val_acc =accuracy(val_preds, torch.tensor(val_labels))
+        print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
 
-    # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
-    val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
-    print('Val accuracy:', val_acc.item())
+        # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
+        val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+        print('Val accuracy:', val_acc.item())
     
-    import sys
-    sys.exit()
+        import sys
+        sys.exit()
 
     """So by nowthe actual QNLP model (i.e model 1) is trained. Next is we are going to connect the model which learns
     #  relationsihp between fasttext emb and angles. look inside the function
