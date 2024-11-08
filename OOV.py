@@ -731,16 +731,20 @@ def convert_to_diagrams(list_sents,labels):
 # Note that this is a confusion arising on sep 29th 2024: because we don't know what is the meaning of
 # the _0 in aldea. Rather, i am yet to read the 2010 discocat paper. That should explain it
 # Until then taking a guess"""
-train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
-val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
-test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
+# train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
+# val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
+# test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
+
+train_diagrams = parser_to_use.sentences2diagrams(train_data)
+val_diagrams = parser_to_use.sentences2diagrams(val_data)
+test_diagrams = parser_to_use.sentences2diagrams(test_data)
 
 """#assignign teh labels back to s`ame old lable
 # doing because didnt want same variable going into th function and returning it.
 #  python lets you get away with it, but i dont trust it"""
-train_labels = train_labels_v2 
-val_labels = val_labels_v2
-test_labels = test_labels_v2
+# train_labels = train_labels_v2 
+# val_labels = val_labels_v2
+# test_labels = test_labels_v2
 
 """
 these d1.cod=d2.code are now orphan codes, but in reality, these code were there in khatri's original
@@ -777,16 +781,16 @@ val_X = []
 """# Note: removing cups and normalizing is more useful in bobcat parser, not in spiders
 #but leaving it here since eventually we want everything to go through bobcat
 # refer: https://cqcl.github.io/lambeq-docs/tutorials/trainer-quantum.html"""
-remove_cups = RemoveCupsRewriter()
+# remove_cups = RemoveCupsRewriter()
 
-for d in tqdm(train_diagrams):
-    train_X.append(remove_cups(d).normal_form())
+# for d in tqdm(train_diagrams):
+#     train_X.append(remove_cups(d).normal_form())
 
-for d in tqdm(val_diagrams):    
-    val_X.append(remove_cups(d).normal_form())
+# for d in tqdm(val_diagrams):    
+#     val_X.append(remove_cups(d).normal_form())
 
-train_diagrams  = train_X
-val_diagrams    = val_X
+# train_diagrams  = train_X
+# val_diagrams    = val_X
 
 # this is used only when there are a pair of sentences
 # from discopy.quantum.gates import CX, Rx, H, Bra, Id
@@ -799,7 +803,7 @@ val_diagrams    = val_X
 """
 print and assert statements for debugging
 """
-assert len(train_diagrams)== len(train_labels_v2)
+
 print(f"count of train, test, val elements respectively are: ")
 print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
 assert len(train_diagrams)== len(train_labels)
@@ -815,10 +819,9 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(4),
-                        AtomicType.SENTENCE: Dim(2)
-                        #    AtomicType.PREPOSITIONAL_PHRASE: Dim(2),
-                        })
+    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(2),
+                    AtomicType.SENTENCE: Dim(2)                        
+                    })
     
     """
     todo: his original code for ansatz is as below. Todo find out: why we switched to the above.
@@ -846,7 +849,7 @@ print(f'RUNNING WITH {nlayers} layers')
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
-    qnlp_model = model_to_use.from_diagrams(train_circuits)
+    qnlp_model = model_to_use.from_diagrams(train_circuits+val_circuits+test_circuits)
 
     train_dataset = Dataset(
                 train_circuits,
@@ -882,8 +885,8 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
-        train_circuits, val_circuits, embedding_model, qnlp_model)
+    # train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
+    #     train_circuits, val_circuits, embedding_model, qnlp_model)
 
     """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
     # and test on val_dataset. todo: find out how to add early stopping.
@@ -965,15 +968,23 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     """#TAKE THE TRAINED model (i.e end of all epochs of early stopping and run it on train_circuits.
     #note:this is being done More for a sanity check since ideally you will see the values
     # printed during training in .fit() itself."""
-    val_preds = qnlp_model.get_diagram_output(train_circuits)    
-    loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    train_loss= loss_pyTorch(val_preds, torch.tensor(train_labels))
-    train_acc =accuracy(val_preds, torch.tensor(train_labels))
-    print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
+
+    # print test accuracy
+    val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+    print('validation accuracy:', val_acc.item())
+
+    import sys
+    sys.exit()
+
+    # train_preds = qnlp_model.get_diagram_output(train_circuits)    
+    # loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+    # train_loss= loss_pyTorch(val_preds, torch.tensor(train_labels))
+    # train_acc =accuracy(val_preds, torch.tensor(train_labels))
+    # print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
 
 
     """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
-    if oov_word_count==0:
+    # if oov_word_count==0:
     #     import matplotlib.pyplot as plt
     #     import numpy as np
 
@@ -994,18 +1005,18 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     #     ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
 
 
-        val_preds = qnlp_model.get_diagram_output(val_circuits)    
-        loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-        val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
-        val_acc =accuracy(val_preds, torch.tensor(val_labels))
-        print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
+    val_preds = qnlp_model.get_diagram_output(val_circuits)    
+    loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+    val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
+    val_acc =accuracy(val_preds, torch.tensor(val_labels))
+    print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
 
-        # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
-        val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
-        print('Val accuracy:', val_acc.item())
-        
-        import sys
-        sys.exit()
+    # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
+    val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+    print('Val accuracy:', val_acc.item())
+    
+    import sys
+    sys.exit()
 
     """So by nowthe actual QNLP model (i.e model 1) is trained. Next is we are going to connect the model which learns
     #  relationsihp between fasttext emb and angles. look inside the function
