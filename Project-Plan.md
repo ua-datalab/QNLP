@@ -60,17 +60,15 @@ ans: 92.86 percentage (obviously, overfitting)-
 
 
 
-
-
 Qn) what other major changes/differences are there between their code and ours
 ans
 - 1) they use sentences2diagrams while we use sentence2diagram. todo: Use their method. Our way was giving arrow/cod/dom level errors.
 - 2) in ansatz definition they give dim 2 for both noun and sentence. we were giving 4. If I gave 4 in their code, error occurs. weird. todo: read more on this. Thought sentences were supposed to live in a dimension higher than nouns as per lambek
 - 3) they initialize their model on all_circuits like shown above. TODO: Nothing in our code/continue initializing only on training
 - 4) they pass val_dataset during .fit() function itself. TODO: Nothing. Our code will barf due to OOV. SO its better we keep training and evaluation separate
-- 5) they use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
-  10) their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally
-converted using lambek calculus. i.e if there is just one basic type n or s it will use 2 dimensions (since everything in foodIT code is in tensor level) while coplex ones get more
+  5) they dont use removecups -atleast not in classical todo: find why
+  6) they use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
+  7) their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally converted using lambek calculus. i.e if there is just one basic type n or s it will use 2 dimensions (since everything in foodIT code is in tensor level) while complex ones get more.example below. Todo: read and understand and debug more into this.
 for example:
 """
 qnlp_model.symbols[24]
@@ -86,12 +84,17 @@ tensor([-0.4763, -1.8438], requires_grad=True)
 """
 
 Todo: 
-- add their differences 1,2,6 to our code
+- add their differences 1,2,5,6 to our code
 - english
 	- add our OOV trick and see what accuracy you get for food IT (without all circuits)
  		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding	 
 	-  inject oov words in val to their data and try above
  	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
+  	-  reading
+  		- todo of 1: read more on sentences2diagram
+  	 	-  todo of 2: why ansatz dimension 2 and 2
+  	  	-  todo of 5 above: why no remove cups
+  	   	- todo of 7 above: why staggered weights  	
  -  Spanish
  	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.  	
 -  
