@@ -55,6 +55,8 @@ Todo:
                     he has to start somewhere and this is a good experiment to mix and match. However, first and
                     foremost the dimensions hs to match
        		- manually look at the corresponding weights and pass this bug. this is a band aid. Ideally, todo: understand deeply dimensions and qbit assignments
+         	- update: getting another error at model3 (nn).fit- expected shape[2] given shape[3]
+          	- solution: this was because i was creating the vectors in NN_train_Y using maxparamlength+1- should have been just maxparamlength alone
 	-  inject oov words in val to their data and try above
  	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
   	-  reading
