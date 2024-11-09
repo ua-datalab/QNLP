@@ -475,7 +475,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     # """
 
     
-    dict_training_symbols_vs_qnlp_trained_weights = {symbol: param for symbol, param in
+    dict1 = {symbol: param for symbol, param in
                                                       zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
    
    
@@ -487,16 +487,11 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     QNLP model will be added.
     i.e for now for each such word in training vocabulary, create a vector filled with zeroes to represent
     trained parameters         
-    
-    Update@oct29th2024- in the below code it was np.zeros(max_word_param_length+1)
-    however, when using pytorch trainer and pytorch model it needs weights in a tuple form 
-    (todo find out why)- but max param length was 1- since we were using spider ansatz
-    so as of now hardcoding the np.zeroes to be 2- 
-    will have to change this later as and when we move to other ansatz
 
     """
-    dict_wrd_in_training_vs_weights = {wrd: np.zeros(max_word_param_length+1) for wrd in train_vocab_embeddings}
+    dict2 = {wrd: np.zeros(max_word_param_length) for wrd in train_vocab_embeddings}
     
+   
     '''for each such word in training vocabulary, 
       to the empty array/array of zeroes   created above.
       -get its weights from the qnlp trained weights
@@ -509,7 +504,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     # dict_wrd_in_training_vs_weights i.e key is either word/symbol while value is sambe for both, which is the corresponding 
     # weight of the same word in the trained QNLP model '''
     cleaned_wrd_with_type=""
-    for symbol, trained_weights in dict_training_symbols_vs_qnlp_trained_weights.items():
+    for symbol, trained_weights in dict1.items():
         if(ansatz_to_use==SpiderAnsatz):  
             #symbol and word are different. e.g. aldea_0. From this extract the word
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symbol.name)
@@ -525,8 +520,8 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         # i think this has something to do with the wrd splitting thing
         #todo: in original code of khatri he is not storing aldea with plain english word
         #but he is doing with aldea_0_s- make sure we revert back to this later.
-        if cleaned_wrd_with_type in dict_wrd_in_training_vs_weights:
-                dict_wrd_in_training_vs_weights[cleaned_wrd_with_type][int(idx)] = trained_weights[int(idx)]
+        if cleaned_wrd_with_type in dict2:
+                dict2[cleaned_wrd_with_type][int(idx)] = trained_weights[int(idx)]
         else:                
                 print(f"inside OOV_generation-found that this word {cleaned_wrd_with_type} was not in trained_param_vectors")
 
@@ -544,7 +539,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     every word should have more than 1 values. So NN_train_Y will be a list of 2 tuple arrays. Be ready
      for if and when this bombs """
     NN_train_X = np.array([train_vocab_embeddings[wrd] for wrd in wrds_in_order])
-    NN_train_Y = np.array([dict_wrd_in_training_vs_weights[wrd] for wrd in wrds_in_order])
+    NN_train_Y = np.array([dict2[wrd] for wrd in wrds_in_order])
     
     """#this is model 3. i.e create a simple Keras NN model, which will learn the above mapping.
       todo: use a better model a) FFNN using pytorch b) something a little bit more complicated than a simple FFNN"""
@@ -584,7 +579,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     plt.legend()
     # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
-    return OOV_NN_model,dict_wrd_in_training_vs_weights
+    return OOV_NN_model,dict2
 
 def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
     """
@@ -633,19 +628,21 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
             idx = rest.split('__')[0]      
             if cleaned_wrd_with_type in pred_parameter_map:
                 if model_to_use == PytorchModel:
-                    val1= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
-                    """# todo: there are some cleaned_wrd_with_type in pred_parameter_map which is empty. i.e size of tuple =1
+                    pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
+                    # val1= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
+                    """# todo: there are some cleaned_wrd_with_type in pred_parameter_map which is empty.
+                      i.e size of tuple =1
                     #figure that out,. commenting this line until then and forcing val2 to be zero                
                     # val2= pred_parameter_map[cleaned_wrd_with_type][int(idx)+1]"""
 
-                    if len(pred_parameter_map[cleaned_wrd_with_type])>1:
-                        val2= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)+1])
-                    else:
-                        val2 = np.float32(0.0)
-                    tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding            
-                    pred_weight_vector.append(tup)
+                    # if len(pred_parameter_map[cleaned_wrd_with_type])>1:
+                    #     val2= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)+1])
+                    # else:
+                    #     val2 = np.float32(0.0)
+                    # tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding            
+                    # pred_weight_vector.append(tup)
 
-    """#so he is assigning the weights he picked from model 3's outout (the DNN one)
+    """#so he is assigning the weights he picked from model 3's output (the DNN one)
     to that of model 4 - i.e the prediction model. I think this is the answer to the question
     of why is he using two QNLP models (model1 and model 4)- that is because if we could direclty use
     the trained weights of the original QNLP model model 1- we wouldnt have had to go through this 
@@ -659,7 +656,9 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     assert len(pred_model.symbols) == len(pred_weight_vector)
     assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
-    # assert len(pred_model.weights) == len(pred_weight_vector)    
+    #also assert dimension of every single symbol/weight matches that of initial_para_vector
+    for x,y in zip(pred_model.weights, pred_weight_vector):
+        assert len(x) == len(y)  
     pred_model.weights = nn.ParameterList(pred_weight_vector)
 
     
