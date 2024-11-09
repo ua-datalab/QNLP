@@ -57,6 +57,8 @@ Todo:
        		- manually look at the corresponding weights and pass this bug. this is a band aid. Ideally, todo: understand deeply dimensions and qbit assignments
          	- update: getting another error at model3 (nn).fit- expected shape[2] given shape[3]
           	- solution: this was because i was creating the vectors in NN_train_Y using maxparamlength+1- should have been just maxparamlength alone
+          	- update: passed nn.fit() error for model3. Now another error inside evaluate_val_set. `index 2 is out of bounds for axis 0 with size 2`- Solution: this was because i was hardcoding parameters to be always a tuple of 2. that is not true- it depends on the _0 and _1 ka value.
+          	- update: error in pred_model. get_diagram_output(val_circuits) which is `RuntimeError: shape '[2, 2]' is invalid for input of size `
 	-  inject oov words in val to their data and try above
  	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
   	-  reading
