@@ -33,6 +33,16 @@
 
 
 # Meeting Notes
+Nov 12th- Mithun's logs
+We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
+
+Next goal in sanity check: try to get values of Khatri back. Note khatri uses Depccg parser, IQPansatz, Numpymodel, quantum trainer. We definitely cant use DEpccg parser. Thats a nasty rabbit hole I dont want to go in.
+1) change data to MRPC -original, not the hacked version we have been using for classification toy experiments
+2) add in his change of quantum circuits including the equality_comparator
+3) 3) rewrite code for a pair of input, instead of just one
+   4) and try to use all models and parser same as his.
+
+
 ##Nov 11th
 
 found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
