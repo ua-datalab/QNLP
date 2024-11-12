@@ -1,7 +1,9 @@
 # nov 11th 2024
  
+import numpy as np
 import lambeq
-from lambeq.backend.grammar import Id, Ty, Box
+from lambeq.backend.grammar import Id, Ty, Box, Cap, Cup, Word, Diagram
+from lambeq.backend.drawing import draw_equation
 
 """#just categories
 1. has objects
@@ -130,6 +132,86 @@ y = Box('y', A@A, B)
 composites_into_a_function =  intermediate >> y
 print(f"type(composites_into_a_function) is {type(composites_into_a_function)}")
 print(f"value of (composites_into_a_function) is {(composites_into_a_function)}")
-composites_into_a_function.draw()
+# composites_into_a_function.draw()
+
+#Rigid monoidal categories
+adjoints= (A.l@A) @ (A@A.l)
+print(f"type(adjoints) is {type(adjoints)}")
+print(f"value of (adjoints) is {(adjoints)}")
 
 
+
+
+cupWithRAdjoint = Cup(A,A.r) 
+print(f"type(compositeWithRAdjoint) is {type(cupWithRAdjoint)}")
+print(f"value of (compositeWithRAdjoint) is {(cupWithRAdjoint)}")
+# compositeWithRAdjoint.draw()
+
+
+capWithLAdjoint = Cap(A,A.l) 
+print(f"type(compositeWithRAdjoint) is {type(capWithLAdjoint)}")
+print(f"value of (compositeWithRAdjoint) is {(capWithLAdjoint)}")
+# capWithLAdjoint.draw()
+
+cupWithLAdjoint = Cup(A.l,A) 
+print(f"type(compositeWithRAdjoint) is {type(cupWithLAdjoint)}")
+print(f"value of (compositeWithRAdjoint) is {(cupWithLAdjoint)}")
+# cupWithLAdjoint.draw()
+
+
+print(f"dom of capWithLAdjoint(s) is {capWithLAdjoint.dom}")
+print(f"cod of capWithLAdjoint(s) is {capWithLAdjoint.cod}")
+print(f"dom of cupWithLAdjoint(s) is {cupWithLAdjoint.dom}")
+print(f"cod of cupWithLAdjoint(s) is {cupWithLAdjoint.cod}")
+
+
+s = capWithLAdjoint @ Id(A)  >> Id(A)@ cupWithLAdjoint
+ 
+print(f"type(s) is {type(s)}")
+print(f"value of (s) is {(s)}")
+# s.draw()
+# s.normal_form().draw()
+
+#pregroups
+n= Ty('n')
+s= Ty('s')
+
+# Word1 = Word('john',n) 
+# Word2 = Word('likes',n.r@s@n.l) 
+# Word3 = Word('mary',n) 
+
+all_words =[Word('john',n) ,Word('likes',n.r@s@n.l) ,Word('mary',n) ]
+morphisms = [(Cup,0,1), (Cup,3,4)]
+
+
+d =Diagram.create_pregroup_diagram(all_words, morphisms)
+df=d.normal_form()
+# draw_equation(d,df)
+
+"""just tensors (no conversion between diagram and tensor yet)"""
+from lambeq.backend.tensor import Box, Dim, Cup, Cap,Diagram    
+
+"""#dimension==tuple of dimensions. so a box of (2,2) means 
+it will have 2 rows and 2 columns and the data it can accomondate should be max 1x4
+e.g.[1,3,4,4]=
+
+"""
+# so a 2d array will have dim=2
+#a 3 d array will have dim of 3
+a= Dim(1)
+b= Dim(2)
+c= Dim(3)
+
+d= a@b@c
+print(f"type of (d) is {type(d)}")
+print(f"value of (d) is {d=}")
+
+print(f'{Dim(1) @ Dim(2) @ Dim(3)=}')
+
+f = Box(name="f",dom=b,cod=c,data=[1,2,3,4,5,6])
+print(f.eval())
+# f.to_diagram().draw()
+
+
+c = Diagram.cups(c, c).eval(dtype=np.int64)
+print(c)

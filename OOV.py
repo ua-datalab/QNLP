@@ -621,14 +621,26 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     #convert the dictionary pred_parameter_map into a list pred_weight_vector
     pred_weight_vector = []
 
-    for sym in pred_model.symbols:
+    assert len(pred_model.symbols) == len(pred_model.weights)
+
+    for sym,weight in zip(pred_model.symbols,pred_model.weights):
         if(ansatz_to_use==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
             if cleaned_wrd_with_type in pred_parameter_map:
                 if model_to_use == PytorchModel:
-                    pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
+                    #better version where dimension of initial param vector is decided by the actual dimension assigned in qnlp. weights for htat word
+                    list_of_params_for_this_word=[]
+
+                    for i in range(len(weight)):
+                        assert len(pred_parameter_map[cleaned_wrd_with_type]) > i
+                        val= pred_parameter_map[cleaned_wrd_with_type][int(idx)]
+                        list_of_params_for_this_word.append(val)
+                    tup= torch.tensor (list_of_params_for_this_word, requires_grad=True) #initializing with first two values of the embedding
+                    pred_weight_vector.append(tup)
+
+                    # pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
                     # val1= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
                     """# todo: there are some cleaned_wrd_with_type in pred_parameter_map which is empty.
                       i.e size of tuple =1
