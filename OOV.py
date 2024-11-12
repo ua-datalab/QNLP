@@ -1183,50 +1183,50 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     # note: as of nov 6th2024 both smart and embed models are giving same value
     # todo/confirm if the weight initialization done in model 3/smart model is not being
     # reflected. this will show up whne we try to reproduce khatri values"""
-    embed_loss, embed_acc = evaluate_val_set(prediction_model,
-                                              val_circuits,
-                                                val_labels,
-                                              trained_wts,
-                                              val_embeddings,
-                                              max_w_param_length,
-                                              OOV_strategy='embed')
-    
-    print('Evaluating ZEROS model')
-    zero_loss, zero_acc = evaluate_val_set(prediction_model,
-                                              val_circuits,
-                                                val_labels,
-                                              trained_wts,
-                                              val_embeddings,
-                                              max_w_param_length,
-                                              OOV_strategy='zeros')
-
-    rand_losses = []
-    rand_accs = []
-
-   
-    print('Evaluating RAND MODEL')
-    """
-    even though random model is yet another random number generator, he is using it 
-    across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
-    crap its called. i.e he is trying to make it as stupid/random as possible.
-
-    update@oct30th2024. Random model is giving some semaphore shit (can you believe, from python?
-    its like generating/creating/doing some real random shit coding that 
-    created C level seg faults from python, which i myself had once created during phd :-D).
-      commenting out for now
-    """
-    # for _ in range(10):
-    #     rl, ra  = evaluate_val_set(prediction_model,
+    # embed_loss, embed_acc = evaluate_val_set(prediction_model,
     #                                           val_circuits,
     #                                             val_labels,
     #                                           trained_wts,
     #                                           val_embeddings,
     #                                           max_w_param_length,
-    #                                           OOV_strategy='random')
+    #                                           OOV_strategy='embed')
+    
+    # print('Evaluating ZEROS model')
+    # zero_loss, zero_acc = evaluate_val_set(prediction_model,
+    #                                           val_circuits,
+    #                                             val_labels,
+    #                                           trained_wts,
+    #                                           val_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='zeros')
+
+    # rand_losses = []
+    # rand_accs = []
+
+   
+    # print('Evaluating RAND MODEL')
+    # """
+    # even though random model is yet another random number generator, he is using it 
+    # across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
+    # crap its called. i.e he is trying to make it as stupid/random as possible.
+
+    # update@oct30th2024. Random model is giving some semaphore shit (can you believe, from python?
+    # its like generating/creating/doing some real random shit coding that 
+    # created C level seg faults from python, which i myself had once created during phd :-D).
+    #   commenting out for now
+    # """
+    # # for _ in range(10):
+    # #     rl, ra  = evaluate_val_set(prediction_model,
+    # #                                           val_circuits,
+    # #                                             val_labels,
+    # #                                           trained_wts,
+    # #                                           val_embeddings,
+    # #                                           max_w_param_length,
+    # #                                           OOV_strategy='random')
         
 
-    #     rand_losses.append(rl)
-    #     rand_accs.append(ra)
+    # #     rand_losses.append(rl)
+    # #     rand_accs.append(ra)
     
     """#so by now, we have predictions on the test/dev/val set,
       using 4 different models. 1 is our trained NN model called 
@@ -1237,14 +1237,20 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     2. using NN (aka model 2 lines above): which is our model 3 trained to learn mapping between fasttext embeddings and qnlp-model-1s weights 
     #rest are all the baselines models
     """
-    res =  {'TRAIN': (train_loss, train_acc),
-            'NN': (smart_loss, smart_acc),
-            'EMBED': (embed_loss, embed_acc),
-            'ZERO': (zero_loss, zero_acc)
+    # res =  {'TRAIN': (train_loss, train_acc),
+    #         'NN': (smart_loss, smart_acc),
+    #         'EMBED': (embed_loss, embed_acc),
+    #         'ZERO': (zero_loss, zero_acc)
+    #        }
+    
+    res =  {
+            'NN': (smart_loss, smart_acc)
+            
+            
            }
-    print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
-    print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
-    print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
 
     return res
 
