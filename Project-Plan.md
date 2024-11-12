@@ -37,6 +37,14 @@
 
 found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
 however when you use OOV model, it flat predicts only 2 values. So if you hit a word with 4 tensor length, the 2 value is not enough to represent weights
+ three solutions
+ easy way
+ - max params must be a value of product of dimensions of basic type, and the length of the dimension of the word i.e if bakes_2_n@n.r@s- and we assign n=dim(2) s=dim(2), we need to have a vector of size 4 prepared to store its weights
+   - so create dict2/np.zeroes based on that max value
+   - find why last layer of NN model is predicting 2 instead of 4 values (most likely linked to max params)
+   - or trained_qnlp_model itself has staggered params so why the fuck would your weight vector have only 2
+Right way
+- try tensoransatz instead of spideranstaz. I Have a bad feeling spideransatz is not writing the params per word correctly. I dont know what spideransatz is or what spideransatz does, it was a vestigial choice from almost a year ago- because spider parser was the only one that was not bombing for the data we were using then. now bobcatparser is easily reading the data.-and our experiments arein classical land, so use the flagship of classical functors, i.e TensorAnsatz, (with bobcatparser, pytorchmodel and ppytorch trainer)- plus eventually once we move to quantum world, I think most of these issues will go. But even then its important that our foundation in classical equivalent (i.e tensors) is very strong.
 ## Nov 8th 2024
 Mithun's coding log
 
