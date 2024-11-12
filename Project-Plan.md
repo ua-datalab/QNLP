@@ -33,7 +33,10 @@
 
 
 # Meeting Notes
+##Nov 11th
 
+found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
+however when you use OOV model, it flat predicts only 2 values. So if you hit a word with 4 tensor length, the 2 value is not enough to represent weights
 ## Nov 8th 2024
 Mithun's coding log
 
