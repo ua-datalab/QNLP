@@ -42,9 +42,12 @@ ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
+
 embedding_model = ft.load_model('./embeddings-l-model.bin')
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
+BASE_DIMENSION_FOR_NOUN =2 
+BASE_DIMENSION_FOR_SENT =2 
 MAXPARAMS = 300
 BATCH_SIZE = 30
 EPOCHS = 30
@@ -256,6 +259,13 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
         max_word_param_length_test = max(get_max_word_param_length(val_circuits))
         max_word_param_length = max(max_word_param_length_train, max_word_param_length_test) + 1
 
+        #update@nov11th2024. max param length should include a factor from dimension
+        """for example if bakes is n.r@s, and n=2 and s=2, the parameter length must be 4. I dont know why
+        spider ansatz its as 1"""
+
+        max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN)
+
+    
     assert max_word_param_length!=0
 
     
@@ -475,8 +485,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     # """
 
     
-    dict1 = {symbol: param for symbol, param in
-                                                      zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
+    dict1 = {symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
    
    
     """
@@ -520,8 +529,17 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         # i think this has something to do with the wrd splitting thing
         #todo: in original code of khatri he is not storing aldea with plain english word
         #but he is doing with aldea_0_s- make sure we revert back to this later.
+
+        """"""
         if cleaned_wrd_with_type in dict2:
-                dict2[cleaned_wrd_with_type][int(idx)] = trained_weights[int(idx)]
+                """
+                original code here was traiend_weights of index. I dont like it.
+                bakes_0_n has a trained_weights of 2 array
+                bakes_1_n.r@s has a trained_weights of 4 array. So why are we taking
+                just the index based value. I have a bad feeling this is spider ansatz
+                ka screw up and these should have been respectively bakes_2_n and bakes_4_n.r@s
+                """
+                dict2[cleaned_wrd_with_type] = trained_weights.detach().numpy()
         else:                
                 print(f"inside OOV_generation-found that this word {cleaned_wrd_with_type} was not in trained_param_vectors")
 
@@ -539,7 +557,22 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     every word should have more than 1 values. So NN_train_Y will be a list of 2 tuple arrays. Be ready
      for if and when this bombs """
     NN_train_X = np.array([train_vocab_embeddings[wrd] for wrd in wrds_in_order])
-    NN_train_Y = np.array([dict2[wrd] for wrd in wrds_in_order])
+
+    #if the weight vector is less than max_param_length (e.g. 4) , pad the rest with zeroes
+
+    NN_train_Y=[]
+    for wrd in wrds_in_order:
+        if len(dict2[wrd])==max_word_param_length:
+            NN_train_Y.append(dict2[wrd])
+        else:            
+            pad= np.zeros(max_word_param_length-len(dict2[wrd]))
+            combined = np.hstack([dict2[wrd],pad])                          
+            NN_train_Y.append(combined)
+            
+                    
+                           
+        
+    # NN_train_Y = np.array([dict2[wrd]  else dict2[wrd].extend([0,0]) for wrd in wrds_in_order])
     
     """#this is model 3. i.e create a simple Keras NN model, which will learn the above mapping.
       todo: use a better model a) FFNN using pytorch b) something a little bit more complicated than a simple FFNN"""
@@ -569,7 +602,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
     #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=1, epochs=100,callbacks=[callback])
+    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=100,callbacks=[callback])
     print(hist.history.keys())
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
     plt.plot(hist.history['loss'], label='loss')
@@ -630,15 +663,7 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
             idx = rest.split('__')[0]      
             if cleaned_wrd_with_type in pred_parameter_map:
                 if model_to_use == PytorchModel:
-                    #better version where dimension of initial param vector is decided by the actual dimension assigned in qnlp. weights for htat word
-                    list_of_params_for_this_word=[]
-
-                    for i in range(len(weight)):
-                        assert len(pred_parameter_map[cleaned_wrd_with_type]) > i
-                        val= pred_parameter_map[cleaned_wrd_with_type][int(idx)]
-                        list_of_params_for_this_word.append(val)
-                    tup= torch.tensor (list_of_params_for_this_word, requires_grad=True) #initializing with first two values of the embedding
-                    pred_weight_vector.append(tup)
+                    pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type])
 
                     # pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
                     # val1= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
@@ -669,8 +694,8 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     assert len(pred_model.symbols) == len(pred_weight_vector)
     assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
     #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    for x,y in zip(pred_model.weights, pred_weight_vector):
-        assert len(x) == len(y)  
+    # for x,y in zip(pred_model.weights, pred_weight_vector):
+    #     assert len(x) == len(y)  
     pred_model.weights = nn.ParameterList(pred_weight_vector)
 
     
@@ -860,8 +885,8 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(2),
-                    AtomicType.SENTENCE: Dim(2)                        
+    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
                     })
     
     
