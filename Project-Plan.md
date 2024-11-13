@@ -34,26 +34,24 @@
 
 # Meeting Notes
 ## Nov 12th- Mithun's logs
-We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
-
-Next goal in sanity check: try to get values of Khatri back. Note khatri uses Depccg parser, IQPansatz, Numpymodel, quantum trainer. We definitely cant use DEpccg parser. Thats a nasty rabbit hole I dont want to go in.
-1) change data to MRPC -original, not the hacked version we have been using for classification toy experiments
-2) add in his change of quantum circuits including the equality_comparator
-3) 3) rewrite code for a pair of input, instead of just one
-   4) and try to use all models and parser same as his.
-
+- We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
+- Next goal in sanity check: try to get values of Khatri back. Note khatri uses Depccg parser, IQPansatz, Numpymodel, quantum trainer. We definitely cant use DEpccg parser. Thats a nasty rabbit hole I dont want to go in.
+1. change data to MRPC -original, not the hacked version we have been using for classification toy experiments
+2. add in his change of quantum circuits including the equality_comparator
+3. rewrite code for a pair of input, instead of just one
+4. and try to use all models and parser same as his.
 
 ## Nov 11th- Mithuns logs
-found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
-however when you use OOV model, it flat predicts only 2 values. So if you hit a word with 4 tensor length, the 2 value is not enough to represent weights
- three solutions
- easy way
- - max params must be a value of product of dimensions of basic type, and the length of the dimension of the word i.e if bakes_2_n@n.r@s- and we assign n=dim(2) s=dim(2), we need to have a vector of size 4 prepared to store its weights
-   - so create dict2/np.zeroes based on that max value
-   - find why last layer of NN model is predicting 2 instead of 4 values (most likely linked to max params)
-   - or trained_qnlp_model itself has staggered params so why the fuck would your weight vector have only 2
-Right way
-- try tensoransatz instead of spideranstaz. I Have a bad feeling spideransatz is not writing the params per word correctly. I dont know what spideransatz is or what spideransatz does, it was a vestigial choice from almost a year ago- because spider parser was the only one that was not bombing for the data we were using then. now bobcatparser is easily reading the data.-and our experiments arein classical land, so use the flagship of classical functors, i.e TensorAnsatz, (with bobcatparser, pytorchmodel and ppytorch trainer)- plus eventually once we move to quantum world, I think most of these issues will go. But even then its important that our foundation in classical equivalent (i.e tensors) is very strong.
+- Found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
+- However when you use OOV model, it flat predicts only 2 values. So if you hit a word with 4 tensor length, the 2 value is not enough to represent weights
+ - Three solutions:
+	- Easy way
+ 		- max params must be a value of product of dimensions of basic type, and the length of the dimension of the word i.e if bakes_2_n@n.r@s- and we assign n=dim(2) s=dim(2), we need to have a vector of size 4 prepared to store its weights
+   		- so create dict2/np.zeroes based on that max value
+   		- find why last layer of NN model is predicting 2 instead of 4 values (most likely linked to max params)
+   		- or trained_qnlp_model itself has staggered params so why the fuck would your weight vector have only 2
+	- Right way
+		- try tensoransatz instead of spideranstaz. I Have a bad feeling spideransatz is not writing the params per word correctly. I dont know what spideransatz is or what spideransatz does, it was a vestigial choice from almost a year ago- because spider parser was the only one that was not bombing for the data we were using then. now bobcatparser is easily reading the data.-and our experiments arein classical land, so use the flagship of classical functors, i.e TensorAnsatz, (with bobcatparser, pytorchmodel and ppytorch trainer)- plus eventually once we move to quantum world, I think most of these issues will go. But even then its important that our foundation in classical equivalent (i.e tensors) is very strong.
   
 ## Nov 8th 2024
 Mithun's coding log
@@ -88,8 +86,8 @@ Todo:
   	  	-  todo of 5 above: why no remove cups
   	   	- todo of 7 above: why staggered weights  	
  -  Spanish
- 	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.  	
-- 
+ 	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.
+  
 ## Nov 7
 - Discussion on Fasttext embeddings
 	- For spanish, we have an executable `.bin` file. It can't be opened, but when we execute it and provide it a word, it will return an embedding.
@@ -97,38 +95,34 @@ Todo:
 - details from Mithuns coding
   
 	- able to replicate the Food IT classification using our code.- the file is called: replicating_food_it.py
- -	however few things to note
- -	Qn) Does their code barf if we provide a new unknown word in dev or tst
- -	ans: No
- -	Qn) Why
- -	Ans: because they are "smartly" using circuits of val and test data during initialization of the model
- -	i.e `all_circuits = train_circuits + val_circuits + test_circuits`
- -	`model = PytorchModel.from_diagrams(all_circuits)`
+ 	  - however few things to note
+ 	  - Qn) Does their code barf if we provide a new unknown word in dev or tst?
+	  	- ans: No
+ 	  - Qn) Why?
+ 		- Ans: because they are "smartly" using circuits of val and test data during initialization of the model
+ 		- i.e `all_circuits = train_circuits + val_circuits + test_circuits`
+ 		- `model = PytorchModel.from_diagrams(all_circuits)`
+		- Qn) will their model barf/complain about OOV if we initialize it only on train_circuits.
+			- Ans: yes
+		- Qn) does Khatri initialize it with only train_circuits or all?
+			- ans: only train_circuits
+		- Qn) what accuracy will we get on val data, if we initialize only on train_circuits, and do the training for 30 epochs and then use that model to test on val?
+			- ans: hits lots of OOV, but this time at an interesting level. person_0_n was a symbol present in the trained qnlp_model.symbols and had a weight corresponding inside qnlp_model.weights. However, the word person in val was n@n.l...or something complex. and that was called as OOV...fucking ma ka lavda. their code is dumb as fuck.
+		- Qn) same above scenario what accuracy do you get at the end of 30 epochs on training data?
+			- ans: 92.86 percentage (obviously, overfitting)
+		- Qn) what other major changes/differences are there between their code and ours
+			- ans
 
-_ Qn) will their model barf/complain about OOV if we initialize it only on train_circuits.
-Ans: yes
-Qn) does Khatri initialize it with only train_circuits or all?
-ans: only train_circuits
-
-Qn) what accuracy will we get on val data, if we initialize only on train_circuits, and do the training for 30 epochs and then use that model to test on val?
-ans: hits lots of OOV, but this time at an interesting level. person_0_n was a symbol present in the trained qnlp_model.symbols and had a weight corresponding inside qnlp_model.weights. However, the word person in val was n@n.l...or something complex. and that was called as OOV...fucking ma ka lavda. their code is dumb as fuck.
-
-Qn) same above scenario what accuracy do you get at the end of 30 epochs on training data?
-ans: 92.86 percentage (obviously, overfitting)- 
-
-
-
-Qn) what other major changes/differences are there between their code and ours
-ans
-- 1) they use sentences2diagrams while we use sentence2diagram. todo: Use their method. Our way was giving arrow/cod/dom level errors.
-- 2) in ansatz definition they give dim 2 for both noun and sentence. we were giving 4. If I gave 4 in their code, error occurs. weird. todo: read more on this. Thought sentences were supposed to live in a dimension higher than nouns as per lambek
-- 3) they initialize their model on all_circuits like shown above. TODO: Nothing in our code/continue initializing only on training
-- 4) they pass val_dataset during .fit() function itself. TODO: Nothing. Our code will barf due to OOV. SO its better we keep training and evaluation separate
-  5) they dont use removecups -atleast not in classical todo: find why
-  6) they use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
-  7) their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally converted using lambek calculus. i.e if there is just one basic type n or s it will use 2 dimensions (since everything in foodIT code is in tensor level) while complex ones get more.example below. Todo: read and understand and debug more into this.
+				1. they use sentences2diagrams while we use sentence2diagram. todo: Use their method. Our way was giving arrow/cod/dom level errors.
+				2. in ansatz definition they give dim 2 for both noun and sentence. we were giving 4. If I gave 4 in their code, error occurs. weird. todo: read more on this. Thought sentences were supposed to live in a dimension higher than nouns as per lambek
+				3. they initialize their model on all_circuits like shown above. TODO: Nothing in our code/continue initializing only on training
+				4. they pass val_dataset during .fit() function itself. TODO: Nothing. Our code will barf due to OOV. SO its better we keep training and evaluation separate
+				5. they dont use removecups -atleast not in classical todo: find why
+				6. They use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
+				7. their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally converted using lambek calculus. i.e if there is just one basic type n or s it will use 2 dimensions (since everything in foodIT code is in tensor level) while complex ones get more.example below. Todo: read and understand and debug more into this.
 for example:
-"""
+
+```
 qnlp_model.symbols[24]
 woman_0__n@n.l
 qnlp_model.weights[24]
@@ -139,9 +133,7 @@ woman_0__n
 qnlp_model.weights[23]
 Parameter containing:
 tensor([-0.4763, -1.8438], requires_grad=True)
-"""
-
- 
+```
 
 ## Nov 5
 - ToDo Megh:
@@ -156,8 +148,7 @@ tensor([-0.4763, -1.8438], requires_grad=True)
      	- Merged all changes into `main`
     - ToDo English embeddings: find them online, and if not, figure out how to incorporate english vector files into our code.
     - Chronology: word2vec, BERT, Fasttext, Byte-Pair (used by GPT). We would ultimately need the n-gram embeddings. Fasttext is used to build words, by training on natural language, n-grams, and thus creating relations between words. Richer because it has seen more data
-    	- Why do we need gpt embeddings- they have learnt word meanings after a level of training on the sub-word embeddings.
-     	- 	 
+    	- Why do we need gpt embeddings- they have learnt word meanings after a level of training on the sub-word embeddings.  
 
 ## Nov 4
 - Model breakdown:
