@@ -41,7 +41,8 @@
 1. meg pointed out that even thoughy i have end to end code OOV for food-IT, it is not correct, because I am using spanish embeddings. So as of now, we DONT have any end to end code. I was using spanish embeddings for english. We tried giving spanish data, and teh parser itself barfed. but remember it was bobcat parser. todo: try with spider parser, spider ansatz
    	- update: we finally have an end to end - system.  working for spanish embeddings. dev accuracy with OOV model is 59percent
 3. also, get gpt or fasttext embedding for english- and rerun food-IT again with OOV issue.
- 	- why not start with Glove. since its english
+ 	- why not start with Glove. since its english- fasttext is not really having any semantic richness. So its important to keep it at word level. since QNLP is a model which relies so much on semantic/word level stuff- so maybe using fasttext (and even gpt) is a bad idea with QNLP
+  	- nevertheless all these experiments should be done one way or other   
   	- maybe fasttext is useful for spanish, uspantek
 
 ## Nov 12th- Mithun's logs
