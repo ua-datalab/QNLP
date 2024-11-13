@@ -30,15 +30,16 @@ import fasttext as ft
 from lambeq import PytorchTrainer
 from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
-from lambeq import Dataset
+from lambeq import Dataset,AtomicType, IQPAnsatz, Sim14Ansatz, Sim15Ansatz
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 
 bobCatParser=BobcatParser()
+
 parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
+ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
