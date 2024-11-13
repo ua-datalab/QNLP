@@ -38,8 +38,8 @@ from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 
 bobCatParser=BobcatParser()
 
-parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
+parser_to_use = spiders_reader  #[bobCatParser, spiders_reader]
+ansatz_to_use = SpiderAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
@@ -51,15 +51,15 @@ BASE_DIMENSION_FOR_NOUN =2
 BASE_DIMENSION_FOR_SENT =2 
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS = 30
+EPOCHS = 5
 LEARNING_RATE = 3e-2
 SEED = 0
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA=False
+USE_SPANISH_DATA=True
 USE_USP_DATA=False
-USE_FOOD_IT_DATA = True
+USE_FOOD_IT_DATA = False
 USE_MRPC_DATA=False
 
 #setting a flag for TESTING so that it is done only once.
@@ -709,6 +709,7 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     return l, a
 
 def read_data(filename):
+    sent_count_longer_than_32=0
     labels, sentences = [], []
     with open(filename) as f:
         for line in f:
@@ -725,8 +726,17 @@ def read_data(filename):
             #     labels.append(int(t))
             
             """
-            labels.append([t, 1-t])            
-            sentences.append(line[1:].strip())
+            sent = line[1:].strip()
+            if( USE_SPANISH_DATA or USE_USP_DATA):
+                tokenized = spacy_tokeniser.tokenise_sentence(line)   
+                if len(tokenized)> 32:
+                    print(f"no of tokens in this sentence is {len(tokenized)}")
+                    sent_count_longer_than_32+=1
+                    continue
+                else:
+                    sentences.append(sent) 
+                    labels.append([t, 1-t])   
+    print(f"there were {sent_count_longer_than_32} sentences which were longer than 32 tokens")
     return labels, sentences
 
 #back to the main thread after all functions are defined.
@@ -777,10 +787,12 @@ def convert_to_diagrams(list_sents,labels):
         Todo: find if this is a very spanish tokenizer only issue or like pytorchmodel only issue"""
         
         if( USE_SPANISH_DATA or USE_USP_DATA):
+            tokenized = spacy_tokeniser.tokenise_sentence(sent)   
             if len(tokenized)> 32:
                 print(f"no of tokens in this sentence is {len(tokenized)}")
                 sent_count_longer_than_32+=1
                 continue
+
         spiders_diagram = parser_to_use.sentence2diagram(sentence=sent)
 
        

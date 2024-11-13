@@ -756,8 +756,9 @@ zipped_val_labels,zipped_val_sentences_1,zipped_val_sentences_2, = zipper(val_y,
 zipped_test_labels,zipped_test_sentences_1,zipped_test_sentences_2, = zipper(test_y,test_X_1,test_X_2)
 
 
+train_diagrams_1 = parser_to_use.sentences2diagrams(zipped_train_sentences_1)
+train_diagrams_2 = parser_to_use.sentences2diagrams(zipped_test_sentences_2)
 
-train_diagrams = parser_to_use.sentences2diagrams(train_data)
 val_diagrams = parser_to_use.sentences2diagrams(val_data)
 test_diagrams = parser_to_use.sentences2diagrams(test_data)
 
