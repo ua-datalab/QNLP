@@ -33,7 +33,7 @@
 
 
 # Meeting Notes
-Nov 12th- Mithun's logs
+## Nov 12th- Mithun's logs
 We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
 
 Next goal in sanity check: try to get values of Khatri back. Note khatri uses Depccg parser, IQPansatz, Numpymodel, quantum trainer. We definitely cant use DEpccg parser. Thats a nasty rabbit hole I dont want to go in.
@@ -43,8 +43,7 @@ Next goal in sanity check: try to get values of Khatri back. Note khatri uses De
    4) and try to use all models and parser same as his.
 
 
-##Nov 11th
-
+## Nov 11th- Mithuns logs
 found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
 however when you use OOV model, it flat predicts only 2 values. So if you hit a word with 4 tensor length, the 2 value is not enough to represent weights
  three solutions
@@ -55,6 +54,7 @@ however when you use OOV model, it flat predicts only 2 values. So if you hit a 
    - or trained_qnlp_model itself has staggered params so why the fuck would your weight vector have only 2
 Right way
 - try tensoransatz instead of spideranstaz. I Have a bad feeling spideransatz is not writing the params per word correctly. I dont know what spideransatz is or what spideransatz does, it was a vestigial choice from almost a year ago- because spider parser was the only one that was not bombing for the data we were using then. now bobcatparser is easily reading the data.-and our experiments arein classical land, so use the flagship of classical functors, i.e TensorAnsatz, (with bobcatparser, pytorchmodel and ppytorch trainer)- plus eventually once we move to quantum world, I think most of these issues will go. But even then its important that our foundation in classical equivalent (i.e tensors) is very strong.
+  
 ## Nov 8th 2024
 Mithun's coding log
 
