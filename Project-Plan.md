@@ -50,6 +50,7 @@
        - # todo
        - start with GLOVE on FOOD-IT and climb up to FASTtext and GPT- if nothing else/no ground breaking results, that itself will be a good paper/discussion.
        	- also do note that FOOD-It is completely living in classical land, i.e spider ansatz and pytorch models- so we might want to experiment Glove+FOODIT on quantum tariner, quantum models and IQP ansatz before calling it a failure/moving to GPT/Fasttext land
+       	- find if in the FOOD_IT paper do they explicitly say that they know they are feeding val data during training itself. Either way, do drop an email or a pull request for their lambeq documentation - to explicitly state this fact. Otherwise this is pure cheating, where youare telling the world here is a pathbreaking model which gives 100% accuracy on 100 sentences, and you will still get another Mithun kinda poor guy down a rabbit hole for 3 years, because they blindly belived it was the models ability which gave 100% as opposed to the simple fact that they were showing val data to model during training itself.
 
 ## Nov 12th- Mithun's logs
 - We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
