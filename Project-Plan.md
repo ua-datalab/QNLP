@@ -30,6 +30,9 @@
 # New ideas
 1. NN model even if the words are same in dev and train, you still wont get 100% accuracy. However, QNLP food-it classification does it (note that OOV problem is not addressed)
 2. Uspantek- intermediary translation system- since its a completely new language/low resource languages
+3. Right now all machine translation is done as start with English- and map it to a new language. But what if QNLP can be the native model, which can learn from a new language itself, and for that matter, low resource languages.
+4. Ask GPT interesting qns in a new language like malayalam,- and try to break it. Because most likely it was trained on english first and then an embedding aligner. 
+5. same thing- that enrique said- see if we can fine tune LLM on uspantek, and check if QNLP can be an adaptor. One does not have to revolutionize the field by creating a new native model, but if it can enhance the existing LLM ability to do well on a non-english language-  can be a good introduction paper for QNLP
 
 # Working Group Best Practices
 - Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
