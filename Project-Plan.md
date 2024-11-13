@@ -26,6 +26,10 @@
  	- Khatri et al, for Spanish: [https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb)
   	- Khatri et al, for Uspantekan: [https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb)
 
+# New ideas
+1. NN model even if the words are same in dev and train, you still wont get 100% accuracy. However, QNLP food-it classification does it (note that OOV problem is not addressed)
+2. Uspantek- intermediary translation system- since its a completely new language/low resource languages
+
 # Working Group Best Practices
 - Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
 - Save code to public repository, so it can be opened on Cyverse and run on colab: [https://github.com/ua-datalab/QNLP/blob/main/](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
