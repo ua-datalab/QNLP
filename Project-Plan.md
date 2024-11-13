@@ -25,6 +25,7 @@
 	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
  	- Khatri et al, for Spanish: [https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb)
   	- Khatri et al, for Uspantekan: [https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb)
+  	- bobs paper for the FOOD-IT classification is kept (here)[https://jair.org/index.php/jair/article/view/14329]
 
 # New ideas
 1. NN model even if the words are same in dev and train, you still wont get 100% accuracy. However, QNLP food-it classification does it (note that OOV problem is not addressed)
