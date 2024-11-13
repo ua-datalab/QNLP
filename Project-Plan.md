@@ -39,7 +39,10 @@
 # Meeting Notes
 ## nov 13th
 1. meg pointed out that even thoughy i have end to end code OOV for food-IT, it is not correct, because I am using spanish embeddings. So as of now, we DONT have any end to end code. I was using spanish embeddings for english. We tried giving spanish data, and teh parser itself barfed. but remember it was bobcat parser. todo: try with spider parser, spider ansatz
-2. also, get gpt or fasttext embedding for english- and rerun food-IT again with OOV issue.
+   	- update: we finally have an end to end - system.  working for spanish embeddings. dev accuracy with OOV model is 59percent
+3. also, get gpt or fasttext embedding for english- and rerun food-IT again with OOV issue.
+ 	- why not start with Glove. since its english
+  	- maybe fasttext is useful for spanish, uspantek
 
 ## Nov 12th- Mithun's logs
 - We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
