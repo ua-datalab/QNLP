@@ -44,6 +44,7 @@
  	- why not start with Glove. since its english- fasttext is not really having any semantic richness. So its important to keep it at word level. since QNLP is a model which relies so much on semantic/word level stuff- so maybe using fasttext (and even gpt) is a bad idea with QNLP
   	- nevertheless all these experiments should be done one way or other   
   	- maybe fasttext is useful for spanish, uspantek
+   		- also another brilliant idea is: maybe for new languages- it makes sense to use Byte pair based encodings. 
 
 ## Nov 12th- Mithun's logs
 - We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
