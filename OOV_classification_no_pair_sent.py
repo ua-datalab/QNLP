@@ -97,13 +97,8 @@ if(USE_SPANISH_DATA):
     TEST="spanish_test.txt"
     DB_WANDBLOGGING="spanish"
 
-# #todo: actual MRPC is a NLi kind of task.- the below MRPC is a hack which has only the 
-# premise mapped to a lable of standard MRPC
-# # Use the 2 classes of information technology and food 
-# # thing dataset instead if you want something for testing one class alone
-
 if(USE_MRPC_DATA):
-    TRAIN="mrpc_train_80_sent.txt"
+    TRAIN="mrpc_train_10_sent.txt"
     DEV="mrpc_dev_10_sent.txt"
     TEST="mrpc_test_10sent.txt"
     DB_WANDBLOGGING="english_MRPC"
@@ -152,7 +147,7 @@ import os
 
 """#########################start definition of functions"""
 
-def run_experiment(nlayers=1, seed=SEED):
+def run_experiment(train_diagrams, val_diagrams, test_diagrams,nlayers=1, seed=SEED):
 
     """mithuns comment @26thsep2024typically spider ansatz only goes with spider reader. 
     like i mentioned earlier, spider was used to just get the code off the ground
@@ -161,10 +156,12 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
-                    })
-    
+    if(ansatz_to_use)==IQPAnsatz:
+        ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)} ,n_layers= nlayers )    
+    else:
+        ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )    
     
    
     # this is used only when there are a pair of sentences
@@ -191,9 +188,9 @@ print(f'RUNNING WITH {nlayers} layers')
     """
 
     #use the anstaz to create circuits from diagrams
-    train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
-    val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
-    test_circuits = [ansatz(diagram) for diagram in test_diagrams]        
+    train_circuits =  [ansatz(diagram) >> equality_comparator for diagram in train_diagrams]
+    val_circuits =  [ansatz(diagram) >> equality_comparator for diagram in val_diagrams]
+    test_circuits = [ansatz(diagram)  >> equality_comparator for diagram in test_diagrams]        
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
@@ -1351,21 +1348,25 @@ train_X = []
 test_X = []
 val_X = []
 
-for d in tqdm(train_diags_raw):
-    d.draw()
-    a = rewriter(d)
-    a.draw()
-    b = a.normal_form()
-    b.draw()
-    c = remove_cups(b)
-    c.draw()
-    train_X.append(c)
+for d in tqdm(train_diags_raw):    
+    a = rewriter(d)    
+    b = a.normal_form()    
+    train_X.append(b)
+    """@nov 14th 2024 remove cups function is giving no adjoints error for 
+    the composite structure. IMHO, 
+    ou should remove cups BEFORE the composite diagram. 
+    solutions a)easy but nasty way- ignore all sentences that cups cannot be removed. 
+    i.e put try catch and move on 
+    b)don't do cup removal alone for now 
+    c) do cup removal before 2 diagrams are made composite.
+    update. doing option b for now."""
+    # c= remove_cups(b)    
 
 for d in tqdm(val_diags_raw):
-    val_X.append(remove_cups(rewriter(d).normal_form()))
+    val_X.append((rewriter(d).normal_form()))
 
 for d in tqdm(test_diags_raw):
-    test_X.append(remove_cups(rewriter(d).normal_form()))    
+    test_X.append((rewriter(d).normal_form()))    
     
 
 
@@ -1386,7 +1387,7 @@ for tf_seed in tf_seeds:
     #  so commenting this out until we move it to cyverse/hpc
     #todo: find the relevance/signfincance of models from 2010 discocat paper"""
     for nl in [3]:
-        this_seed_results.append(run_experiment(nl, tf_seed))
+        this_seed_results.append(run_experiment(train_X,val_X, test_X,nl, tf_seed))
     compr_results[tf_seed] = this_seed_results
 wandb.finish()
 print(f"\nvalue of all evaluation metrics across all seeds is :")
