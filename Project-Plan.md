@@ -41,6 +41,8 @@
 
 
 # Meeting Notes
+## Nov 14th- Mithun working on reproducing khatri values
+- using just one file OOV_classification now on+ passing arguments as to pair based dataset or not. THe pair no pair file difference was causing too many versions.
 ## nov 13th
 1. megh pointed out that even thoughy i have end to end code OOV for food-IT, it is not correct, because I am using spanish embeddings. So as of now, we DONT have any end to end code. I was using spanish embeddings for english. We tried giving spanish data, and teh parser itself barfed. but remember it was bobcat parser. todo: try with spider parser, spider ansatz
    	- update: we finally have an end to end - system.  working for spanish embeddings. dev accuracy with OOV model is 59percent
