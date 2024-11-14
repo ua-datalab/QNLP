@@ -170,7 +170,7 @@ def run_experiment(nlayers=1, seed=SEED):
     # this is used only when there are a pair of sentences
     from discopy.quantum.gates import CX, Rx, H, Bra, Id
     equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
-    equality_comparator.draw()
+    
     """
     todo: his original code for ansatz is as below. Todo find out: why we switched to the above.
     I think it had something do with spider ansatz-
@@ -1273,6 +1273,7 @@ if type_of_data == "pair":
     train_diagrams_1, train_diagrams_2, train_labels = convert_to_diagrams_given_pair_of_sents(train_sentences_1_after_token_maxlen,train_sentences_2_after_token_maxlen,train_labels_after_token_maxlen_removal)    
     assert len(train_diagrams_1)== len(train_labels)== len(train_diagrams_2)
     print(f"no of data points in training immediately after diagram conversion  is {len(train_diagrams_1)}")
+    
 
     val_diagrams_1, val_diagrams_2, val_labels = convert_to_diagrams_given_pair_of_sents(val_sentences_1_after_token_maxlen_removal,val_sentences_2_after_token_maxlen_removal,val_labels_after_token_maxlen_removal)    
     assert len(val_diagrams_1)== len(val_diagrams_2)== len(val_labels)
@@ -1293,9 +1294,13 @@ if type_of_data == "pair":
     print(f"no of data points in val immediately after cod dom check  is {len(joint_diagrams_val)}")
     print(f"no of data points in test immediately after cod dom check  is {len(joint_diagrams_test)}")
     
+    
+    
 
     train_diags_raw = [d for d in joint_diagrams_train if d is not None]
     train_y = np.array([y for d,y in zip(joint_diagrams_train, train_labels) if d is not None])
+
+    
 
     val_diags_raw = [d for d in joint_diagrams_val if d is not None]
     val_y = np.array([y for d,y in zip(joint_diagrams_val, val_labels) if d is not None])
@@ -1338,14 +1343,23 @@ else:
 #but leaving it here since eventually we want everything to go through bobcat
 # refer: https://cqcl.github.io/lambeq-docs/tutorials/trainer-quantum.html"""
 remove_cups = RemoveCupsRewriter()
+
 rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'connector', 'prepositional_phrase'])
+#todo: add more box level and diagram level rewriters, like 
 
 train_X = []
 test_X = []
 val_X = []
 
 for d in tqdm(train_diags_raw):
-    train_X.append(remove_cups(rewriter(d).normal_form()))
+    d.draw()
+    a = rewriter(d)
+    a.draw()
+    b = a.normal_form()
+    b.draw()
+    c = remove_cups(b)
+    c.draw()
+    train_X.append(c)
 
 for d in tqdm(val_diags_raw):
     val_X.append(remove_cups(rewriter(d).normal_form()))
