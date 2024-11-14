@@ -15,7 +15,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 4. Prediction model - which is use dto predict on test set.
 #todo, find why not just do model1.predict?
 """
-
+import mlflow
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
 from tensorflow import keras
@@ -38,13 +38,18 @@ from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 
 bobCatParser=BobcatParser()
 
-parser_to_use = spiders_reader  #[bobCatParser, spiders_reader]
+parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
 ansatz_to_use = SpiderAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
 
 embedding_model = ft.load_model('./embeddings-l-model.bin')
+import wandb
+import random
+
+
+
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 BASE_DIMENSION_FOR_NOUN =2 
@@ -57,24 +62,30 @@ SEED = 0
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA=True
-USE_USP_DATA=False
-USE_FOOD_IT_DATA = False
+USE_SPANISH_DATA= False
+USE_USP_DATA= False
+USE_FOOD_IT_DATA = True
 USE_MRPC_DATA=False
 
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
 
+arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}"
+DB_WANDBLOGGING= ""
+
+
 if(USE_USP_DATA):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
     TEST="uspantek_test.txt"
+    DB_WANDBLOGGING="uspantek"
 
 if(USE_SPANISH_DATA):
     TRAIN="spanish_train.txt"
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
+    DB_WANDBLOGGING="spanish"
 
 # #todo: actual MRPC is a NLi kind of task.- the below MRPC is a hack which has only the 
 # premise mapped to a lable of standard MRPC
@@ -85,16 +96,30 @@ if(USE_MRPC_DATA):
     TRAIN="mrpc_train_80_sent.txt"
     DEV="mrpc_dev_10_sent.txt"
     TEST="mrpc_test_10sent.txt"
+    DB_WANDBLOGGING="english_MRPC"
 
 if(USE_FOOD_IT_DATA):
     TRAIN="mc_train_data.txt"
     DEV="mc_dev_data.txt"
     TEST="mc_test_data.txt"
+    DB_WANDBLOGGING="english_food_IT"
 
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
 # acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
 sig = torch.sigmoid
+# start a new wandb run to track this script
 
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="qnlp_nov2024_expts",
+    # track hyperparameters and run metadata
+    config={
+    "learning_rate": LEARNING_RATE,
+    "architecture": arch,
+    "dataset": DB_WANDBLOGGING,
+    "epochs": EPOCHS,
+    }
+)
 def accuracy(y_hat, y):
         assert type(y_hat)== type(y)
         # half due to double-counting
@@ -703,10 +728,11 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     #use the model now to create predictions on the test set.
     preds = pred_model.get_diagram_output(val_circuits)
     loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    l= loss_pyTorch(preds, torch.tensor(val_labels))
-    a=accuracy(preds, torch.tensor(val_labels))
-
-    return l, a
+    val_loss= loss_pyTorch(preds, torch.tensor(val_labels))
+    val_accuracy=accuracy(preds, torch.tensor(val_labels))
+    wandb.log({"val_accuracy":val_accuracy,"val loss when no OOV":val_loss})
+    
+    return val_loss,val_accuracy
 
 def read_data(filename):
     sent_count_longer_than_32=0
@@ -727,15 +753,16 @@ def read_data(filename):
             
             """
             sent = line[1:].strip()
+            #ndarray created by spider parser doesnt like more than 32 tokens
             if( USE_SPANISH_DATA or USE_USP_DATA):
                 tokenized = spacy_tokeniser.tokenise_sentence(line)   
                 if len(tokenized)> 32:
                     print(f"no of tokens in this sentence is {len(tokenized)}")
                     sent_count_longer_than_32+=1
                     continue
-                else:
-                    sentences.append(sent) 
-                    labels.append([t, 1-t])   
+              
+            sentences.append(sent) 
+            labels.append([t, 1-t])   
     print(f"there were {sent_count_longer_than_32} sentences which were longer than 32 tokens")
     return labels, sentences
 
@@ -745,6 +772,10 @@ def read_data(filename):
 train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
 val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
 test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
+
+assert len(train_data)== len(train_labels)
+assert len(val_data)== len(val_labels)
+assert len(test_data)== len(test_labels)
 
 
 # todo: not sure what am doing here. need to figure out as and when we get to testing
@@ -765,43 +796,6 @@ spider reader should be soon discareded and switched to bob cat parser+ some
 quantum trainers asap. """
 
 
-def convert_to_diagrams(list_sents,labels):
-    list_target = []
-    labels_target = []
-    sent_count_longer_than_32=0
-    for sent, label in tqdm(zip(list_sents, labels),desc="reading sent"):
-        
-        # tokenized = spacy_spanish_tokeniser.tokenise_sentence(sent)
-        # diag =parser.sentence2diagram(tokenized, tokenised= True)
-        # diag.draw()
-        # list_target.append(diag)
-        # #this is 
-        # if(USE_MRPC_DATA):
-        #     sent = sent.split('\t')[2]
-        
-        tokenized = spacy_tokeniser.tokenise_sentence(sent)              
-
-        """if the length of sentences is more than 32, ignore it
-        doing this to avoid this error
-        (ValueError: maximum supported dimension for an ndarray is 32, found 33)
-        Todo: find if this is a very spanish tokenizer only issue or like pytorchmodel only issue"""
-        
-        if( USE_SPANISH_DATA or USE_USP_DATA):
-            tokenized = spacy_tokeniser.tokenise_sentence(sent)   
-            if len(tokenized)> 32:
-                print(f"no of tokens in this sentence is {len(tokenized)}")
-                sent_count_longer_than_32+=1
-                continue
-
-        spiders_diagram = parser_to_use.sentence2diagram(sentence=sent)
-
-       
-        list_target.append(spiders_diagram)
-        labels_target.append(label)
-    
-    print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
-    print("no. of items processed= ", len(list_target))
-    return list_target, labels_target
 
 """#convert the plain text input to ZX diagrams
 # #todo: find who does the adding the underscore 0 part. is it ansatz or sentence2diagram?.
@@ -1089,7 +1083,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
         val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
         val_acc =accuracy(val_preds, torch.tensor(val_labels))
         print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
-
+        wandb.log({"val accuracy when no OOV":val_acc},{"val loss when no OOV":val_loss})
         # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
         val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
         print('Val accuracy:', val_acc.item())
@@ -1259,7 +1253,6 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     res =  {
             'NN': (smart_loss, smart_acc)
             
-            
            }
     # print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
     # print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
@@ -1288,7 +1281,7 @@ for tf_seed in tf_seeds:
     for nl in [3]:
         this_seed_results.append(run_experiment(nl, tf_seed))
     compr_results[tf_seed] = this_seed_results
-
+wandb.finish()
 print(f"\nvalue of all evaluation metrics across all seeds is :")
 #todo: cleanly print this dict below
 for k,v in compr_results.items():
