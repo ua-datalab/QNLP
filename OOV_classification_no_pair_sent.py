@@ -19,7 +19,6 @@ import mlflow
 import string
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
-from tqdm import tqdm
 from lambeq import Rewriter
 from tensorflow import keras
 from tensorflow.keras import layers
@@ -43,7 +42,7 @@ from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 bobCatParser=BobcatParser()
 
 parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
+ansatz_to_use = TensorAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
 model_to_use  = NumpyModel #[NumpyModel, PytorchModel]
 trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
@@ -64,6 +63,7 @@ import random
 MAXLEN = 30
 BASE_DIMENSION_FOR_NOUN =2 
 BASE_DIMENSION_FOR_SENT =2 
+BASE_DIMENSION_FOR_PREP_PHRASE =2 
 MAXPARAMS = 300
 BATCH_SIZE = 30
 EPOCHS = 5
@@ -158,7 +158,7 @@ def run_experiment(train_diagrams, val_diagrams, test_diagrams,nlayers=1, seed=S
     answer might be in 2010 discocat paper"""
     if(ansatz_to_use)==IQPAnsatz:
         ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)} ,n_layers= nlayers )    
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)} ,n_layers= nlayers,n_single_qubit_params =3)    
     else:
         ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
                     AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )    
@@ -187,12 +187,25 @@ print(f'RUNNING WITH {nlayers} layers')
     test_circs = [ansatz(d) >> equality_comparator for d in test_X]
     """
 
-    #use the anstaz to create circuits from diagrams
-    train_circuits =  [ansatz(diagram) >> equality_comparator for diagram in train_diagrams]
-    val_circuits =  [ansatz(diagram) >> equality_comparator for diagram in val_diagrams]
-    test_circuits = [ansatz(diagram)  >> equality_comparator for diagram in test_diagrams]        
-    print("length of each circuit in train is:")
-    print([len(x) for x in train_circuits])
+    #use the anstaz to create circuits from diagrams- comparison is relevant only for pairs of sentences
+    if type_of_data == "pair":
+        train_circuits=[]
+        for diagram in train_diagrams:
+            a= ansatz(diagram)
+            b =a >> equality_comparator
+            train_circuits.append(b)
+        
+        val_circuits =  [ansatz(diagram) >> equality_comparator for diagram in val_diagrams]
+        test_circuits = [ansatz(diagram)  >> equality_comparator for diagram in test_diagrams]        
+        print("length of each circuit in train is:")
+        print([len(x) for x in train_circuits])
+    else:
+        train_circuits =  [ansatz(diagram) >> equality_comparator for diagram in train_diagrams]
+        val_circuits =  [ansatz(diagram) >> equality_comparator for diagram in val_diagrams]
+        test_circuits = [ansatz(diagram)  >> equality_comparator for diagram in test_diagrams]        
+        print("length of each circuit in train is:")
+        print([len(x) for x in train_circuits])
+
 
     qnlp_model = model_to_use.from_diagrams(train_circuits)
 
@@ -1348,7 +1361,7 @@ train_X = []
 test_X = []
 val_X = []
 
-for d in tqdm(train_diags_raw):    
+for d in tqdm(train_diags_raw, desc="rewriting and removing cups"):    
     a = rewriter(d)    
     b = a.normal_form()    
     train_X.append(b)
@@ -1362,10 +1375,10 @@ for d in tqdm(train_diags_raw):
     update. doing option b for now."""
     # c= remove_cups(b)    
 
-for d in tqdm(val_diags_raw):
+for d in tqdm(val_diags_raw,desc="rewriting and removing cups"):
     val_X.append((rewriter(d).normal_form()))
 
-for d in tqdm(test_diags_raw):
+for d in tqdm(test_diags_raw,desc="rewriting and removing cups"):
     test_X.append((rewriter(d).normal_form()))    
     
 
