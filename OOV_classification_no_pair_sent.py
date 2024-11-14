@@ -39,14 +39,15 @@ from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 bobCatParser=BobcatParser()
 
 parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-ansatz_to_use = SpiderAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
-model_to_use  =  PytorchModel #[numpy, pytorch]
-trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
-embedding_model_to_use = "English" #[English, Spanish]
+ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
+model_to_use  = NumpyModel #[NumpyModel, PytorchModel]
+trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
+embedding_model_to_use = "english" #[english, spanish]
+type_of_data = "pair" #[single, pair]]
 
-if(embedding_model_to_use=="Spanish"):
+if(embedding_model_to_use=="spanish"):
     embedding_model = ft.load_model('./embeddings-l-model.bin')
-if(embedding_model_to_use=="English"):
+if(embedding_model_to_use=="english"):
     embedding_model = ft.load_model('cc.en.300.bin')
 
 import wandb
@@ -66,10 +67,10 @@ SEED = 0
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA= False
-USE_USP_DATA= False
-USE_FOOD_IT_DATA = True
-USE_MRPC_DATA=False
+USE_SPANISH_DATA    = False
+USE_USP_DATA        = False
+USE_FOOD_IT_DATA    = False
+USE_MRPC_DATA       = True
 
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
@@ -812,7 +813,50 @@ quantum trainers asap. """
 # val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
 # test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
 
-train_diagrams = parser_to_use.sentences2diagrams(train_data)
+#Some sentences were failing, so putting a try catch around it.
+def convert_to_diagrams(list_sents,labels):
+    list_target = []
+    labels_target = []
+    sent_count_longer_than_32=0
+    for sent, label in tqdm(zip(list_sents, labels),desc="reading sent"):
+        
+        # tokenized = spacy_spanish_tokeniser.tokenise_sentence(sent)
+        # diag =parser.sentence2diagram(tokenized, tokenised= True)
+        # diag.draw()
+        # list_target.append(diag)
+        # #this is 
+       
+        
+        tokenized = spacy_tokeniser.tokenise_sentence(sent)              
+
+        """if the length of sentences is more than 32, ignore it
+        doing this to avoid this error
+        (ValueError: maximum supported dimension for an ndarray is 32, found 33)
+        Todo: find if this is a very spanish tokenizer only issue or like pytorchmodel only issue"""
+        
+        if( USE_SPANISH_DATA or USE_USP_DATA):
+            if len(tokenized)> 32:
+                print(f"no of tokens in this sentence is {len(tokenized)}")
+                sent_count_longer_than_32+=1
+                continue
+        try:
+            if(USE_MRPC_DATA):
+                sent = sent.split('\t')[2]
+                zx_diagram = parser_to_use.sentence2diagram(sentence=sent)
+        except:
+            continue
+
+       
+        list_target.append(zx_diagram)
+        labels_target.append(label)
+    
+    print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
+    print("no. of items processed= ", len(list_target))
+    return list_target, labels_target
+
+train_diagrams = convert_to_diagrams(train_data,train_labels)
+
+
 val_diagrams = parser_to_use.sentences2diagrams(val_data)
 test_diagrams = parser_to_use.sentences2diagrams(test_data)
 
@@ -858,21 +902,21 @@ val_X = []
 """# Note: removing cups and normalizing is more useful in bobcat parser, not in spiders
 #but leaving it here since eventually we want everything to go through bobcat
 # refer: https://cqcl.github.io/lambeq-docs/tutorials/trainer-quantum.html"""
-# remove_cups = RemoveCupsRewriter()
+remove_cups = RemoveCupsRewriter()
 
-# for d in tqdm(train_diagrams):
-#     train_X.append(remove_cups(d).normal_form())
+for d in tqdm(train_diagrams):
+    train_X.append(remove_cups(d).normal_form())
 
-# for d in tqdm(val_diagrams):    
-#     val_X.append(remove_cups(d).normal_form())
+for d in tqdm(val_diagrams):    
+    val_X.append(remove_cups(d).normal_form())
 
-# train_diagrams  = train_X
-# val_diagrams    = val_X
+train_diagrams  = train_X
+val_diagrams    = val_X
 
 # this is used only when there are a pair of sentences
-# from discopy.quantum.gates import CX, Rx, H, Bra, Id
-# equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
-# equality_comparator.draw()
+from discopy.quantum.gates import CX, Rx, H, Bra, Id
+equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
+equality_comparator.draw()
 
 
 

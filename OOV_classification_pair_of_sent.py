@@ -44,10 +44,12 @@ parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
 ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+embedding_model_to_use = "English" #[English, Spanish]
 
-
-embedding_model = ft.load_model('./embeddings-l-model.bin')
-
+if(embedding_model_to_use=="Spanish"):
+    embedding_model = ft.load_model('./embeddings-l-model.bin')
+if(embedding_model_to_use=="English"):
+    embedding_model = ft.load_model('cc.en.300.bin')
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 BASE_DIMENSION_FOR_NOUN =2 
 BASE_DIMENSION_FOR_SENT =2 
