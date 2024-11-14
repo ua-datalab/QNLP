@@ -42,9 +42,13 @@ parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
 ansatz_to_use = SpiderAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+embedding_model_to_use = "English" #[English, Spanish]
 
+if(embedding_model_to_use=="Spanish"):
+    embedding_model = ft.load_model('./embeddings-l-model.bin')
+if(embedding_model_to_use=="English"):
+    embedding_model = ft.load_model('cc.en.300.bin')
 
-embedding_model = ft.load_model('./embeddings-l-model.bin')
 import wandb
 import random
 
