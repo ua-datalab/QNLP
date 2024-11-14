@@ -16,14 +16,18 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 #todo, find why not just do model1.predict?
 """
 import mlflow
+import string
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
+from tqdm import tqdm
+from lambeq import Rewriter
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 import torch
 from torch import nn
 import spacy
+from collections import Counter
 from lambeq import SpacyTokeniser
 import numpy as np
 import fasttext as ft
@@ -43,7 +47,7 @@ ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,Te
 model_to_use  = NumpyModel #[NumpyModel, PytorchModel]
 trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
-type_of_data = "pair" #[single, pair]]
+type_of_data = "" #[single, pair -will be filled in MRPC or other NLI kind of pair based datasets]]
 
 if(embedding_model_to_use=="spanish"):
     embedding_model = ft.load_model('./embeddings-l-model.bin')
@@ -57,6 +61,7 @@ import random
 
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
+MAXLEN = 30
 BASE_DIMENSION_FOR_NOUN =2 
 BASE_DIMENSION_FOR_SENT =2 
 MAXPARAMS = 300
@@ -102,6 +107,7 @@ if(USE_MRPC_DATA):
     DEV="mrpc_dev_10_sent.txt"
     TEST="mrpc_test_10sent.txt"
     DB_WANDBLOGGING="english_MRPC"
+    type_of_data = "pair"
 
 if(USE_FOOD_IT_DATA):
     TRAIN="mc_train_data.txt"
@@ -144,11 +150,407 @@ else:
 
 import os
 
+"""#########################start definition of functions"""
+
+def run_experiment(nlayers=1, seed=SEED):
+
+    """mithuns comment @26thsep2024typically spider ansatz only goes with spider reader. 
+    like i mentioned earlier, spider was used to just get the code off the ground
+    1) we need to definitely test with atleast bobcat parser
+    2) Noun should have a higher dimension than sentence? how? 
+    - go back and confirm the original 1958 paper by lambek. also how
+    is the code in LAMBEQ deciding the dimensions or even what  data types to use?
+    answer might be in 2010 discocat paper"""
+    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
+                    })
+    
+    
+   
+    # this is used only when there are a pair of sentences
+    from discopy.quantum.gates import CX, Rx, H, Bra, Id
+    equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
+    equality_comparator.draw()
+    """
+    todo: his original code for ansatz is as below. Todo find out: why we switched to the above.
+    I think it had something do with spider ansatz-
+    todo: write the whole history of playing with this code- why spider ansatz etc- in one single
+    word document, like chronological order.-for your own sanity
+
+N = AtomicType.NOUN
+S = AtomicType.SENTENCE
+P = AtomicType.PREPOSITIONAL_PHRASE
+print(f'RUNNING WITH {nlayers} layers')
+    ansatz = Sim15Ansatz({N: 1, S: 1, P:1}, n_layers=nlayers, n_single_qubit_params=3)
+
+    Also the two lines below is more to do with comparing two things, like NLI/MRPC, Might not be that
+    relevant in say classification
+
+    train_circs = [ansatz(d) >> equality_comparator for d in train_X]
+    test_circs = [ansatz(d) >> equality_comparator for d in test_X]
+    """
+
+    #use the anstaz to create circuits from diagrams
+    train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
+    val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
+    test_circuits = [ansatz(diagram) for diagram in test_diagrams]        
+    print("length of each circuit in train is:")
+    print([len(x) for x in train_circuits])
+
+    qnlp_model = model_to_use.from_diagrams(train_circuits)
+
+    train_dataset = Dataset(
+                train_circuits,
+                train_labels,
+                batch_size=BATCH_SIZE)
+
+    val_dataset = Dataset(val_circuits, val_labels, shuffle=False)
+
+    print(len(train_labels), len(train_circuits))
+    #print and assert statements for debugging
+    print(len(train_circuits), len(val_circuits), len(test_circuits))
+    assert len(train_circuits)== len(train_labels)
+    assert len(val_circuits)== len(val_labels)
+    assert len(test_circuits)== len(test_labels)
+
+
+    trainer = trainer_to_use(
+            model=qnlp_model,
+            loss_function=torch.nn.BCEWithLogitsLoss(),
+            optimizer=torch.optim.AdamW,
+            learning_rate=LEARNING_RATE,
+            use_tensorboard=True, #todo: why isnt any visualization shown despite use_tensorboard=True
+            epochs=EPOCHS,
+            evaluate_functions=eval_metrics,
+            evaluate_on_train=True,
+            verbose='text',
+            seed=SEED)
+    
+
+    #get the embeddings etc to be used in models 2 through 4. Note
+    # that one very interesting thing that happens as far as model 1is considered is that
+    # inside the function generate_initial_parameterisation() the QNLP
+    # model ka weights (i.e the angles of gates)
+    # gets initialized with initial fast text embeddings of each word in training
+
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
+        train_circuits, val_circuits, embedding_model, qnlp_model)
+
+    """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
+    # and test on val_dataset. todo: find out how to add early stopping.
+    # I vaguely remember seeing callbacks somewhere"""
+    trainer.fit(train_dataset, log_interval=1)
+
+    """#for experiments on october 14th 2024. i.e 
+    just use 1 off the shelf model and spread spectrum/parameter search
+      for out of hte box for uspantek"""
+    
+
+    """
+    comment@nov 6th2024. Below is the chronological log of my encounter 
+    with a bug and how i fixed it. todo: move it eventually to a bug fix faq from code comment
+    
+    error@ oct16th 2024- 
+    below code is egiving the error,  i.e when trying to evaluate on val dataset
+
+     File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/lambeq/training/pytorch_model.py", line 142, in get_diagram_output
+    raise KeyError(
+KeyError: 'Unknown symbol: únicamente_0__s
+
+    Note this is only 
+    a) after commenting the qnlp_model.weights ka problem
+    inside the function generate_initial_parameterisation()
+    which means, we kind of ignore/commented out that problem, 
+    and here is the next one. 
+
+    b) when we are trying to evaluate on val dataset
+
+
+    What this error means is that: únicamente_0__s is not found 
+    to get the diagram output for. Mostlikely it is looking
+    for embedding of únicamente_0__s inside train_embeddings.
+
+    "the exact line 143 can be found in this part of the LAMBEQ code:https://github.com/CQCL/lambeq/blob/8109d952d707880b8588e0d04f24f0b5a94c3d59/lambeq/training/pytorch_model.py#L140
+
+    what that line is doing is that, it is going through circuits of val data,
+    extracting each of the root word from it, and 
+    asking for the weights of that word from a dictionary called
+      parameters = {k: v for k, v in zip(self.symbols, self.weights)}
+      which has all symbols as keys and its weights as values
+      i.e self.symbols and self.weights are zipped, and combined as a dictionary
+      
+      todo: 
+      1. find if our self.symbols and self.weights have same size.
+      update; answer =
+      len(qnlp_model.symbols)
+463
+len(qnlp_model.weights)
+463
+(qnlp_model.symbols[0])
+(aldea_0__s
+qnlp_model.weights[0]
+Parameter containing:
+tensor([-0.0098,  0.7008], requires_grad=True)
+
+      2. it is asking for únicamente_0__s- which shouldnt happen because 
+      our dictionaries are all stored as {plain text name: embedding} i.e
+       just "únicamente".
+       3. unicamente is from val data, why are we comparing/asking for its embedding from 
+       model.symbols- which has only training data?
+
+       update: finally figured out what is going on:
+       WE ARE NOT SUPPOSED TO USE THE BASIC QNLP MODEL ON VAL dataset
+       because
+        a) qnlp_model is by definition handicapped. i.e it doesn't know
+         what to do with OOV words. I was using it for prediction 
+         on val dataset itself in the below code i.e val_preds
+         instead of train_preds
+         is wrong methodology because Qnlp_model doesn't know how to handle OOV
+          b)  the whole purpose of creating all the models 2, 3,4 and then 
+       the OOV_prediction model is those 4 models below, which KNOW HOW TO 
+       HANDLE OOV
+       I.E the final accuracy calculation on val/dev SHOULD ONLY BE DONE
+       USING THESE 4 models and NEVER using the base qnlp_model.- unless oov count ==0
+    """
+
+    """#TAKE THE TRAINED model (i.e end of all epochs of early stopping and run it on train_circuits.
+    #note:this is being done More for a sanity check since ideally you will see the values
+    # printed during training in .fit() itself."""
+
+    # print val accuracy
+    # val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+    # print('validation accuracy:', val_acc.item())
+
+
+    # train_preds = qnlp_model.get_diagram_output(train_circuits)    
+    # loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+    # train_loss= loss_pyTorch(val_preds, torch.tensor(train_labels))
+    # train_acc =accuracy(val_preds, torch.tensor(train_labels))
+    # print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
+
+
+    """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
+    if oov_word_count==0:
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
+
+        ax_tl.set_title('Training set')
+        ax_tr.set_title('Development set')
+        ax_bl.set_xlabel('Epochs')
+        ax_br.set_xlabel('Epochs')
+        ax_bl.set_ylabel('Accuracy')
+        ax_tl.set_ylabel('Loss')
+
+        colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+        range_ = np.arange(1, trainer.epochs+1)
+        ax_tl.plot(range_, trainer.train_epoch_costs, color=next(colours))
+        ax_bl.plot(range_, trainer.train_eval_results['acc'], color=next(colours))
+        ax_tr.plot(range_, trainer.val_costs, color=next(colours))
+        ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
+
+
+        val_preds = qnlp_model.get_diagram_output(val_circuits)    
+        loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+        val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
+        val_acc =accuracy(val_preds, torch.tensor(val_labels))
+        print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
+        wandb.log({"val accuracy when no OOV":val_acc},{"val loss when no OOV":val_loss})
+        # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
+        val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+        print('Val accuracy:', val_acc.item())
+    
+        import sys
+        sys.exit()
+
+    """So by nowthe actual QNLP model (i.e model 1) is trained. Next is we are going to connect the model which learns
+    #  relationsihp between fasttext emb and angles. look inside the function
+    generate_initial_parameterisation for more specific comments
+
+    
+    #now we get into the land of model 3- i.e the model which learns the connection between weights of model 1 
+    i.e the QNLP model. 
+    and embeddings of model 2
+    i.e model 3=model(a,b) where a = embeddings and b = angles
+    todo: find the difference between angles nad weights- why is it per word?
+     update: read 2010 discocat paper for answers. In short in QNLP land
+      words are the ones which have n qbits assigned to it, and each qbit has
+       a corresponding  gate. i.e if the word likes has 3 qbits (after lambeq
+       calculus addition in 2010 discocat)- then it will have 3 gates and hence 3 angles """
+
+    """" here hey create model 3- i.e nn-model is the model which learns mapping between
+      fasttext ka embeddings and QNlp model (i.e model 1) ka learned weights
+    or in other words , if you give the embedding of a new
+      sentence model 3 (NN_model) will
+    give you the corresponding weights of model 1 (i.e QNLP model) which can then be used for
+    predicting class of the new sentence. update @6thnov2024. I feel what robert oppenheimer felt 
+    as the first scientist to bring quantum mechanics to the USA. Phew this was really
+    cutting some avant garde territory trying to understand lambeq top down- terrible documentation for bottom up
+    aka only those 17+ research papers that i had to dig up historically to finally
+    understand WTF is lambeq doing. especialy 2010 discocat"""
+    NN_model,trained_wts = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
+
+    """#this is model 4, a separate model1 like model used only for predicting 
+    on the test/dev data based only on test_circuits. Now you might have a qn why 
+    cant we simply use model 1 itself for predicting the class of val/dev 
+    data. This is the OOV problem. remember, Model 1 the way it predicts is
+    if you give the circuits, it will multiply by its weights and tell you
+    the exact class the circuit belongs to. however, remember, it has no idea how 
+    to convert an OOV word to circuit. Which is why we went back to fasttext
+    embeddings. But then we realized, just having fast text embeddings of thew new
+    dev/val data is not alone enough, but we want to instead get the corresponding
+    weights of it from model 1. That is why we trained another NN model called
+    model3 (aka NN_model) which gives you the corresponding weights of the new sentences.
+    Now coming back to your question of why not use model 1. as of now model 1 has learned
+    weights for only KNOWN words,. If you give the weights of UNKNOWN words , like those
+    found in dev, it is WRONG. So the best way is, create a new QNLP model (exactly like
+    model 1) called model4, assign its weights to be what model 3 (the OOV_NN) model predicted
+    and now give the corresponding circuits of dev data (just like model 1 would have done
+    if it could) and ask it to multiply circuitsx weights and give a class prediction.
+    """
+    
+    
+    prediction_model = model_to_use.from_diagrams(val_circuits)
+
+    trainer = trainer_to_use(
+            model=prediction_model,
+            loss_function=torch.nn.BCEWithLogitsLoss(),
+            optimizer=torch.optim.AdamW,
+            learning_rate=LEARNING_RATE,
+            epochs=EPOCHS,
+            evaluate_functions=eval_metrics,
+            evaluate_on_train=True,
+            verbose='text',
+            seed=SEED)
+
+    """#Create a dictionary where key is word and weights are the trained weights after QNLP_model was
+    trained. 
+    Todo: What I dont understand is, why is he doing that agian here? this is exactly what he is doing
+    in the first few lines of  generate_OOV_parameterising_model. 
+    a) check if this is my mistake or its same in his original code
+    b) debug and check if values are same. i.e in generate_oov_* and here. if yes, return from generate_oov_* 
+    update: yeah values are same. Going to pass it directly from 
+    the function generate_OOV_parameterising_model
+    """
+    # trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
+
+
+    """ now that we have 2 models ready, 
+    1) the OOV model, i.e model 3 (of 
+    which there are 3 different types as shown below)
+     2)  and the model4- which is a copy of 
+    original QNLP model 1 but this time with weights of the val/test dataset
+    , both well trained, let's evaluate it on the dev (and
+    eventually test) set
+    """
+
+
+    smart_loss, smart_acc = evaluate_val_set(prediction_model,
+                                                val_circuits,
+                                                val_labels,
+                                                trained_wts,
+                                                val_embeddings,
+                                                max_w_param_length,
+                                                OOV_strategy='model',
+                                                OOV_model=NN_model)
+    print(f"value of smart_loss={smart_loss} and value of smart_acc ={smart_acc}")
+    print('Evaluating EMBED model')
+
+    """#This is where he is directly using the embeddings of fasttext model as the weigh of prediction model- 
+    # i.e instead of using a learned model/model 3 to predict the weights
+    # absolute crap/used only for creating random baseline
+    # note: as of nov 6th2024 both smart and embed models are giving same value
+    # todo/confirm if the weight initialization done in model 3/smart model is not being
+    # reflected. this will show up whne we try to reproduce khatri values"""
+    # embed_loss, embed_acc = evaluate_val_set(prediction_model,
+    #                                           val_circuits,
+    #                                             val_labels,
+    #                                           trained_wts,
+    #                                           val_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='embed')
+    
+    # print('Evaluating ZEROS model')
+    # zero_loss, zero_acc = evaluate_val_set(prediction_model,
+    #                                           val_circuits,
+    #                                             val_labels,
+    #                                           trained_wts,
+    #                                           val_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='zeros')
+
+    # rand_losses = []
+    # rand_accs = []
+
+   
+    # print('Evaluating RAND MODEL')
+    # """
+    # even though random model is yet another random number generator, he is using it 
+    # across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
+    # crap its called. i.e he is trying to make it as stupid/random as possible.
+
+    # update@oct30th2024. Random model is giving some semaphore shit (can you believe, from python?
+    # its like generating/creating/doing some real random shit coding that 
+    # created C level seg faults from python, which i myself had once created during phd :-D).
+    #   commenting out for now
+    # """
+    # # for _ in range(10):
+    # #     rl, ra  = evaluate_val_set(prediction_model,
+    # #                                           val_circuits,
+    # #                                             val_labels,
+    # #                                           trained_wts,
+    # #                                           val_embeddings,
+    # #                                           max_w_param_length,
+    # #                                           OOV_strategy='random')
+        
+
+    # #     rand_losses.append(rl)
+    # #     rand_accs.append(ra)
+    
+    """#so by now, we have predictions on the test/dev/val set,
+      using 4 different models. 1 is our trained NN model called 
+    'model' and the rest are all baselines.
+    He collects all the results (loss and accuracy of all
+      5 experiments including training using model1) into a dictionary called res
+    1. training using QNLP/model 1 and am guessing he is evaluating on a part of trained model itself
+    2. using NN (aka model 2 lines above): which is our model 3 trained to learn mapping between fasttext embeddings and qnlp-model-1s weights 
+    #rest are all the baselines models
+    """
+    # res =  {'TRAIN': (train_loss, train_acc),
+    #         'NN': (smart_loss, smart_acc),
+    #         'EMBED': (embed_loss, embed_acc),
+    #         'ZERO': (zero_loss, zero_acc)
+    #        }
+    
+    res =  {
+            'NN': (smart_loss, smart_acc)
+            
+           }
+    # print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
+
+    return res
+
 
 """go through all thecircuits in training data, 
     and pick the one which has highest type value
     note that they are not using the literal length of the circuit, but
     the number attached to next to aldea_2...todo : find what exactly that does"""
+def read_data_pair_hypthesis_premise(filename):
+    labels=[]
+    sentence1=[]
+    sentence2 = []
+    
+    with open(filename) as f:
+        for line in f:
+            procd_line = line.strip().split('\t')
+            sentence1.append(procd_line[3])
+            sentence2.append(procd_line[4])
+            labels.append(int(procd_line[0]))
+    return labels, sentence1, sentence2
+
 def get_max_word_param_length(input_circuits):
         lengths=[]
         for d in input_circuits:
@@ -760,7 +1162,12 @@ def read_data(filename):
             sent = line[1:].strip()
             #ndarray created by spider parser doesnt like more than 32 tokens
             if( USE_SPANISH_DATA or USE_USP_DATA):
-                tokenized = spacy_tokeniser.tokenise_sentence(line)   
+                tokenized = spacy_tokeniser.tokenise_sentence(line) 
+                """if the length of sentences is more than 32, ignore it
+                doing this to avoid this error
+                (ValueError: maximum supported dimension for an ndarray is 32, found 33)
+                Todo: find if this is a very spanish tokenizer only issue or like pytorchmodel only issue"""
+        
                 if len(tokenized)> 32:
                     print(f"no of tokens in this sentence is {len(tokenized)}")
                     sent_count_longer_than_32+=1
@@ -772,15 +1179,6 @@ def read_data(filename):
     return labels, sentences
 
 #back to the main thread after all functions are defined.
-
-#read the base data, i.e plain text english.
-train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
-val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
-test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
-
-assert len(train_data)== len(train_labels)
-assert len(val_data)== len(val_labels)
-assert len(test_data)== len(test_labels)
 
 
 # todo: not sure what am doing here. need to figure out as and when we get to testing
@@ -814,500 +1212,147 @@ quantum trainers asap. """
 # test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
 
 #Some sentences were failing, so putting a try catch around it.
-def convert_to_diagrams(list_sents,labels):
-    list_target = []
+def convert_to_diagrams_given_pair_of_sents(list_sents1,list_sents2,labels):
+    zxdiagrams_sent1 = []
+    zxdiagrams_sent2 = []
     labels_target = []
     sent_count_longer_than_32=0
-    for sent, label in tqdm(zip(list_sents, labels),desc="reading sent"):
-        
-        # tokenized = spacy_spanish_tokeniser.tokenise_sentence(sent)
-        # diag =parser.sentence2diagram(tokenized, tokenised= True)
-        # diag.draw()
-        # list_target.append(diag)
-        # #this is 
-       
-        
-        tokenized = spacy_tokeniser.tokenise_sentence(sent)              
-
-        """if the length of sentences is more than 32, ignore it
-        doing this to avoid this error
-        (ValueError: maximum supported dimension for an ndarray is 32, found 33)
-        Todo: find if this is a very spanish tokenizer only issue or like pytorchmodel only issue"""
-        
-        if( USE_SPANISH_DATA or USE_USP_DATA):
-            if len(tokenized)> 32:
-                print(f"no of tokens in this sentence is {len(tokenized)}")
-                sent_count_longer_than_32+=1
-                continue
-        try:
-            if(USE_MRPC_DATA):
-                sent = sent.split('\t')[2]
-                zx_diagram = parser_to_use.sentence2diagram(sentence=sent)
-        except:
-            continue
-
-       
-        list_target.append(zx_diagram)
+    for sent1,sent2,label in tqdm(zip(list_sents1,list_sents2, labels),desc="converting sent to diags", total= len(list_sents1)):                        
+        if USE_MRPC_DATA:                
+                #skip the sentences parser cannot parse
+                try:
+                    zx_diagram_sent1 = parser_to_use.sentence2diagram(sentence=sent1)
+                    zx_diagram_sent2 = parser_to_use.sentence2diagram(sentence=sent2)
+                except:
+                    continue        
+        zxdiagrams_sent1.append(zx_diagram_sent1)
+        zxdiagrams_sent2.append(zx_diagram_sent2)
         labels_target.append(label)
+    return zxdiagrams_sent1,zxdiagrams_sent2, labels_target
+
+
+def remove_sent_less_than_token_maxlen(labels,sent1,sent2):    
+    filt_sentences_1 = []
+    filt_sentences_2 = []
+    filt_labels = []
+    for label, s1, s2 in zip(labels, sent1, sent2):
+        if max((len(s1.split(' ')), len(s2.split(' ')))) <= MAXLEN:    
+            filt_sentences_1.append(s1.translate(str.maketrans('', '', string.punctuation)))
+            filt_sentences_2.append(s2.translate(str.maketrans('', '', string.punctuation)))
+            this_y = [0, 0]
+            this_y[label] = 1
+            filt_labels.append(this_y)
+    return filt_labels, filt_sentences_1, filt_sentences_2
+
+
+"""""""""""""back to main thread after functions defs"""""""""""""
+if type_of_data == "pair":
+    #read the base data, i.e plain text english.
+    train_y, train_X_1, train_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,TRAIN))
+    val_y, val_X_1, val_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,DEV))
+    test_y, test_X_1, test_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,TEST))
+
+
     
-    print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
-    print("no. of items processed= ", len(list_target))
-    return list_target, labels_target
-
-train_diagrams = convert_to_diagrams(train_data,train_labels)
+    assert len(train_y)== len(train_X_1)== len(train_X_2)
+    print(f"no of data points in training immediately after reading data is {len(train_X_1)}")
 
 
-val_diagrams = parser_to_use.sentences2diagrams(val_data)
-test_diagrams = parser_to_use.sentences2diagrams(test_data)
-
-"""#assignign teh labels back to s`ame old lable
-# doing because didnt want same variable going into th function and returning it.
-#  python lets you get away with it, but i dont trust it"""
-# train_labels = train_labels_v2 
-# val_labels = val_labels_v2
-# test_labels = test_labels_v2
-
-"""
-these d1.cod=d2.code are now orphan codes, but in reality, these code were there in khatri's original
-code (https://colab.research.google.com/drive/13W_oktxSFMAB6m5Rfvy8vidxuQDrCWwW#scrollTo=0be9c058)
-Mithun@27thsep2024-I have a bad feeling I might have removed all this an year ago, when it was giving "error"
-Clearly my mental state at that time ws so messed pu that all i was trying to do it, somehow get it to work.
-even if it means removing bug filled code...weird/sad but true.
-
-update@5thnov2024- the d1.cod==d2.code is a very specific thing for datasets which have pairs of
-inputs. eg mrpc or NLI. for plain single sentence classification shouldnt matter"""
-
-# from collections import Counter
-# # We omit any case where the 2 phrases are not parsed to the same type
-# joint_diagrams_train = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(train_diags1, train_diags2)]
-# joint_diagrams_test = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(test_diags1, test_diags2)]
+    train_labels_after_token_maxlen_removal,train_sentences_1_after_token_maxlen,train_sentences_2_after_token_maxlen, = remove_sent_less_than_token_maxlen(train_y,train_X_1,train_X_2)
+    val_labels_after_token_maxlen_removal,val_sentences_1_after_token_maxlen_removal,val_sentences_2_after_token_maxlen_removal, = remove_sent_less_than_token_maxlen(val_y,val_X_1,val_X_2)
+    test_labels_after_token_maxlen_removal,test_sentences_1_after_token_maxlen_removal,test_sentences_2_after_token_maxlen_removal, = remove_sent_less_than_token_maxlen(test_y,test_X_1,test_X_2)
 
 
-# train_diags_raw = [d for d in joint_diagrams_train if d is not None]
-# train_y = np.array([y for d,y in zip(joint_diagrams_train, filt_train_y) if d is not None])
+    assert len(train_labels_after_token_maxlen_removal)== len(train_sentences_1_after_token_maxlen)== len(train_sentences_2_after_token_maxlen)
+    assert len(val_labels_after_token_maxlen_removal)== len(val_sentences_1_after_token_maxlen_removal)== len(val_sentences_2_after_token_maxlen_removal)
+    assert len(test_labels_after_token_maxlen_removal)== len(test_sentences_1_after_token_maxlen_removal)== len(test_sentences_2_after_token_maxlen_removal)    
 
-# test_diags_raw = [d for d in joint_diagrams_test if d is not None]
-# test_y = np.array([y for d,y in zip(joint_diagrams_test, filt_test_y) if d is not None])
+    print(f"no of data points in training immediately  _after_token_maxlen_removal  is {len(train_sentences_1_after_token_maxlen)}")
 
-# print("FINAL DATASET SIZE:")
-# print("-----------------------------------")
-# print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
-# print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
+    #BOBCAT parser doesnt like all sentences in MRPC. todo: put a try catch inside. Also verify output of sentences2diagrams is same sentence2diagram    
+    train_diagrams_1, train_diagrams_2, train_labels = convert_to_diagrams_given_pair_of_sents(train_sentences_1_after_token_maxlen,train_sentences_2_after_token_maxlen,train_labels_after_token_maxlen_removal)    
+    assert len(train_diagrams_1)== len(train_labels)== len(train_diagrams_2)
+    print(f"no of data points in training immediately after diagram conversion  is {len(train_diagrams_1)}")
+
+    val_diagrams_1, val_diagrams_2, val_labels = convert_to_diagrams_given_pair_of_sents(val_sentences_1_after_token_maxlen_removal,val_sentences_2_after_token_maxlen_removal,val_labels_after_token_maxlen_removal)    
+    assert len(val_diagrams_1)== len(val_diagrams_2)== len(val_labels)
+    print(f"no of data points in val immediately after diagram conversion  is {len(val_diagrams_1)}")
+
+    test_diagrams_1, test_diagrams_2, test_labels = convert_to_diagrams_given_pair_of_sents(test_sentences_1_after_token_maxlen_removal,test_sentences_2_after_token_maxlen_removal,test_labels_after_token_maxlen_removal)    
+    assert len(test_diagrams_1)== len(test_diagrams_2)== len(test_labels)
+    print(f"no of data points in test immediately after diagram conversion  is {len(test_diagrams_2)}")
+
+    
+    
+    # We omit any case where the 2 phrases are not parsed to the same type
+    joint_diagrams_train = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(train_diagrams_1, train_diagrams_2)]
+    joint_diagrams_val = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(val_diagrams_1, val_diagrams_2)]
+    joint_diagrams_test = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(test_diagrams_1, test_diagrams_2)]
+
+    print(f"no of data points in training immediately after cod dom check  is {len(joint_diagrams_train)}")
+    print(f"no of data points in val immediately after cod dom check  is {len(joint_diagrams_val)}")
+    print(f"no of data points in test immediately after cod dom check  is {len(joint_diagrams_test)}")
+    
+
+    train_diags_raw = [d for d in joint_diagrams_train if d is not None]
+    train_y = np.array([y for d,y in zip(joint_diagrams_train, train_labels) if d is not None])
+
+    val_diags_raw = [d for d in joint_diagrams_val if d is not None]
+    val_y = np.array([y for d,y in zip(joint_diagrams_val, val_labels) if d is not None])
+    
+    test_diags_raw = [d for d in joint_diagrams_test if d is not None]
+    test_y = np.array([y for d,y in zip(joint_diagrams_test, test_labels) if d is not None])
+
+    print("FINAL DATASET SIZE:")
+    print("-----------------------------------")
+    print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
+    print(f"val/dev: {len(val_diags_raw)} {Counter([tuple(elem) for elem in val_y])}")
+    print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
 
 
+else: 
+    #read the base data, i.e plain text english.
+    train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
+    val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
+    test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
-train_X = []
-val_X = []
+    assert len(train_data)== len(train_labels)
+    assert len(val_data)== len(val_labels)
+    assert len(test_data)== len(test_labels)
+
+    train_diagrams_raw = parser_to_use.sentences2diagrams(train_data)
+    val_diagrams_raw = parser_to_use.sentences2diagrams(val_data)
+    test_diagrams_raw = parser_to_use.sentences2diagrams(test_data)
+
+    """
+    print and assert statements for debugging
+    """
+
+    print(f"count of train, test, val elements respectively are: ")
+    print({len(train_diagrams_raw)}, {len(test_diagrams_raw)}, {len(val_diagrams_raw)})
+    assert len(train_diagrams_raw)== len(train_labels)
+    assert len(val_diagrams_raw)== len(val_labels)
+    assert len(test_diagrams_raw)== len(test_labels)
 
 """# Note: removing cups and normalizing is more useful in bobcat parser, not in spiders
 #but leaving it here since eventually we want everything to go through bobcat
 # refer: https://cqcl.github.io/lambeq-docs/tutorials/trainer-quantum.html"""
 remove_cups = RemoveCupsRewriter()
+rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'connector', 'prepositional_phrase'])
 
-for d in tqdm(train_diagrams):
-    train_X.append(remove_cups(d).normal_form())
+train_X = []
+test_X = []
+val_X = []
 
-for d in tqdm(val_diagrams):    
-    val_X.append(remove_cups(d).normal_form())
+for d in tqdm(train_diags_raw):
+    train_X.append(remove_cups(rewriter(d).normal_form()))
 
-train_diagrams  = train_X
-val_diagrams    = val_X
+for d in tqdm(val_diags_raw):
+    val_X.append(remove_cups(rewriter(d).normal_form()))
 
-# this is used only when there are a pair of sentences
-from discopy.quantum.gates import CX, Rx, H, Bra, Id
-equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
-equality_comparator.draw()
-
-
-
-
-"""
-print and assert statements for debugging
-"""
-
-print(f"count of train, test, val elements respectively are: ")
-print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
-assert len(train_diagrams)== len(train_labels)
-assert len(val_diagrams)== len(val_labels)
-assert len(test_diagrams)== len(test_labels)
-
-def run_experiment(nlayers=1, seed=SEED):
-
-    """mithuns comment @26thsep2024typically spider ansatz only goes with spider reader. 
-    like i mentioned earlier, spider was used to just get the code off the ground
-    1) we need to definitely test with atleast bobcat parser
-    2) Noun should have a higher dimension than sentence? how? 
-    - go back and confirm the original 1958 paper by lambek. also how
-    is the code in LAMBEQ deciding the dimensions or even what  data types to use?
-    answer might be in 2010 discocat paper"""
-    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
-                    })
+for d in tqdm(test_diags_raw):
+    test_X.append(remove_cups(rewriter(d).normal_form()))    
     
-    
-
-    """
-    todo: his original code for ansatz is as below. Todo find out: why we switched to the above.
-    I think it had something do with spider ansatz-
-    todo: write the whole history of playing with this code- why spider ansatz etc- in one single
-    word document, like chronological order.-for your own sanity
-
-N = AtomicType.NOUN
-S = AtomicType.SENTENCE
-P = AtomicType.PREPOSITIONAL_PHRASE
-print(f'RUNNING WITH {nlayers} layers')
-    ansatz = Sim15Ansatz({N: 1, S: 1, P:1}, n_layers=nlayers, n_single_qubit_params=3)
-
-    Also the two lines below is more to do with comparing two things, like NLI/MRPC, Might not be that
-    relevant in say classification
-
-    train_circs = [ansatz(d) >> equality_comparator for d in train_X]
-    test_circs = [ansatz(d) >> equality_comparator for d in test_X]
-    """
-
-    #use the anstaz to create circuits from diagrams
-    train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
-    val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
-    test_circuits = [ansatz(diagram) for diagram in test_diagrams]        
-    print("length of each circuit in train is:")
-    print([len(x) for x in train_circuits])
-
-    qnlp_model = model_to_use.from_diagrams(train_circuits)
-
-    train_dataset = Dataset(
-                train_circuits,
-                train_labels,
-                batch_size=BATCH_SIZE)
-
-    val_dataset = Dataset(val_circuits, val_labels, shuffle=False)
-
-    print(len(train_labels), len(train_circuits))
-    #print and assert statements for debugging
-    print(len(train_circuits), len(val_circuits), len(test_circuits))
-    assert len(train_circuits)== len(train_labels)
-    assert len(val_circuits)== len(val_labels)
-    assert len(test_circuits)== len(test_labels)
-
-
-    trainer = trainer_to_use(
-            model=qnlp_model,
-            loss_function=torch.nn.BCEWithLogitsLoss(),
-            optimizer=torch.optim.AdamW,
-            learning_rate=LEARNING_RATE,
-            use_tensorboard=True, #todo: why isnt any visualization shown despite use_tensorboard=True
-            epochs=EPOCHS,
-            evaluate_functions=eval_metrics,
-            evaluate_on_train=True,
-            verbose='text',
-            seed=SEED)
-    
-
-    #get the embeddings etc to be used in models 2 through 4. Note
-    # that one very interesting thing that happens as far as model 1is considered is that
-    # inside the function generate_initial_parameterisation() the QNLP
-    # model ka weights (i.e the angles of gates)
-    # gets initialized with initial fast text embeddings of each word in training
-
-    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
-        train_circuits, val_circuits, embedding_model, qnlp_model)
-
-    """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
-    # and test on val_dataset. todo: find out how to add early stopping.
-    # I vaguely remember seeing callbacks somewhere"""
-    trainer.fit(train_dataset, log_interval=1)
-
-    """#for experiments on october 14th 2024. i.e 
-    just use 1 off the shelf model and spread spectrum/parameter search
-      for out of hte box for uspantek"""
-    
-
-    """
-    comment@nov 6th2024. Below is the chronological log of my encounter 
-    with a bug and how i fixed it. todo: move it eventually to a bug fix faq from code comment
-    
-    error@ oct16th 2024- 
-    below code is egiving the error,  i.e when trying to evaluate on val dataset
-
-     File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/lambeq/training/pytorch_model.py", line 142, in get_diagram_output
-    raise KeyError(
-KeyError: 'Unknown symbol: únicamente_0__s
-
-    Note this is only 
-    a) after commenting the qnlp_model.weights ka problem
-    inside the function generate_initial_parameterisation()
-    which means, we kind of ignore/commented out that problem, 
-    and here is the next one. 
-
-    b) when we are trying to evaluate on val dataset
-
-
-    What this error means is that: únicamente_0__s is not found 
-    to get the diagram output for. Mostlikely it is looking
-    for embedding of únicamente_0__s inside train_embeddings.
-
-    "the exact line 143 can be found in this part of the LAMBEQ code:https://github.com/CQCL/lambeq/blob/8109d952d707880b8588e0d04f24f0b5a94c3d59/lambeq/training/pytorch_model.py#L140
-
-    what that line is doing is that, it is going through circuits of val data,
-    extracting each of the root word from it, and 
-    asking for the weights of that word from a dictionary called
-      parameters = {k: v for k, v in zip(self.symbols, self.weights)}
-      which has all symbols as keys and its weights as values
-      i.e self.symbols and self.weights are zipped, and combined as a dictionary
-      
-      todo: 
-      1. find if our self.symbols and self.weights have same size.
-      update; answer =
-      len(qnlp_model.symbols)
-463
-len(qnlp_model.weights)
-463
-(qnlp_model.symbols[0])
-(aldea_0__s
-qnlp_model.weights[0]
-Parameter containing:
-tensor([-0.0098,  0.7008], requires_grad=True)
-
-      2. it is asking for únicamente_0__s- which shouldnt happen because 
-      our dictionaries are all stored as {plain text name: embedding} i.e
-       just "únicamente".
-       3. unicamente is from val data, why are we comparing/asking for its embedding from 
-       model.symbols- which has only training data?
-
-       update: finally figured out what is going on:
-       WE ARE NOT SUPPOSED TO USE THE BASIC QNLP MODEL ON VAL dataset
-       because
-        a) qnlp_model is by definition handicapped. i.e it doesn't know
-         what to do with OOV words. I was using it for prediction 
-         on val dataset itself in the below code i.e val_preds
-         instead of train_preds
-         is wrong methodology because Qnlp_model doesn't know how to handle OOV
-          b)  the whole purpose of creating all the models 2, 3,4 and then 
-       the OOV_prediction model is those 4 models below, which KNOW HOW TO 
-       HANDLE OOV
-       I.E the final accuracy calculation on val/dev SHOULD ONLY BE DONE
-       USING THESE 4 models and NEVER using the base qnlp_model.- unless oov count ==0
-    """
-
-    """#TAKE THE TRAINED model (i.e end of all epochs of early stopping and run it on train_circuits.
-    #note:this is being done More for a sanity check since ideally you will see the values
-    # printed during training in .fit() itself."""
-
-    # print val accuracy
-    # val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
-    # print('validation accuracy:', val_acc.item())
-
-
-    # train_preds = qnlp_model.get_diagram_output(train_circuits)    
-    # loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    # train_loss= loss_pyTorch(val_preds, torch.tensor(train_labels))
-    # train_acc =accuracy(val_preds, torch.tensor(train_labels))
-    # print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
-
-
-    """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
-    if oov_word_count==0:
-        import matplotlib.pyplot as plt
-        import numpy as np
-
-        fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
-
-        ax_tl.set_title('Training set')
-        ax_tr.set_title('Development set')
-        ax_bl.set_xlabel('Epochs')
-        ax_br.set_xlabel('Epochs')
-        ax_bl.set_ylabel('Accuracy')
-        ax_tl.set_ylabel('Loss')
-
-        colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-        range_ = np.arange(1, trainer.epochs+1)
-        ax_tl.plot(range_, trainer.train_epoch_costs, color=next(colours))
-        ax_bl.plot(range_, trainer.train_eval_results['acc'], color=next(colours))
-        ax_tr.plot(range_, trainer.val_costs, color=next(colours))
-        ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
-
-
-        val_preds = qnlp_model.get_diagram_output(val_circuits)    
-        loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-        val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
-        val_acc =accuracy(val_preds, torch.tensor(val_labels))
-        print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
-        wandb.log({"val accuracy when no OOV":val_acc},{"val loss when no OOV":val_loss})
-        # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
-        val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
-        print('Val accuracy:', val_acc.item())
-    
-        import sys
-        sys.exit()
-
-    """So by nowthe actual QNLP model (i.e model 1) is trained. Next is we are going to connect the model which learns
-    #  relationsihp between fasttext emb and angles. look inside the function
-    generate_initial_parameterisation for more specific comments
-
-    
-    #now we get into the land of model 3- i.e the model which learns the connection between weights of model 1 
-    i.e the QNLP model. 
-    and embeddings of model 2
-    i.e model 3=model(a,b) where a = embeddings and b = angles
-    todo: find the difference between angles nad weights- why is it per word?
-     update: read 2010 discocat paper for answers. In short in QNLP land
-      words are the ones which have n qbits assigned to it, and each qbit has
-       a corresponding  gate. i.e if the word likes has 3 qbits (after lambeq
-       calculus addition in 2010 discocat)- then it will have 3 gates and hence 3 angles """
-
-    """" here hey create model 3- i.e nn-model is the model which learns mapping between
-      fasttext ka embeddings and QNlp model (i.e model 1) ka learned weights
-    or in other words , if you give the embedding of a new
-      sentence model 3 (NN_model) will
-    give you the corresponding weights of model 1 (i.e QNLP model) which can then be used for
-    predicting class of the new sentence. update @6thnov2024. I feel what robert oppenheimer felt 
-    as the first scientist to bring quantum mechanics to the USA. Phew this was really
-    cutting some avant garde territory trying to understand lambeq top down- terrible documentation for bottom up
-    aka only those 17+ research papers that i had to dig up historically to finally
-    understand WTF is lambeq doing. especialy 2010 discocat"""
-    NN_model,trained_wts = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
-
-    """#this is model 4, a separate model1 like model used only for predicting 
-    on the test/dev data based only on test_circuits. Now you might have a qn why 
-    cant we simply use model 1 itself for predicting the class of val/dev 
-    data. This is the OOV problem. remember, Model 1 the way it predicts is
-    if you give the circuits, it will multiply by its weights and tell you
-    the exact class the circuit belongs to. however, remember, it has no idea how 
-    to convert an OOV word to circuit. Which is why we went back to fasttext
-    embeddings. But then we realized, just having fast text embeddings of thew new
-    dev/val data is not alone enough, but we want to instead get the corresponding
-    weights of it from model 1. That is why we trained another NN model called
-    model3 (aka NN_model) which gives you the corresponding weights of the new sentences.
-    Now coming back to your question of why not use model 1. as of now model 1 has learned
-    weights for only KNOWN words,. If you give the weights of UNKNOWN words , like those
-    found in dev, it is WRONG. So the best way is, create a new QNLP model (exactly like
-    model 1) called model4, assign its weights to be what model 3 (the OOV_NN) model predicted
-    and now give the corresponding circuits of dev data (just like model 1 would have done
-    if it could) and ask it to multiply circuitsx weights and give a class prediction.
-    """
-    
-    
-    prediction_model = model_to_use.from_diagrams(val_circuits)
-
-    trainer = trainer_to_use(
-            model=prediction_model,
-            loss_function=torch.nn.BCEWithLogitsLoss(),
-            optimizer=torch.optim.AdamW,
-            learning_rate=LEARNING_RATE,
-            epochs=EPOCHS,
-            evaluate_functions=eval_metrics,
-            evaluate_on_train=True,
-            verbose='text',
-            seed=SEED)
-
-    """#Create a dictionary where key is word and weights are the trained weights after QNLP_model was
-    trained. 
-    Todo: What I dont understand is, why is he doing that agian here? this is exactly what he is doing
-    in the first few lines of  generate_OOV_parameterising_model. 
-    a) check if this is my mistake or its same in his original code
-    b) debug and check if values are same. i.e in generate_oov_* and here. if yes, return from generate_oov_* 
-    update: yeah values are same. Going to pass it directly from 
-    the function generate_OOV_parameterising_model
-    """
-    # trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
-
-
-    """ now that we have 2 models ready, 
-    1) the OOV model, i.e model 3 (of 
-    which there are 3 different types as shown below)
-     2)  and the model4- which is a copy of 
-    original QNLP model 1 but this time with weights of the val/test dataset
-    , both well trained, let's evaluate it on the dev (and
-    eventually test) set
-    """
-
-
-    smart_loss, smart_acc = evaluate_val_set(prediction_model,
-                                                val_circuits,
-                                                val_labels,
-                                                trained_wts,
-                                                val_embeddings,
-                                                max_w_param_length,
-                                                OOV_strategy='model',
-                                                OOV_model=NN_model)
-    print(f"value of smart_loss={smart_loss} and value of smart_acc ={smart_acc}")
-    print('Evaluating EMBED model')
-
-    """#This is where he is directly using the embeddings of fasttext model as the weigh of prediction model- 
-    # i.e instead of using a learned model/model 3 to predict the weights
-    # absolute crap/used only for creating random baseline
-    # note: as of nov 6th2024 both smart and embed models are giving same value
-    # todo/confirm if the weight initialization done in model 3/smart model is not being
-    # reflected. this will show up whne we try to reproduce khatri values"""
-    # embed_loss, embed_acc = evaluate_val_set(prediction_model,
-    #                                           val_circuits,
-    #                                             val_labels,
-    #                                           trained_wts,
-    #                                           val_embeddings,
-    #                                           max_w_param_length,
-    #                                           OOV_strategy='embed')
-    
-    # print('Evaluating ZEROS model')
-    # zero_loss, zero_acc = evaluate_val_set(prediction_model,
-    #                                           val_circuits,
-    #                                             val_labels,
-    #                                           trained_wts,
-    #                                           val_embeddings,
-    #                                           max_w_param_length,
-    #                                           OOV_strategy='zeros')
-
-    # rand_losses = []
-    # rand_accs = []
-
-   
-    # print('Evaluating RAND MODEL')
-    # """
-    # even though random model is yet another random number generator, he is using it 
-    # across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
-    # crap its called. i.e he is trying to make it as stupid/random as possible.
-
-    # update@oct30th2024. Random model is giving some semaphore shit (can you believe, from python?
-    # its like generating/creating/doing some real random shit coding that 
-    # created C level seg faults from python, which i myself had once created during phd :-D).
-    #   commenting out for now
-    # """
-    # # for _ in range(10):
-    # #     rl, ra  = evaluate_val_set(prediction_model,
-    # #                                           val_circuits,
-    # #                                             val_labels,
-    # #                                           trained_wts,
-    # #                                           val_embeddings,
-    # #                                           max_w_param_length,
-    # #                                           OOV_strategy='random')
-        
-
-    # #     rand_losses.append(rl)
-    # #     rand_accs.append(ra)
-    
-    """#so by now, we have predictions on the test/dev/val set,
-      using 4 different models. 1 is our trained NN model called 
-    'model' and the rest are all baselines.
-    He collects all the results (loss and accuracy of all
-      5 experiments including training using model1) into a dictionary called res
-    1. training using QNLP/model 1 and am guessing he is evaluating on a part of trained model itself
-    2. using NN (aka model 2 lines above): which is our model 3 trained to learn mapping between fasttext embeddings and qnlp-model-1s weights 
-    #rest are all the baselines models
-    """
-    # res =  {'TRAIN': (train_loss, train_acc),
-    #         'NN': (smart_loss, smart_acc),
-    #         'EMBED': (embed_loss, embed_acc),
-    #         'ZERO': (zero_loss, zero_acc)
-    #        }
-    
-    res =  {
-            'NN': (smart_loss, smart_acc)
-            
-           }
-    # print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
-    # print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
-    # print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
-
-    return res
-
 
 
 """####final push-which calls run_experiment function above
