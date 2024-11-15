@@ -39,10 +39,10 @@ from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 
-bobCatParser=BobcatParser()
+bobCatParser=BobcatParser(root_cats=["N","S","NP"])
 
 parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-ansatz_to_use = TensorAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
+ansatz_to_use = Sim15Ansatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ] 
 model_to_use  = NumpyModel #[NumpyModel, PytorchModel]
 trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
@@ -61,9 +61,9 @@ import random
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 MAXLEN = 30
-BASE_DIMENSION_FOR_NOUN =2 
-BASE_DIMENSION_FOR_SENT =2 
-BASE_DIMENSION_FOR_PREP_PHRASE =2 
+BASE_DIMENSION_FOR_NOUN = 1 
+BASE_DIMENSION_FOR_SENT = 1
+BASE_DIMENSION_FOR_PREP_PHRASE = 1 
 MAXPARAMS = 300
 BATCH_SIZE = 30
 EPOCHS = 5
@@ -147,7 +147,7 @@ import os
 
 """#########################start definition of functions"""
 
-def run_experiment(train_diagrams, val_diagrams, test_diagrams,nlayers=1, seed=SEED):
+def run_experiment(train_X, val_X, test_X,nlayers=1, seed=SEED):
 
     """mithuns comment @26thsep2024typically spider ansatz only goes with spider reader. 
     like i mentioned earlier, spider was used to just get the code off the ground
@@ -156,9 +156,10 @@ def run_experiment(train_diagrams, val_diagrams, test_diagrams,nlayers=1, seed=S
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    if(ansatz_to_use)==IQPAnsatz:
-        ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)} ,n_layers= nlayers,n_single_qubit_params =3)    
+    if(ansatz_to_use)==IQPAnsatz or Sim15Ansatz or Sim14Ansatz:
+        ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
+                    AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
+                    AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
     else:
         ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
                     AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )    
@@ -169,40 +170,23 @@ def run_experiment(train_diagrams, val_diagrams, test_diagrams,nlayers=1, seed=S
     equality_comparator = (CX >> (H @ Rx(0.5)) >> (Bra(0) @ Id(1)))
     
     """
-    todo: his original code for ansatz is as below. Todo find out: why we switched to the above.
-    I think it had something do with spider ansatz-
-    todo: write the whole history of playing with this code- why spider ansatz etc- in one single
-    word document, like chronological order.-for your own sanity
-
-N = AtomicType.NOUN
-S = AtomicType.SENTENCE
-P = AtomicType.PREPOSITIONAL_PHRASE
-print(f'RUNNING WITH {nlayers} layers')
-    ansatz = Sim15Ansatz({N: 1, S: 1, P:1}, n_layers=nlayers, n_single_qubit_params=3)
-
-    Also the two lines below is more to do with comparing two things, like NLI/MRPC, Might not be that
-    relevant in say classification
-
-    train_circs = [ansatz(d) >> equality_comparator for d in train_X]
-    test_circs = [ansatz(d) >> equality_comparator for d in test_X]
+    
+    ansatz(d) >> equality_comparator  
+    is giving error that diagrams and circuits cant compose/chain..that makes sense,..
+    commenting out for now: todo: figure out whats going on. Nov 14th 2024
     """
 
-    #use the anstaz to create circuits from diagrams- comparison is relevant only for pairs of sentences
-    if type_of_data == "pair":
-        train_circuits=[]
-        for diagram in train_diagrams:
-            a= ansatz(diagram)
-            b =a >> equality_comparator
-            train_circuits.append(b)
-        
-        val_circuits =  [ansatz(diagram) >> equality_comparator for diagram in val_diagrams]
-        test_circuits = [ansatz(diagram)  >> equality_comparator for diagram in test_diagrams]        
+    if(type_of_data=="pair"):
+        train_circuits = [ansatz(diagram) for diagram in train_X]
+        val_circuits =  [ansatz(diagram)  for diagram in val_X]
+        test_circuits = [ansatz(diagram)  for diagram in test_X]        
         print("length of each circuit in train is:")
         print([len(x) for x in train_circuits])
+    
     else:
-        train_circuits =  [ansatz(diagram) >> equality_comparator for diagram in train_diagrams]
-        val_circuits =  [ansatz(diagram) >> equality_comparator for diagram in val_diagrams]
-        test_circuits = [ansatz(diagram)  >> equality_comparator for diagram in test_diagrams]        
+        train_circuits = [ansatz(diagram) for diagram in train_X]
+        val_circuits =  [ansatz(diagram)  for diagram in val_X]
+        test_circuits = [ansatz(diagram)  for diagram in test_X]        
         print("length of each circuit in train is:")
         print([len(x) for x in train_circuits])
 
@@ -223,8 +207,21 @@ print(f'RUNNING WITH {nlayers} layers')
     assert len(val_circuits)== len(val_labels)
     assert len(test_circuits)== len(test_labels)
 
-
-    trainer = trainer_to_use(
+    if(trainer_to_use==QuantumTrainer):
+        trainer = QuantumTrainer(
+        model=qnlp_model,
+            loss_function=torch.nn.BCEWithLogitsLoss(),
+        epochs=EPOCHS,
+        optimizer=SPSAOptimizer,
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS},
+        evaluate_functions=eval_metrics,
+        evaluate_on_train=True,
+        verbose='text',
+        log_dir='RelPron/logs',
+        seed=SEED
+        )
+    else:
+        trainer = trainer_to_use(
             model=qnlp_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
@@ -561,7 +558,7 @@ def read_data_pair_hypthesis_premise(filename):
             labels.append(int(procd_line[0]))
     return labels, sentence1, sentence2
 
-def get_max_word_param_length(input_circuits):
+def get_max_word_param_length_for_spider(input_circuits):
         lengths=[]
         for d in input_circuits:
             for symb in d.free_symbols:
@@ -642,11 +639,10 @@ Todo: the format in which spider ansatz creates the circuits i.e the naming conv
 is different than others. so This works only for SpiderAnsatz. So modify code for other ansatz."""
 def create_vocab_from_circuits(circuits):
     vocab=set()
-    if(ansatz_to_use==SpiderAnsatz):  
-        for d in circuits:
-            for symb in d.free_symbols:                  
-                cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
-                vocab.add(cleaned_wrd_with_type)
+    for d in circuits:
+        for symb in d.free_symbols:                    
+            cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
+            vocab.add(cleaned_wrd_with_type)
     return vocab
 
 """#set the the initial phases of the gates.
@@ -666,9 +662,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     # guess after reading only 1958 paper is that s is sentence, which is part of the 
     # 2 fundamental units lambek specifices in 1958 paper- n and s"""
     
-    train_vocab=create_vocab_from_circuits(train_circuits)
-    val_vocab=create_vocab_from_circuits(val_circuits)
+    if(ansatz_to_use==SpiderAnsatz): 
+        train_vocab=create_vocab_from_circuits(train_circuits)
+        val_vocab=create_vocab_from_circuits(val_circuits)
 
+    else:
+        train_vocab= {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols }
+        val_vocab = {symb.name.rsplit('_', 1)[0] for d in val_circuits for symb in d.free_symbols}
+    
     
     
     #todo print: the total number of words in train, and test+ note it down
@@ -698,16 +699,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       todo: confirm for other ansatz if this value is more than 1"""
     max_word_param_length=0
     if(ansatz_to_use==SpiderAnsatz):
-        max_word_param_length_train = max(get_max_word_param_length(train_circuits))
-        max_word_param_length_test = max(get_max_word_param_length(val_circuits))
+        max_word_param_length_train = max(get_max_word_param_length_for_spider(train_circuits))
+        max_word_param_length_test = max(get_max_word_param_length_for_spider(val_circuits))
         max_word_param_length = max(max_word_param_length_train, max_word_param_length_test) + 1
+    else:
+          max_word_param_length = max(max(int(symb.name.rsplit('_', 1)[1]) for d in train_circuits for symb in d.free_symbols),max(int(symb.name.rsplit('_', 1)[1]) for d in val_circuits for symb in d.free_symbols)) + 1
+        #update@nov11th2024. max param length should include a factor from dimension"""for example if bakes is n.r@s, and n=2 and s=2, the parameter length must be 4. I dont know why spider ansatz its as 1"""
 
-        #update@nov11th2024. max param length should include a factor from dimension
-        """for example if bakes is n.r@s, and n=2 and s=2, the parameter length must be 4. I dont know why
-        spider ansatz its as 1"""
-
-        max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN)
-
+    max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN,BASE_DIMENSION_FOR_PREP_PHRASE)
     
     assert max_word_param_length!=0
 
@@ -821,6 +820,10 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
                 import sys
                 sys.exit()
+        else:
+            wrd, idx = sym.name.rsplit('_', 1)
+            initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])
+            
 
     """
     Set the intialization of QNLP model's weight as that of the embeddings of each word
@@ -853,9 +856,12 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     ."""
     
     assert len(qnlp_model.weights) == len(initial_param_vector)
+    
     #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    for x,y in zip(qnlp_model.weights, initial_param_vector):
-        assert len(x) == len(y)
+    #note this is usually a pytorchmodel thing
+    if model_to_use == PytorchModel:
+        for x,y in zip(qnlp_model.weights, initial_param_vector):
+            assert len(x) == len(y)
 
     qnlp_model.weights = nn.ParameterList(initial_param_vector)
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
@@ -1392,8 +1398,8 @@ compr_results = {}
 
 #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
 tf_seeds = [2]
-
 for tf_seed in tf_seeds:
+
     tf.random.set_seed(tf_seed)
     this_seed_results = []
     """#note: nl is number of layers. should ideally run for 1,2,3 i.e all layers. but current laptop didnt have enough memory.
