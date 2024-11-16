@@ -38,15 +38,17 @@ from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
+from lambeq import TreeReader
 
 bobCatParser=BobcatParser(root_cats=["N","S","NP"])
+tree_reader= TreeReader()
 
-parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
+parser_to_use = tree_reader  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = Sim15Ansatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ] 
 model_to_use  = NumpyModel #[NumpyModel, PytorchModel]
 trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
-type_of_data = "" #[single, pair -will be filled in MRPC or other NLI kind of pair based datasets]]
+type_of_data = "pair" #[single, pair -will be filled in MRPC or other NLI kind of pair based datasets]]
 
 if(embedding_model_to_use=="spanish"):
     embedding_model = ft.load_model('./embeddings-l-model.bin')
@@ -60,7 +62,7 @@ import random
 
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
-MAXLEN = 30
+MAXLEN = 15
 BASE_DIMENSION_FOR_NOUN = 1 
 BASE_DIMENSION_FOR_SENT = 1
 BASE_DIMENSION_FOR_PREP_PHRASE = 1 
@@ -98,9 +100,9 @@ if(USE_SPANISH_DATA):
     DB_WANDBLOGGING="spanish"
 
 if(USE_MRPC_DATA):
-    TRAIN="mrpc_train_10_sent.txt"
-    DEV="mrpc_dev_10_sent.txt"
-    TEST="mrpc_test_10sent.txt"
+    TRAIN="msr_paraphrase_train.txt"
+    DEV="msr_paraphrase_test.txt"
+    TEST="msr_paraphrase_test.txt"
     DB_WANDBLOGGING="english_MRPC"
     type_of_data = "pair"
 
@@ -127,12 +129,10 @@ wandb.init(
     }
 )
 def accuracy(y_hat, y):
-        assert type(y_hat)== type(y)
-        # half due to double-counting
-        #todo/confirm what does he mean by double counting
-        return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  
-
+        return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  # half due to double-counting
 eval_metrics = {"acc": accuracy}
+
+
 spacy_tokeniser = SpacyTokeniser()
 
 if(USE_SPANISH_DATA) or (USE_USP_DATA):
@@ -177,7 +177,7 @@ def run_experiment(train_X, val_X, test_X,nlayers=1, seed=SEED):
     """
 
     if(type_of_data=="pair"):
-        train_circuits = [ansatz(diagram) for diagram in train_X]
+        train_circuits = [ansatz(diagram) >> equality_comparator for diagram in train_X]
         val_circuits =  [ansatz(diagram)  for diagram in val_X]
         test_circuits = [ansatz(diagram)  for diagram in test_X]        
         print("length of each circuit in train is:")
@@ -210,7 +210,7 @@ def run_experiment(train_X, val_X, test_X,nlayers=1, seed=SEED):
     if(trainer_to_use==QuantumTrainer):
         trainer = QuantumTrainer(
         model=qnlp_model,
-            loss_function=torch.nn.BCEWithLogitsLoss(),
+        loss_function=loss,
         epochs=EPOCHS,
         optimizer=SPSAOptimizer,
         optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS},
@@ -1263,51 +1263,125 @@ def remove_sent_less_than_token_maxlen(labels,sent1,sent2):
 
 """""""""""""back to main thread after functions defs"""""""""""""
 if type_of_data == "pair":
+    import string
+
+    train_X_1 = []
+    train_X_2 = []
+    train_y = []
+
+    with open(os.path.join(DATA_BASE_FOLDER,TRAIN), encoding='utf-8-sig') as f:
+        for line in f:
+            procd_line = line.strip().split('\t')
+            train_X_1.append(procd_line[3])
+            train_X_2.append(procd_line[4])
+            train_y.append(int(procd_line[0]))
+
+
+
+    test_X_1 = []
+    test_X_2 = []
+    test_y = []
+
+
+    with open(os.path.join(DATA_BASE_FOLDER,DEV), encoding='utf-8-sig') as f:
+        for line in f:
+            procd_line = line.strip().split('\t')
+            test_X_1.append(procd_line[3])
+            test_X_2.append(procd_line[4])
+            test_y.append(int(procd_line[0]))
+
+
+    MAXLEN = 10
+
+
+    filt_train_X1 = []
+    filt_train_X2 = []
+    filt_train_y = []
+
+    filt_test_X1 = []
+    filt_test_X2 = []
+    filt_test_y = []
+
+    ctr_train = 0
+    for label, s1, s2 in zip(train_y, train_X_1, train_X_2):
+        if max((len(s1.split(' ')), len(s2.split(' ')))) <= MAXLEN:
+            ctr_train += 1
+            filt_train_X1.append(s1.translate(str.maketrans('', '', string.punctuation)))
+            filt_train_X2.append(s2.translate(str.maketrans('', '', string.punctuation)))
+            this_y = [0, 0]
+            this_y[label] = 1
+            filt_train_y.append(this_y)
+
+    ctr_test = 0
+    for label, s1, s2 in zip(test_y, test_X_1, test_X_2):
+        if max((len(s1.split(' ')), len(s2.split(' ')))) <= MAXLEN:
+            ctr_test += 1
+            filt_test_X1.append(s1.translate(str.maketrans('', '', string.punctuation)))
+            filt_test_X2.append(s2.translate(str.maketrans('', '', string.punctuation)))
+            this_y = [0, 0]
+            this_y[label] = 1
+            filt_test_y.append(this_y)
+
+            print(ctr_train, ctr_test)
+    
     #read the base data, i.e plain text english.
-    train_y, train_X_1, train_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,TRAIN))
-    val_y, val_X_1, val_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,DEV))
-    test_y, test_X_1, test_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,TEST))
+    # train_y, train_X_1, train_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,TRAIN))
+    # val_y, val_X_1, val_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,DEV))
+    # test_y, test_X_1, test_X_2 = read_data_pair_hypthesis_premise(os.path.join(DATA_BASE_FOLDER,TEST))
 
 
     
-    assert len(train_y)== len(train_X_1)== len(train_X_2)
-    print(f"no of data points in training immediately after reading data is {len(train_X_1)}")
+    # assert len(train_y)== len(train_X_1)== len(train_X_2)
+    # print(f"no of data points in training immediately after reading data is {len(train_X_1)}")
 
 
-    train_labels_after_token_maxlen_removal,train_sentences_1_after_token_maxlen,train_sentences_2_after_token_maxlen, = remove_sent_less_than_token_maxlen(train_y,train_X_1,train_X_2)
-    val_labels_after_token_maxlen_removal,val_sentences_1_after_token_maxlen_removal,val_sentences_2_after_token_maxlen_removal, = remove_sent_less_than_token_maxlen(val_y,val_X_1,val_X_2)
-    test_labels_after_token_maxlen_removal,test_sentences_1_after_token_maxlen_removal,test_sentences_2_after_token_maxlen_removal, = remove_sent_less_than_token_maxlen(test_y,test_X_1,test_X_2)
+    # train_labels_after_token_maxlen_removal,train_sentences_1_after_token_maxlen,train_sentences_2_after_token_maxlen, = remove_sent_less_than_token_maxlen(train_y,train_X_1,train_X_2)
+    # val_labels_after_token_maxlen_removal,val_sentences_1_after_token_maxlen_removal,val_sentences_2_after_token_maxlen_removal, = remove_sent_less_than_token_maxlen(val_y,val_X_1,val_X_2)
+    # test_labels_after_token_maxlen_removal,test_sentences_1_after_token_maxlen_removal,test_sentences_2_after_token_maxlen_removal, = remove_sent_less_than_token_maxlen(test_y,test_X_1,test_X_2)
 
 
-    assert len(train_labels_after_token_maxlen_removal)== len(train_sentences_1_after_token_maxlen)== len(train_sentences_2_after_token_maxlen)
-    assert len(val_labels_after_token_maxlen_removal)== len(val_sentences_1_after_token_maxlen_removal)== len(val_sentences_2_after_token_maxlen_removal)
-    assert len(test_labels_after_token_maxlen_removal)== len(test_sentences_1_after_token_maxlen_removal)== len(test_sentences_2_after_token_maxlen_removal)    
+    # assert len(train_labels_after_token_maxlen_removal)== len(train_sentences_1_after_token_maxlen)== len(train_sentences_2_after_token_maxlen)
+    # assert len(val_labels_after_token_maxlen_removal)== len(val_sentences_1_after_token_maxlen_removal)== len(val_sentences_2_after_token_maxlen_removal)
+    # assert len(test_labels_after_token_maxlen_removal)== len(test_sentences_1_after_token_maxlen_removal)== len(test_sentences_2_after_token_maxlen_removal)    
 
-    print(f"no of data points in training immediately  _after_token_maxlen_removal  is {len(train_sentences_1_after_token_maxlen)}")
+    # print(f"no of data points in training immediately  _after_token_maxlen_removal  is {len(train_sentences_1_after_token_maxlen)}")
 
-    #BOBCAT parser doesnt like all sentences in MRPC. todo: put a try catch inside. Also verify output of sentences2diagrams is same sentence2diagram    
-    train_diagrams_1, train_diagrams_2, train_labels = convert_to_diagrams_given_pair_of_sents(train_sentences_1_after_token_maxlen,train_sentences_2_after_token_maxlen,train_labels_after_token_maxlen_removal)    
-    assert len(train_diagrams_1)== len(train_labels)== len(train_diagrams_2)
-    print(f"no of data points in training immediately after diagram conversion  is {len(train_diagrams_1)}")
-    
+    if(parser_to_use==bobCatParser or tree_reader):
+        #BOBCAT parser doesnt like all sentences in MRPC. todo: put a try catch inside. Also verify output of sentences2diagrams is same sentence2diagram    
+        train_diagrams_1, train_diagrams_2, train_labels = convert_to_diagrams_given_pair_of_sents(filt_train_X1,filt_train_X2,filt_train_y)    
+        assert len(train_diagrams_1)== len(train_labels)== len(train_diagrams_2)
+        print(f"no of data points in training immediately after diagram conversion  is {len(train_diagrams_1)}")
+        
 
-    val_diagrams_1, val_diagrams_2, val_labels = convert_to_diagrams_given_pair_of_sents(val_sentences_1_after_token_maxlen_removal,val_sentences_2_after_token_maxlen_removal,val_labels_after_token_maxlen_removal)    
-    assert len(val_diagrams_1)== len(val_diagrams_2)== len(val_labels)
-    print(f"no of data points in val immediately after diagram conversion  is {len(val_diagrams_1)}")
+        # val_diagrams_1, val_diagrams_2, val_labels = convert_to_diagrams_given_pair_of_sents(val_sentences_1_after_token_maxlen_removal,val_sentences_2_after_token_maxlen_removal,val_labels_after_token_maxlen_removal)    
+        # assert len(val_diagrams_1)== len(val_diagrams_2)== len(val_labels)
+        # print(f"no of data points in val immediately after diagram conversion  is {len(val_diagrams_1)}")
 
-    test_diagrams_1, test_diagrams_2, test_labels = convert_to_diagrams_given_pair_of_sents(test_sentences_1_after_token_maxlen_removal,test_sentences_2_after_token_maxlen_removal,test_labels_after_token_maxlen_removal)    
-    assert len(test_diagrams_1)== len(test_diagrams_2)== len(test_labels)
-    print(f"no of data points in test immediately after diagram conversion  is {len(test_diagrams_2)}")
+        test_diagrams_1, test_diagrams_2, test_labels = convert_to_diagrams_given_pair_of_sents(filt_test_X1,filt_test_X2,filt_test_y)    
+        assert len(test_diagrams_1)== len(test_diagrams_2)== len(test_labels)
+        print(f"no of data points in test immediately after diagram conversion  is {len(test_diagrams_2)}")
+    else:
+        train_diagrams_1 = parser_to_use.sentences2diagrams(filt_train_X1)
+        train_diagrams_2 = parser_to_use.sentences2diagrams(filt_train_X2)
+
+        test_diagrams_1 = parser_to_use.sentences2diagrams(filt_test_X1)
+        test_diagrams_2 = parser_to_use.sentences2diagrams(filt_test_X2)
+
+        train_labels= filt_train_y
+        test_labels = filt_test_y
+
+        assert len(train_labels)== len(train_diagrams_1)== len(train_diagrams_2)
+        assert len(test_labels)== len(test_diagrams_1)== len(test_diagrams_2)
 
     
     
     # We omit any case where the 2 phrases are not parsed to the same type
     joint_diagrams_train = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(train_diagrams_1, train_diagrams_2)]
-    joint_diagrams_val = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(val_diagrams_1, val_diagrams_2)]
+    # joint_diagrams_val = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(val_diagrams_1, val_diagrams_2)]
     joint_diagrams_test = [d1 @ d2.r if d1.cod == d2.cod else None for (d1, d2) in zip(test_diagrams_1, test_diagrams_2)]
 
     print(f"no of data points in training immediately after cod dom check  is {len(joint_diagrams_train)}")
-    print(f"no of data points in val immediately after cod dom check  is {len(joint_diagrams_val)}")
+    # print(f"no of data points in val immediately after cod dom check  is {len(joint_diagrams_val)}")
     print(f"no of data points in test immediately after cod dom check  is {len(joint_diagrams_test)}")
     
     
@@ -1318,8 +1392,8 @@ if type_of_data == "pair":
 
     
 
-    val_diags_raw = [d for d in joint_diagrams_val if d is not None]
-    val_y = np.array([y for d,y in zip(joint_diagrams_val, val_labels) if d is not None])
+    # val_diags_raw = [d for d in joint_diagrams_val if d is not None]
+    # val_y = np.array([y for d,y in zip(joint_diagrams_val, val_labels) if d is not None])
     
     test_diags_raw = [d for d in joint_diagrams_test if d is not None]
     test_y = np.array([y for d,y in zip(joint_diagrams_test, test_labels) if d is not None])
@@ -1327,7 +1401,7 @@ if type_of_data == "pair":
     print("FINAL DATASET SIZE:")
     print("-----------------------------------")
     print(f"Training: {len(train_diags_raw)} {Counter([tuple(elem) for elem in train_y])}")
-    print(f"val/dev: {len(val_diags_raw)} {Counter([tuple(elem) for elem in val_y])}")
+    # print(f"val/dev: {len(val_diags_raw)} {Counter([tuple(elem) for elem in val_y])}")
     print(f"Testing : {len(test_diags_raw)} {Counter([tuple(elem) for elem in test_y])}")
 
 
@@ -1365,12 +1439,19 @@ rewriter = Rewriter(['prepositional_phrase', 'determiner', 'coordination', 'conn
 
 train_X = []
 test_X = []
-val_X = []
+# val_X = []
+
+
+# for d in tqdm(train_diags_raw):
+#     train_X.append(remove_cups(rewriter(d).normal_form()))
+
+# for d in tqdm(test_diags_raw):
+#     test_X.append(remove_cups(rewriter(d).normal_form()))
 
 for d in tqdm(train_diags_raw, desc="rewriting and removing cups"):    
     a = rewriter(d)    
     b = a.normal_form()    
-    train_X.append(b)
+    
     """@nov 14th 2024 remove cups function is giving no adjoints error for 
     the composite structure. IMHO, 
     ou should remove cups BEFORE the composite diagram. 
@@ -1379,13 +1460,28 @@ for d in tqdm(train_diags_raw, desc="rewriting and removing cups"):
     b)don't do cup removal alone for now 
     c) do cup removal before 2 diagrams are made composite.
     update. doing option b for now."""
-    # c= remove_cups(b)    
+    try:
+        c= remove_cups(b)    
+    except:
+        train_X.append(b)
+        continue
+    train_X.append(c)
 
-for d in tqdm(val_diags_raw,desc="rewriting and removing cups"):
-    val_X.append((rewriter(d).normal_form()))
 
-for d in tqdm(test_diags_raw,desc="rewriting and removing cups"):
-    test_X.append((rewriter(d).normal_form()))    
+for d in tqdm(test_diags_raw, desc="rewriting and removing cups for test partition"):    
+    a = rewriter(d)    
+    b = a.normal_form()    
+    try:
+        c= remove_cups(b)    
+    except:
+        test_X.append(b)
+        continue
+    test_X.append(c)
+# for d in tqdm(val_diags_raw,desc="rewriting and removing cups"):
+#     val_X.append((rewriter(d).normal_form()))
+
+# for d in tqdm(test_diags_raw,desc="rewriting and removing cups"):
+#     test_X.append((rewriter(d).normal_form()))    
     
 
 
@@ -1406,7 +1502,7 @@ for tf_seed in tf_seeds:
     #  so commenting this out until we move it to cyverse/hpc
     #todo: find the relevance/signfincance of models from 2010 discocat paper"""
     for nl in [3]:
-        this_seed_results.append(run_experiment(train_X,val_X, test_X,nl, tf_seed))
+        this_seed_results.append(run_experiment(train_X, test_X,nl, tf_seed))
     compr_results[tf_seed] = this_seed_results
 wandb.finish()
 print(f"\nvalue of all evaluation metrics across all seeds is :")
