@@ -46,6 +46,12 @@
 - todo: update code with code for 1 sent (no pair)
 - update: done. we have 2 files now, one for yes pair of sentences (OOV_classification_yes_pair_sent.py) and other for nopair -classifcation of food IT(OOV_classification_no_pair_sents.py)
 - todo; start experiments, especially with bobcat and classification.
+	- for no pair:
+ 		- move wandb to no pair file
+ 		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
+   		- use english fasttext embeddings  
+	-  for yes pair
+ 	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
 - everythign is in mithun_dev branch as of today
 
 ## Nov 14th- Mithun working on reproducing khatri values
