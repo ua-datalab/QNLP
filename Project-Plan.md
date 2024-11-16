@@ -41,6 +41,10 @@
 
 
 # Meeting Notes
+## Nov 16th- Mithun working on reproducing khatri values
+"stopping/giving up on trying to reproduce khatri code. Main issue is he uses depccg parser, which is impossible to setup. I tried bobcat parser, and spiders reader and even tree reader. bobcat parser, doesnt do well with remove cups, spider and tree does, but then they hit the ansatz error saying circuits vs diagrams.its amess. time to call it quits"
+- todo: update code with code for 1 sent (no pair) 
+
 ## Nov 14th- Mithun working on reproducing khatri values
 - using just one file OOV_classification now on+ passing arguments as to pair based dataset or not. THe pair no pair file difference was causing too many versions.
 ## nov 13th
