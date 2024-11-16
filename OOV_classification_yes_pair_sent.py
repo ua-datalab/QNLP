@@ -1,19 +1,8 @@
 # -*- coding: utf-8 -*-
-"""v7
-#name: v7_*
-# Code which takes uspantekan or spanish small data (100 sent) about two classes
-education and dancing, runs it through a QNLP model, which is supported by a fasttext model,
-and two neural network models to learn and make prediction.
-#to get blow by blow details of what this code does, refer to a section named
-"how this code runs" inside the project plan
-https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
+"""
+## Nov 16th 2024- Mithun working on reproducing khatri values
+"stopping/giving up on trying to reproduce khatri code. Main issue is he uses depccg parser, which is impossible to setup. I tried bobcat parser, and spiders reader and even tree reader. bobcat parser, doesnt do well with remove cups, spider and tree does, but then they hit the ansatz error saying circuits vs diagrams.its amess. time to call it quits"
 
-4 major models used in this code. 
-1. QNLP model, called model1
-2. Fast text embedding model , called model 2
-3. NN model that learns mapping between fast text embedding and QNLP trained model's weights
-4. Prediction model - which is use dto predict on test set.
-#todo, find why not just do model1.predict?
 """
 import mlflow
 import string
