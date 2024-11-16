@@ -30,16 +30,15 @@ import fasttext as ft
 from lambeq import PytorchTrainer
 from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
-from lambeq import Dataset,AtomicType, IQPAnsatz, Sim14Ansatz, Sim15Ansatz
+from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
 
 bobCatParser=BobcatParser()
-
 parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, SpiderAnsatz ,Sim15Ansatz,TensorAnsatz ]
+ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 
@@ -885,13 +884,11 @@ def run_experiment(nlayers=1, seed=SEED):
     2) Noun should have a higher dimension than sentence? how? 
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
-    answer might be in 2010 discocat paper"""   
-    if(ansatz_to_use)==IQPAnsatz or Sim15Ansatz or Sim14Ansatz:
-        ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
-                    AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT} ,n_layers= nlayers,n_single_qubit_params =3)    
-    else:
-        ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )  
+    answer might be in 2010 discocat paper"""
+    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
+                    })
+    
     
 
     """
