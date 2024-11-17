@@ -45,15 +45,21 @@
 ## Nov 17th
 - todo from yesterday; start experiments, especially with bobcat and classification.
 	- for no pair:
- 		- move wandb to no pair file.
+ 		- add unit tests to CI on github
+   		- add early stopping to training data 	
+ 		- move wandb to no pair file. ---done
    			- add parameters  in wandb
+			- separate out dev and train epochs 
  		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
    		- use english fasttext embeddings----done
      		- add unit tests ---done
-       		- add unit tests to CI on github
+       		
        		- move to cyverse
          	- map out possible combinations in spreadsheet
-          	- add early stopping to training data
+          	
+          	- move dep epochs count to wandb param
+          	- add type of data also to wandb arch
+          	- go through every single line of code in yes pair manually and check if it has been ported to no pair code
 	-  for yes pair
  	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
 
