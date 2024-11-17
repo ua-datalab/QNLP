@@ -1252,7 +1252,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     # print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
     # print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
 
-    return res
+    return smart_loss.item(), smart_acc.item()
 
 
 
@@ -1273,7 +1273,7 @@ for tf_seed in tf_seeds:
     #  so commenting this out until we move it to cyverse/hpc
     #todo: find the relevance/signfincance of models from 2010 discocat paper"""
     for nl in [3]:
-        this_seed_results.append(run_experiment(nl, tf_seed))
+        this_seed_results.append([run_experiment(nl, tf_seed)])
     compr_results[tf_seed] = this_seed_results
 
 print(f"\nvalue of all evaluation metrics across all seeds is :")
