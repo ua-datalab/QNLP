@@ -41,6 +41,36 @@
 
 
 # Meeting Notes
+
+## Nov 17th
+planning for experiments.
+- Qn)
+	- Ans:
+- Qn) Did you add test cases?
+	- Ans: yes. test_oov_no_pair.py. Can be run using the command `pytest` on command line.
+ 	-  todo: either add this to a start up file, or to continous integration on github
+- Qn) What was the accuracy on dev set when you ran Food IT code +oov with spanish embeddings
+	- Ans:43.3%
+- Qn)Did you try running food IT code with english fast text embeddings.
+	- Ans: No not yet.
+	- update: just did. accuracy in dev is  51.66%. As much as this is not great, but this 8 points bump is huge IMHO, which means the patient is alive and is responding to meds.
+ - - Qn) Remind me, what exactly are we using OOV for?
+	- Ans: So in FOOD_IT, there was exactly one symbol (not word) that was out of vocabulary. it was person_n@n.l or something. So when we test using the model that was 
+- Qn) What is the configuration you are currently using for FOOD-IT?
+	- Ans:
+ 		- parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
+		- ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
+		- model_to_use  =  PytorchModel #[numpy, pytorch]
+		- trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+		- embedding_model_to_use = "english"
+- Qn) what is the plan forward?
+	- Ans: High level: slowly bring in quantum stuff. Especially a quantum ansatz
+- Qn) What is the detailed level plan forward.
+	- Ans:
+- Qn)
+	- Ans:
+
+
 ## Nov 16th- Mithun working on reproducing khatri values
 "stopping/giving up on trying to reproduce khatri code. Main issue is he uses depccg parser, which is impossible to setup. I tried bobcat parser, and spiders reader and even tree reader. bobcat parser, doesnt do well with remove cups, spider and tree does, but then they hit the ansatz error saying circuits vs diagrams.its amess. time to call it quits"
 - todo: update code with code for 1 sent (no pair)
