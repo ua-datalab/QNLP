@@ -49,7 +49,8 @@
    		- add early stopping to training data 	
  		- move wandb to no pair file. ---done
    			- add parameters  in wandb
-			- separate out dev and train epochs 
+			- separate out dev and train epochs
+   			- turn on wandb and ensure you can see them on web browser
  		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
    		- use english fasttext embeddings----done
      		- add unit tests ---done
