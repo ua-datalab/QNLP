@@ -55,7 +55,9 @@ if(embedding_model_to_use=="spanish"):
     # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
     embedding_model = ft.load_model('./embeddings-l-model.bin')
 if(embedding_model_to_use=="english"):
-    filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
+    import os.path
+    if not (os.path.isfile('cc.en.300.bin')):
+        filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
     embedding_model = ft.load_model('cc.en.300.bin')
 
 
@@ -67,7 +69,8 @@ BASE_DIMENSION_FOR_NOUN =2
 BASE_DIMENSION_FOR_SENT =2 
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS = 30
+EPOCHS_TRAIN = 30
+EPOCHS_DEV = 100
 LEARNING_RATE = 3e-2
 SEED = 0
 DATA_BASE_FOLDER= "data"
@@ -131,12 +134,11 @@ wandb.init(
     "learning_rate": LEARNING_RATE,
     "architecture": arch,
     "dataset": DB_WANDBLOGGING,
-    "epochs": EPOCHS,
     "BASE_DIMENSION_FOR_NOUN": BASE_DIMENSION_FOR_NOUN ,
     "BASE_DIMENSION_FOR_SENT":BASE_DIMENSION_FOR_SENT ,
     "MAXPARAMS" :MAXPARAMS,
     "BATCH_SIZE":BATCH_SIZE,
-    "EPOCHS" :EPOCHS,
+    "EPOCHS" :EPOCHS_TRAIN,
     "LEARNING_RATE" : LEARNING_RATE,
     "SEED" : SEED ,
     "DATA_BASE_FOLDER":DATA_BASE_FOLDER
@@ -654,7 +656,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
     #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=100,callbacks=[callback])
+    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_DEV,callbacks=[callback])
     print(hist.history.keys())
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
     plt.plot(hist.history['loss'], label='loss')
@@ -992,7 +994,7 @@ print(f'RUNNING WITH {nlayers} layers')
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
             use_tensorboard=True, #todo: why isnt any visualization shown despite use_tensorboard=True
-            epochs=EPOCHS,
+            epochs=EPOCHS_TRAIN,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
@@ -1190,7 +1192,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
-            epochs=EPOCHS,
+            epochs=EPOCHS_TRAIN,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
