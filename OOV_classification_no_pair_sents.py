@@ -61,8 +61,8 @@ if(embedding_model_to_use=="english"):
     embedding_model = ft.load_model('cc.en.300.bin')
 
 
-arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}"
-DB_WANDBLOGGING= ""
+arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
+
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 BASE_DIMENSION_FOR_NOUN =2 
@@ -84,47 +84,32 @@ USE_MRPC_DATA=False
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
+TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
 
-
-if(USE_USP_DATA):
+if(TYPE_OF_DATA_TO_USE== "uspantek"):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
     TEST="uspantek_test.txt"
-    DB_WANDBLOGGING="uspantek"
+    
 
-if(USE_SPANISH_DATA):
+if(TYPE_OF_DATA_TO_USE== "spanish"):
     TRAIN="spanish_train.txt"
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
-    DB_WANDBLOGGING="spanish"
+    
 
-if(USE_MRPC_DATA):
+if(TYPE_OF_DATA_TO_USE== "msr_paraphrase_corpus"):
     TRAIN="msr_paraphrase_train.txt"
     DEV="msr_paraphrase_test.txt"
     TEST="msr_paraphrase_test.txt"
-    DB_WANDBLOGGING="english_MRPC"
     type_of_data = "pair"
 
-if(USE_FOOD_IT_DATA):
+if(TYPE_OF_DATA_TO_USE== "food_it"):
     TRAIN="mc_train_data.txt"
     DEV="mc_dev_data.txt"
     TEST="mc_test_data.txt"
-    DB_WANDBLOGGING="english_food_IT"
+    
 
-# #todo: actual MRPC is a NLi kind of task.- the below MRPC is a hack which has only the 
-# premise mapped to a lable of standard MRPC
-# # Use the 2 classes of information technology and food 
-# # thing dataset instead if you want something for testing one class alone
-
-if(USE_MRPC_DATA):
-    TRAIN="mrpc_train_80_sent.txt"
-    DEV="mrpc_dev_10_sent.txt"
-    TEST="mrpc_test_10sent.txt"
-
-if(USE_FOOD_IT_DATA):
-    TRAIN="mc_train_data.txt"
-    DEV="mc_dev_data.txt"
-    TEST="mc_test_data.txt"
 
 wandb.init(
     # set the wandb project where this run will be logged
@@ -133,7 +118,6 @@ wandb.init(
     config={
     "learning_rate": LEARNING_RATE,
     "architecture": arch,
-    "dataset": DB_WANDBLOGGING,
     "BASE_DIMENSION_FOR_NOUN": BASE_DIMENSION_FOR_NOUN ,
     "BASE_DIMENSION_FOR_SENT":BASE_DIMENSION_FOR_SENT ,
     "MAXPARAMS" :MAXPARAMS,
@@ -141,7 +125,10 @@ wandb.init(
     "EPOCHS" :EPOCHS_TRAIN,
     "LEARNING_RATE" : LEARNING_RATE,
     "SEED" : SEED ,
-    "DATA_BASE_FOLDER":DATA_BASE_FOLDER
+    "DATA_BASE_FOLDER":DATA_BASE_FOLDER,
+    "EPOCHS_DEV":EPOCHS_DEV,
+    "TYPE_OF_DATA_TO_USE":TYPE_OF_DATA_TO_USE,
+    "embedding_model_to_use":embedding_model_to_use
     })
 
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
