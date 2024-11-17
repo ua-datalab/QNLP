@@ -46,6 +46,8 @@
 - todo from yesterday; start experiments, especially with bobcat and classification.
 	- for no pair:
  		- add unit tests to CI on github
+   			- update: done till fasttext model loading issue.
+      			- cache fasttext model so that you dont have to download it every time
    		- add early stopping to training data 	
  		- move wandb to no pair file. ---done
    			- add parameters  in wandb
