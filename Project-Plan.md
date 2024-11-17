@@ -51,6 +51,7 @@
  		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
    		- use english fasttext embeddings
      		- add unit tests
+       		- add unit tests to CI on github
        		- move to cyverse
          	- map out possible combinations in spreadsheet
 	-  for yes pair
