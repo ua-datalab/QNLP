@@ -35,8 +35,9 @@ from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
-
+import wget
 import wandb
+
 
 # bobCatParser=BobcatParser()
 bobCatParser=BobcatParser(root_cats=["N","S","NP"])
@@ -49,9 +50,12 @@ model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 
+
 if(embedding_model_to_use=="spanish"):
+    # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
     embedding_model = ft.load_model('./embeddings-l-model.bin')
 if(embedding_model_to_use=="english"):
+    filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
     embedding_model = ft.load_model('cc.en.300.bin')
 
 

@@ -2,6 +2,7 @@
 import pytest
 import OOV_classification_no_pair_sents
 from OOV_classification_no_pair_sents import run_experiment
+import os
 
 
 def test_run_expt():            
