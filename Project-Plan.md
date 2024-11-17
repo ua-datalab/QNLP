@@ -49,7 +49,10 @@
 	- for no pair:
  		- move wandb to no pair file
  		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
-   		- use english fasttext embeddings  
+   		- use english fasttext embeddings
+     		- add unit tests
+       		- move to cyverse
+         	- map out possible combinations in spreadsheet
 	-  for yes pair
  	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
 - everythign is in mithun_dev branch as of today
