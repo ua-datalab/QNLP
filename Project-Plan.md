@@ -56,13 +56,13 @@
    			- turn on wandb and ensure you can see them on web browser
  		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
    		- use english fasttext embeddings----done
-     		- add unit tests ---done
-       		
+     		- create a variable dataset to use- and add it to arch and then into wandbparams.
+       		-  add unit tests ---done
+         	-  - move dev epochs count to wandb param --done
+          	- add type of data also to wandb arch --done
        		- move to cyverse
-         	- map out possible combinations in spreadsheet
-          	
-          	- move dep epochs count to wandb param
-          	- add type of data also to wandb arch
+         	- map out possible combinations in spreadsheet --done. rather building it (here)[https://docs.google.com/spreadsheets/d/1w6u7xbR3Q37fh8uhgIJw230yWQetXdrZlvK42msIy80/edit?usp=sharing]
+          	- change expected value in test file based on new config. eg. english vs spanish embeddings
           	- go through every single line of code in yes pair manually and check if it has been ported to no pair code
 	-  for yes pair
  	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
