@@ -48,10 +48,11 @@
  		- add unit tests to CI on github
    			- update: done till fasttext model loading issue.
       			- cache fasttext model so that you dont have to download it every time
+         		- update. can't cache fasttext during continous integrations since its a fresh ubuntu virtual machine every time.  
    		- add early stopping to training data 	
  		- move wandb to no pair file. ---done
    			- add parameters  in wandb
-			- separate out dev and train epochs
+			- separate out dev and train epochs variable names
    			- turn on wandb and ensure you can see them on web browser
  		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
    		- use english fasttext embeddings----done
