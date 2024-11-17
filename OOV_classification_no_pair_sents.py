@@ -34,16 +34,23 @@ from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
-from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
+from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
 
 bobCatParser=BobcatParser()
-parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
+tree_reader = TreeReader()
+
+parser_to_use = tree_reader  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+embedding_model_to_use = "english" #[english, spanish]
+
+if(embedding_model_to_use=="spanish"):
+    embedding_model = ft.load_model('./embeddings-l-model.bin')
+if(embedding_model_to_use=="english"):
+    embedding_model = ft.load_model('cc.en.300.bin')
 
 
-embedding_model = ft.load_model('./embeddings-l-model.bin')
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 BASE_DIMENSION_FOR_NOUN =2 
