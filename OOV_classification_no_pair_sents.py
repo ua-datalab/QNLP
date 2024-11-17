@@ -36,10 +36,14 @@ from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
 
-bobCatParser=BobcatParser()
+import wandb
+
+# bobCatParser=BobcatParser()
+bobCatParser=BobcatParser(root_cats=["N","S","NP"])
+
 tree_reader = TreeReader()
 
-parser_to_use = tree_reader  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
+parser_to_use = bobCatParser  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
@@ -51,6 +55,8 @@ if(embedding_model_to_use=="english"):
     embedding_model = ft.load_model('cc.en.300.bin')
 
 
+arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}"
+DB_WANDBLOGGING= ""
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 BASE_DIMENSION_FOR_NOUN =2 
@@ -72,15 +78,31 @@ USE_MRPC_DATA=False
 #  Everything else is done on train and dev
 TESTING = False
 
+
 if(USE_USP_DATA):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
     TEST="uspantek_test.txt"
+    DB_WANDBLOGGING="uspantek"
 
 if(USE_SPANISH_DATA):
     TRAIN="spanish_train.txt"
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
+    DB_WANDBLOGGING="spanish"
+
+if(USE_MRPC_DATA):
+    TRAIN="msr_paraphrase_train.txt"
+    DEV="msr_paraphrase_test.txt"
+    TEST="msr_paraphrase_test.txt"
+    DB_WANDBLOGGING="english_MRPC"
+    type_of_data = "pair"
+
+if(USE_FOOD_IT_DATA):
+    TRAIN="mc_train_data.txt"
+    DEV="mc_dev_data.txt"
+    TEST="mc_test_data.txt"
+    DB_WANDBLOGGING="english_food_IT"
 
 # #todo: actual MRPC is a NLi kind of task.- the below MRPC is a hack which has only the 
 # premise mapped to a lable of standard MRPC
@@ -96,6 +118,17 @@ if(USE_FOOD_IT_DATA):
     TRAIN="mc_train_data.txt"
     DEV="mc_dev_data.txt"
     TEST="mc_test_data.txt"
+
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="qnlp_nov2024_expts",
+    # track hyperparameters and run metadata
+    config={
+    "learning_rate": LEARNING_RATE,
+    "architecture": arch,
+    "dataset": DB_WANDBLOGGING,
+    "epochs": EPOCHS,
+    })
 
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
 # acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
