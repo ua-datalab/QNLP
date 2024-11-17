@@ -1,0 +1,8 @@
+scipy 
+numpy   
+spacy     
+tensorflow
+lambeq
+fasttext
+pytest
+wget
