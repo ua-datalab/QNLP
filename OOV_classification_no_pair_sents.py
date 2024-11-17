@@ -128,6 +128,14 @@ wandb.init(
     "architecture": arch,
     "dataset": DB_WANDBLOGGING,
     "epochs": EPOCHS,
+    "BASE_DIMENSION_FOR_NOUN": BASE_DIMENSION_FOR_NOUN ,
+    "BASE_DIMENSION_FOR_SENT":BASE_DIMENSION_FOR_SENT ,
+    "MAXPARAMS" :MAXPARAMS,
+    "BATCH_SIZE":BATCH_SIZE,
+    "EPOCHS" :EPOCHS,
+    "LEARNING_RATE" : LEARNING_RATE,
+    "SEED" : SEED ,
+    "DATA_BASE_FOLDER":DATA_BASE_FOLDER
     })
 
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
