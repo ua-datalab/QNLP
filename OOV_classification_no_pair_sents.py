@@ -32,43 +32,77 @@ from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
 from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
-from lambeq import TensorAnsatz,SpiderAnsatz
+from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
 from lambeq import BobcatParser,spiders_reader
+from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
 
-parser_to_use = spiders_reader  #[BobcatParser(verbose='text'), spiders_reader]
-ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15,TensorAnsatz ]
+import wandb
+
+# bobCatParser=BobcatParser()
+bobCatParser=BobcatParser(root_cats=["N","S","NP"])
+
+tree_reader = TreeReader()
+
+parser_to_use = bobCatParser  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
+ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
 model_to_use  =  PytorchModel #[numpy, pytorch]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+embedding_model_to_use = "english" #[english, spanish]
 
-embedding_model = ft.load_model('./embeddings-l-model.bin')
+if(embedding_model_to_use=="spanish"):
+    embedding_model = ft.load_model('./embeddings-l-model.bin')
+if(embedding_model_to_use=="english"):
+    embedding_model = ft.load_model('cc.en.300.bin')
+
+
+arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}"
+DB_WANDBLOGGING= ""
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
+BASE_DIMENSION_FOR_NOUN =2 
+BASE_DIMENSION_FOR_SENT =2 
 MAXPARAMS = 300
-BATCH_SIZE = 32
-EPOCHS = 2
-LEARNING_RATE = 0.1
-SEED = 43434
+BATCH_SIZE = 30
+EPOCHS = 30
+LEARNING_RATE = 3e-2
+SEED = 0
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA=True
+USE_SPANISH_DATA=False
 USE_USP_DATA=False
-USE_FOOD_IT_DATA = False
+USE_FOOD_IT_DATA = True
 USE_MRPC_DATA=False
 
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
 
+
 if(USE_USP_DATA):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
     TEST="uspantek_test.txt"
+    DB_WANDBLOGGING="uspantek"
 
 if(USE_SPANISH_DATA):
     TRAIN="spanish_train.txt"
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
+    DB_WANDBLOGGING="spanish"
+
+if(USE_MRPC_DATA):
+    TRAIN="msr_paraphrase_train.txt"
+    DEV="msr_paraphrase_test.txt"
+    TEST="msr_paraphrase_test.txt"
+    DB_WANDBLOGGING="english_MRPC"
+    type_of_data = "pair"
+
+if(USE_FOOD_IT_DATA):
+    TRAIN="mc_train_data.txt"
+    DEV="mc_dev_data.txt"
+    TEST="mc_test_data.txt"
+    DB_WANDBLOGGING="english_food_IT"
 
 # #todo: actual MRPC is a NLi kind of task.- the below MRPC is a hack which has only the 
 # premise mapped to a lable of standard MRPC
@@ -84,6 +118,17 @@ if(USE_FOOD_IT_DATA):
     TRAIN="mc_train_data.txt"
     DEV="mc_dev_data.txt"
     TEST="mc_test_data.txt"
+
+wandb.init(
+    # set the wandb project where this run will be logged
+    project="qnlp_nov2024_expts",
+    # track hyperparameters and run metadata
+    config={
+    "learning_rate": LEARNING_RATE,
+    "architecture": arch,
+    "dataset": DB_WANDBLOGGING,
+    "epochs": EPOCHS,
+    })
 
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
 # acc = lambda y_hat, y: np.sum(np.round(y_hat) == y) / len(y) / 2  # half due to double-counting
@@ -101,11 +146,7 @@ spacy_tokeniser = SpacyTokeniser()
 if(USE_SPANISH_DATA) or (USE_USP_DATA):
     spanish_tokeniser=spacy.load("es_core_news_sm")
     spacy_tokeniser.tokeniser = spanish_tokeniser
-
-
-
-#for english tokenizer
-if(USE_MRPC_DATA) or USE_FOOD_IT_DATA:
+else:
     english_tokenizer = spacy.load("en_core_web_sm")
     spacy_tokeniser.tokeniser =english_tokenizer
 
@@ -194,14 +235,13 @@ def clean_wrd_for_spider_ansatz_coming_from_vocab(wrd):
 
 """given a set of circuits (e.g. train_circuit) extract the word from the 
 symbol and create a dictionary full of it
-Todo: This works only for SpiderAnsatz. So modify code for other ansatz."""
+Todo: the format in which spider ansatz creates the circuits i.e the naming convention of aldea_0_s
+is different than others. so This works only for SpiderAnsatz. So modify code for other ansatz."""
 def create_vocab_from_circuits(circuits):
     vocab=set()
     if(ansatz_to_use==SpiderAnsatz):  
         for d in circuits:
-            for symb in d.free_symbols: 
-                if "aldea" in symb.name:
-                    print("found aldea")               
+            for symb in d.free_symbols:                  
                 cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
                 vocab.add(cleaned_wrd_with_type)
     return vocab
@@ -222,7 +262,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     # distorting_0_s- right now we don't know what 0 or s stands for. My
     # guess after reading only 1958 paper is that s is sentence, which is part of the 
     # 2 fundamental units lambek specifices in 1958 paper- n and s"""
-    # train_vocab = {symb.name.rsplit('_', 1)[0] for d in train_circuits for symb in d.free_symbols}
+    
     train_vocab=create_vocab_from_circuits(train_circuits)
     val_vocab=create_vocab_from_circuits(val_circuits)
 
@@ -236,8 +276,8 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     oov_words=val_vocab - train_vocab
     print(f"list of OOV words are {oov_words}")     
 
-    #todo: find the meaning of symbol count- what is the difference between symbol count and OOV or train_vocab
-    """update @29thOct2024- Symbol is the term used for the word + number of qbits or dimension
+    """todo: find the meaning of symbol count- what is the difference between symbol count and OOV or train_vocab
+    update @29thOct2024- Symbol is the term used for the word + number of qbits or dimension
     e.g aldea_0__s means, that symbol is for the word aldea for for its 1st qbit/dimension
     similarly aldea_1__s means it is the symbol for the 2nd qbit etc.
     So ideally the count of OOV symbols must be more than that of oov words.
@@ -249,22 +289,32 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     print(f"the symbols that are in symbol count but not in word count are:{oov_symbols-oov_words}")
 
     #######note that everything to do with OOV ends here. So far it was just FYI, there is OOV in this dataset's test partition
-    
+    """max word param length is the maximum qbits needed anywhere,
+      train or val- not too significant in spider, since it allocates 
+      1 qbit/dimension to all (technically 0th dimension so maxword param length=1)
+      todo: confirm for other ansatz if this value is more than 1"""
     max_word_param_length=0
     if(ansatz_to_use==SpiderAnsatz):
         max_word_param_length_train = max(get_max_word_param_length(train_circuits))
         max_word_param_length_test = max(get_max_word_param_length(val_circuits))
         max_word_param_length = max(max_word_param_length_train, max_word_param_length_test) + 1
 
+        #update@nov11th2024. max param length should include a factor from dimension
+        """for example if bakes is n.r@s, and n=2 and s=2, the parameter length must be 4. I dont know why
+        spider ansatz its as 1"""
+
+        max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN)
+
+    
     assert max_word_param_length!=0
 
     
-    # max_word_param_length = max(, ) + 1
+    
     print(f'Max params/word: {max_word_param_length}')
 
     """ # next , for each word in train and test vocab , we need to get its embedding from fasttext
     # mithuns comment @26thsep2024: 
-    # note that there is some confusion between the input data Khatri used from MRPC
+    # todo: note that there is some confusion between the input data Khatri used from MRPC
     # as oposed to the spanish one = rather how spider reader is storing it.
     # In MRPC and  bobcat parser, they store it in one format(i think its two underscore
     # while spider parser stores it with one underscore or two dashes or something
@@ -273,32 +323,24 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     replaced/fixed/single format must be stored for all ansatz- evne see if you can
     create a pull request for this
     """
-    if(ansatz_to_use==SpiderAnsatz):  
-        # train_vocab_embeddings={}      
-        
+    if(ansatz_to_use==SpiderAnsatz):               
 
         """ #for each word in train and test vocab get its embedding from fasttext
-        #note that even though the symbols per se have _0_, in the train_vocab_embedding 
-        # dictionary it is stored in the
-        #format of {wrd: embedding}- i.e only the word aldea out of aldea_0_ is separated out and used.
-        # mithuns comment @26thsep2024: note that this is a hack, and ideally such data format
-        # based difference shouldnt occur. 
-        # TODO: run khastri code on MRPC and confirm who is screwing up.
-        # is it spider ansatz which is messing up the data format or is it us?
-
-        update@october29th2024: so in khatri code when he is giving the word
-        to the embedding model he is using plain text word i.e "aldea"
+        #note that in the train_vocab_embedding dictionary it is stored in the
+        #format of {wrd: embedding}-i.e the word given 
+        to the embedding model below  is using plain text word i.e "aldea"
         but when he is storing it in the dict train_vocab_embeddings, the key
         goes back to "aldea__s" while the value is the vector/embedding you got from
         fasttext
         # """
         train_vocab_embeddings = get_vocab_emb_dict(train_vocab)
         val_vocab_embeddings = get_vocab_emb_dict(val_vocab)
-    
-        
-
+            
     else:
-        #for the words created from other ansatz just write it as : _0_ so we can reuse the parsing from original khatri code. But here recording specifically for this instance
+        """#for the words created from other ansatz other than spider reuse 
+        the parsing from original khatri code. 
+        # todo: confirm manually 
+        # """
         train_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in train_vocab}
         val_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in val_vocab}
 
@@ -307,9 +349,15 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     initial_param_vector = []
 
     #todo: find what qnlp_model.symbols is- rather how is it different than train vocab?
-    #ans: it is every word in the given list of circuits e.g. únicamente_0__s
-    for sym in qnlp_model.symbols:
-        #@sep2nd2024-not sure what idx is supposed to do, am giong to give it the number associated with the word
+    #ans: it is every word in the given list of circuits with its qbits
+    # and data type e.g. únicamente_0__s
+    for sym,weight in zip(qnlp_model.symbols, qnlp_model.weights):
+        """#for each qbit, the initial parameter size changes.
+        # i.e if aldea had both aldea_0_s and aldea_1_s
+        # its initial param will have two difference entries in the initial param vector
+        Note that this is coming from deep qnlp_model.symbols where each qbit in a given
+        word is stored separately. REmebmer connection to functors+ refer this symbols lambeq
+        documentation:https://cqcl.github.io/lambeq-docs/tutorials/training-symbols.html"""
         if(ansatz_to_use==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
@@ -321,36 +369,55 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
             #  b) read the 2010 discocat and CQM paper onwards up, chronologically
             #no point turning knobs without deeply understanding what symbols do
             
-            #todo:compare the format ith mrpc data, and see if he is storing the initial param vector- and symbols with _0_ or not?
-            # update@29th 0ct 2024. a) done
+            #answers:
+            # a) done. refer link above
             #  b) done. Refer definition of symbol in comments near line 223
             # b) yes he is appending just the first element of the embedding as an entry to 
-            # initial params."""
+            # initial params- for first qbit, second one to second qbit etc. Its a little weird
+            # but considering xavier glorot random initialization this can be pardoned i guess 
+            # todo: this will be a nice improvement if you can initialize with the whole
+            # vector- or even sum of it will make a difference as we have seen in classical world"""
             if cleaned_wrd_with_type in train_vocab_embeddings:
-                if model_to_use == PytorchModel:
-                    # initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx),1-int(idx)])
-                    val1= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)]
-                    val2= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)+1]
-                    tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding
+                if model_to_use == PytorchModel:                    
+                    #pytorch model likes the param vector in [a,1-a] format. Just like that of the labels
+                    #todo: confirm if this happens for other models/do we really need to have an if else here
+                    # todo: what is the connection between initial param vectors and labels? oh remember in QNLP labels directly are logits/confidence in predictions?
+
+                    """update@nov8th 2024. While this was copied from Khatri's code, this is wrong. Your initial_param_vector
+                    and inturn the corresponding qnlp.weight's dimension, is decided by a) how many qbits you assigned to
+                    n and s during the ansatz creationg an b) how complex the word's representation is.
+                    for example let's say you gave n=2 and s=4 qbits. So john_n will have a dimension of 2
+                    since it has only one noun. however, now look at prepares_0_n.r@s. This will have a dimension of 8 because
+                    it is the product of a nount and a sentence. therefore 2x4=8. Therefore the initial param vector
+                    also should have a tensor of dimension 8. i.e in the below code, am hard coding exactly 2 dimensions
+                    for all words. THAT IS WRONG. the number of dimensions must be picked from qnlp.weights 
+                    and the a initial parameter prepared, by that size. Now note that khatri is simply picking the 
+                    first n cells of the embedding vector- it is as good as initializing randomly. that's ok
+                    he has to start somewhere and this is a good experiment to mix and match. However, first and
+                    foremost the dimensions hs to match.
+                    todo: find if its just a spider ansatz thing that the 2x4=8 is created of does it happen for IQPansatz
+                    also. because khatri uses IQPansatz, so we need to ensure that is not having a problem before declaring
+                    his code to be blindly wrong."""
+                    
+                    # val1= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)]
+                    # val2= train_vocab_embeddings[cleaned_wrd_with_type][int(idx)+1]
+                    # tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding
+                    # initial_param_vector.append(tup)
+
+                    #better version where dimension of initial param vector is decided by the actual dimension assigned in qnlp. weights for htat word
+                    list_of_params_for_this_word=[]
+                    for i in range(len(weight)):
+                        assert len(train_vocab_embeddings[cleaned_wrd_with_type]) > i
+                        val= train_vocab_embeddings[cleaned_wrd_with_type][int(i)]
+                        list_of_params_for_this_word.append(val)
+                    tup= torch.tensor (list_of_params_for_this_word, requires_grad=True) #initializing with first two values of the embedding
                     initial_param_vector.append(tup)
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
-            else:
-                '''
-                #todo: lots of words are getting hit with OOV- conirm why they are not there in fasttext emb
-                # my guess is its all the unicode characters. 
-                # In theory fast text is meant to create zero 
-                # OOV..since it builds up from 1 gram 2 gram etc
-                #update: this might be caused because am 
-                # removing the _0_ thing from the actual name, without
-                #  realizing what it is doing.
-                
-                found that this word verdad, was OOV/not in fasttext emb
-                found that this word vió, was OOV/not in fasttext emb
-                found that this word yo, was OOV/not in fasttext emb
-                found that this word yyyyyy was OOV/not in fasttext emb
-                '''
-                print(f"found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
+            else:                            
+                print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
+                import sys
+                sys.exit()
 
     """
     Set the intialization of QNLP model's weight as that of the embeddings of each word
@@ -358,14 +425,10 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     FOr example in NN world, embedding is separate than weights of neurons.
     You might initialize the weights of neurons with random shit like Xavier glorot
     but almost nver initialize it with embedding itself.
-    todo: qnlp_model.weights-is a list
-     of size 463 while the np.array is creating a matrix of shape (463,) -which
-     is then again being converted to nn.ParameterList-which is a list.
-     We dont even know how/why we are going to numpy land and then converting it back to nn.parameter
-     rather; there was no np.array initially.- gave some error. So i went to khatri's
-     code - and exactly copy pasted np.array()- the error went away, so i didnt complain.
-     But all this is being caused because we are working on someone else's code without
-     realizing what the code does.
+    update/answer: read 2010 discocat paper. It explains why every single WORD itself has a entry in QNLP land, as opposed to embedddings
+    #todo: it will be really cool enhancement if we can have a combined training of model1 and model 4, with the embeddings
+    being updated on the fly.- and not training model4 offline after model 1
+
     """
 
     """#update @16th oct 2024. 
@@ -385,12 +448,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       @octr17th2024
       commenting the code out until i find what its doing
     ."""
-    # assert len(qnlp_model.symbols) == len(qnlp_model.weights)==  len(train_vocab_embeddings) +len(val_vocab_embeddings)
-    assert len( qnlp_model.weights) == len(initial_param_vector)
-    qnlp_model.weights = nn.ParameterList(initial_param_vector)
     
+    assert len(qnlp_model.weights) == len(initial_param_vector)
+    #also assert dimension of every single symbol/weight matches that of initial_para_vector
+    for x,y in zip(qnlp_model.weights, initial_param_vector):
+        assert len(x) == len(y)
 
-    return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length
+    qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
 
@@ -453,12 +518,14 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     # for example if you read 1958 Lambek paper youc an see that adverb Likes can have two different TYPE representations.
     # but yes, todo: confirm this by comparing it with the original Khatri MRPC code.
     # todo: he is doing the same process above inside the function generate_initial_parameterisation
-    around line 222. Find out why doing it so many times? are they same? so why not just pass around?- update@oct29th2024. the _2 in symbol denotes the qbit number or the dimension of the tensor. refer line 222 comments starting with update @29thOct2024
+    around line 222. Find out why doing it so many times? are they same? so why not just pass around?-
+     
+       update@oct29th2024/answer: the _2 in symbol denotes the qbit number or the dimension of the tensor.
+      refer line 222 comments starting with update @29thOct2024
     # """
 
     
-    dict_training_symbols_vs_qnlp_trained_weights = {symbol: param for symbol, param in
-                                                      zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
+    dict1 = {symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
    
    
     """
@@ -469,19 +536,15 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     QNLP model will be added.
     i.e for now for each such word in training vocabulary, create a vector filled with zeroes to represent
     trained parameters         
-    
-    Update@oct29th2024- in the below code it was np.zeros(max_word_param_length+1)
-    however, when using pytorch trainer and pytorch model it needs weights in a tuple form 
-    (todo find out why)- but max param length was 1- since we were using spider ansatz
-    so as of now hardcoding the np.zeroes to be 2- will have to change this later as and when we move to other ansatz
 
     """
-    dict_wrd_in_training_vs_weights = {wrd: np.zeros(max_word_param_length+1) for wrd in train_vocab_embeddings}
+    dict2 = {wrd: np.zeros(max_word_param_length) for wrd in train_vocab_embeddings}
     
+   
     '''for each such word in training vocabulary, 
       to the empty array/array of zeroes   created above.
-      -get ist weights from the qnlp trained weights
-    #todo 1) am still not sure why he is touching his nose in a circumambulated way
+      -get its weights from the qnlp trained weights
+    #todo 1) am still not sure why he is touching his nose in a circumambulated way/why does he need two dictionaires here which he then parses in a zip below
     # 2)  print and confirm, i think they are repeating the same
     #  weight value for every entry of the array in trained_param_vectors.
     # 
@@ -490,7 +553,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     # dict_wrd_in_training_vs_weights i.e key is either word/symbol while value is sambe for both, which is the corresponding 
     # weight of the same word in the trained QNLP model '''
     cleaned_wrd_with_type=""
-    for symbol, trained_weights in dict_training_symbols_vs_qnlp_trained_weights.items():
+    for symbol, trained_weights in dict1.items():
         if(ansatz_to_use==SpiderAnsatz):  
             #symbol and word are different. e.g. aldea_0. From this extract the word
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symbol.name)
@@ -506,8 +569,17 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         # i think this has something to do with the wrd splitting thing
         #todo: in original code of khatri he is not storing aldea with plain english word
         #but he is doing with aldea_0_s- make sure we revert back to this later.
-        if cleaned_wrd_with_type in dict_wrd_in_training_vs_weights:
-                dict_wrd_in_training_vs_weights[cleaned_wrd_with_type][int(idx)] = trained_weights[int(idx)]
+
+        """"""
+        if cleaned_wrd_with_type in dict2:
+                """
+                original code here was traiend_weights of index. I dont like it.
+                bakes_0_n has a trained_weights of 2 array
+                bakes_1_n.r@s has a trained_weights of 4 array. So why are we taking
+                just the index based value. I have a bad feeling this is spider ansatz
+                ka screw up and these should have been respectively bakes_2_n and bakes_4_n.r@s
+                """
+                dict2[cleaned_wrd_with_type] = trained_weights.detach().numpy()
         else:                
                 print(f"inside OOV_generation-found that this word {cleaned_wrd_with_type} was not in trained_param_vectors")
 
@@ -525,7 +597,22 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     every word should have more than 1 values. So NN_train_Y will be a list of 2 tuple arrays. Be ready
      for if and when this bombs """
     NN_train_X = np.array([train_vocab_embeddings[wrd] for wrd in wrds_in_order])
-    NN_train_Y = np.array([dict_wrd_in_training_vs_weights[wrd] for wrd in wrds_in_order])
+
+    #if the weight vector is less than max_param_length (e.g. 4) , pad the rest with zeroes
+
+    NN_train_Y=[]
+    for wrd in wrds_in_order:
+        if len(dict2[wrd])==max_word_param_length:
+            NN_train_Y.append(dict2[wrd])
+        else:            
+            pad= np.zeros(max_word_param_length-len(dict2[wrd]))
+            combined = np.hstack([dict2[wrd],pad])                          
+            NN_train_Y.append(combined)
+            
+                    
+                           
+        
+    # NN_train_Y = np.array([dict2[wrd]  else dict2[wrd].extend([0,0]) for wrd in wrds_in_order])
     
     """#this is model 3. i.e create a simple Keras NN model, which will learn the above mapping.
       todo: use a better model a) FFNN using pytorch b) something a little bit more complicated than a simple FFNN"""
@@ -549,12 +636,13 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     )
     # Embedding dim!
     """#todo find why maxparams are hardcoded as 300 (is it the dimension of the fasttext embedding?)
-    #ans: yes. The first layer needs to have the dimension of NN_train_X, which in turn has the dimension of the  
+    #ans: yes. Like in any standard FFNN
+    # the first layer needs to have the dimension of NN_train_X, which in turn has the dimension of the  
     Fasttext embedding"""
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
     #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, NN_train_Y, validation_split=0.2, verbose=1, epochs=100,callbacks=[callback])
+    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=100,callbacks=[callback])
     print(hist.history.keys())
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
     plt.plot(hist.history['loss'], label='loss')
@@ -562,9 +650,9 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     plt.xlabel('Epoch')
     plt.ylabel('Error')
     plt.legend()
-    plt.show()
+    # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
-    return OOV_NN_model,dict_wrd_in_training_vs_weights
+    return OOV_NN_model,dict2
 
 def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
     """
@@ -606,26 +694,32 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     #convert the dictionary pred_parameter_map into a list pred_weight_vector
     pred_weight_vector = []
 
-    for sym in pred_model.symbols:
+    assert len(pred_model.symbols) == len(pred_model.weights)
+
+    for sym,weight in zip(pred_model.symbols,pred_model.weights):
         if(ansatz_to_use==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
             if cleaned_wrd_with_type in pred_parameter_map:
                 if model_to_use == PytorchModel:
-                    val1= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
-                    """# todo: there are some cleaned_wrd_with_type in pred_parameter_map which is empty. i.e size of tuple =1
+                    pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type])
+
+                    # pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
+                    # val1= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)])
+                    """# todo: there are some cleaned_wrd_with_type in pred_parameter_map which is empty.
+                      i.e size of tuple =1
                     #figure that out,. commenting this line until then and forcing val2 to be zero                
                     # val2= pred_parameter_map[cleaned_wrd_with_type][int(idx)+1]"""
 
-                    if len(pred_parameter_map[cleaned_wrd_with_type])>1:
-                        val2= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)+1])
-                    else:
-                        val2 = np.float32(0.0)
-                    tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding            
-                    pred_weight_vector.append(tup)
+                    # if len(pred_parameter_map[cleaned_wrd_with_type])>1:
+                    #     val2= np.float32(pred_parameter_map[cleaned_wrd_with_type][int(idx)+1])
+                    # else:
+                    #     val2 = np.float32(0.0)
+                    # tup= torch.tensor ([val1,val2], requires_grad=True) #initializing with first two values of the embedding            
+                    # pred_weight_vector.append(tup)
 
-    """#so he is assigning the weights he picked from model 3's outout (the DNN one)
+    """#so he is assigning the weights he picked from model 3's output (the DNN one)
     to that of model 4 - i.e the prediction model. I think this is the answer to the question
     of why is he using two QNLP models (model1 and model 4)- that is because if we could direclty use
     the trained weights of the original QNLP model model 1- we wouldnt have had to go through this 
@@ -639,7 +733,9 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     assert len(pred_model.symbols) == len(pred_weight_vector)
     assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
-    # assert len(pred_model.weights) == len(pred_weight_vector)    
+    #also assert dimension of every single symbol/weight matches that of initial_para_vector
+    # for x,y in zip(pred_model.weights, pred_weight_vector):
+    #     assert len(x) == len(y)  
     pred_model.weights = nn.ParameterList(pred_weight_vector)
 
     
@@ -698,10 +794,6 @@ spider reader should be soon discareded and switched to bob cat parser+ some
 quantum trainers asap. """
 
 
-"""spanish_diagrams is a dummy function I had created once when I had to test
-both MRPC and uspantekan/spanish data at the same time. it is very useful in debugging
-especially for converting aldea_0 kinda format issues. But do remove this
-once not needed. Mithun@26th sep 2024"""
 def convert_to_diagrams(list_sents,labels):
     list_target = []
     labels_target = []
@@ -745,16 +837,20 @@ def convert_to_diagrams(list_sents,labels):
 # Note that this is a confusion arising on sep 29th 2024: because we don't know what is the meaning of
 # the _0 in aldea. Rather, i am yet to read the 2010 discocat paper. That should explain it
 # Until then taking a guess"""
-train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
-val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
-test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
+# train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
+# val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
+# test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
+
+train_diagrams = parser_to_use.sentences2diagrams(train_data)
+val_diagrams = parser_to_use.sentences2diagrams(val_data)
+test_diagrams = parser_to_use.sentences2diagrams(test_data)
 
 """#assignign teh labels back to s`ame old lable
 # doing because didnt want same variable going into th function and returning it.
 #  python lets you get away with it, but i dont trust it"""
-train_labels = train_labels_v2 
-val_labels = val_labels_v2
-test_labels = test_labels_v2
+# train_labels = train_labels_v2 
+# val_labels = val_labels_v2
+# test_labels = test_labels_v2
 
 """
 these d1.cod=d2.code are now orphan codes, but in reality, these code were there in khatri's original
@@ -791,16 +887,16 @@ val_X = []
 """# Note: removing cups and normalizing is more useful in bobcat parser, not in spiders
 #but leaving it here since eventually we want everything to go through bobcat
 # refer: https://cqcl.github.io/lambeq-docs/tutorials/trainer-quantum.html"""
-remove_cups = RemoveCupsRewriter()
+# remove_cups = RemoveCupsRewriter()
 
-for d in tqdm(train_diagrams):
-    train_X.append(remove_cups(d).normal_form())
+# for d in tqdm(train_diagrams):
+#     train_X.append(remove_cups(d).normal_form())
 
-for d in tqdm(val_diagrams):    
-    val_X.append(remove_cups(d).normal_form())
+# for d in tqdm(val_diagrams):    
+#     val_X.append(remove_cups(d).normal_form())
 
-train_diagrams  = train_X
-val_diagrams    = val_X
+# train_diagrams  = train_X
+# val_diagrams    = val_X
 
 # this is used only when there are a pair of sentences
 # from discopy.quantum.gates import CX, Rx, H, Bra, Id
@@ -813,7 +909,7 @@ val_diagrams    = val_X
 """
 print and assert statements for debugging
 """
-assert len(train_diagrams)== len(train_labels_v2)
+
 print(f"count of train, test, val elements respectively are: ")
 print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
 assert len(train_diagrams)== len(train_labels)
@@ -829,11 +925,12 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(4),
-                        AtomicType.SENTENCE: Dim(2)
-                        #    AtomicType.PREPOSITIONAL_PHRASE: Dim(2),
-                        })
+    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
+                    })
     
+    
+
     """
     todo: his original code for ansatz is as below. Todo find out: why we switched to the above.
     I think it had something do with spider ansatz-
@@ -853,29 +950,15 @@ print(f'RUNNING WITH {nlayers} layers')
     test_circs = [ansatz(d) >> equality_comparator for d in test_X]
     """
 
-    #use the anstax to create circuits from diagrams
+    #use the anstaz to create circuits from diagrams
     train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
     val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
-    test_circuits = [ansatz(diagram) for diagram in test_diagrams]
-
-
-    
-
-    #mithuns comment @26thsep2024:pytorch model was the only one going well
-    #  with spider reader and spider anstaz
-    #also todo: should this not contain both val and train circuits as inputz?
-    # qnlp_model = PytorchModel.from_diagrams(train_circuits)
-
-    from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset
-    # qnlp_model = NumpyModel.from_diagrams(train_circuits)
-    qnlp_model = model_to_use.from_diagrams(train_circuits)
-    
-
-    
+    test_circuits = [ansatz(diagram) for diagram in test_diagrams]        
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
-    
+    qnlp_model = model_to_use.from_diagrams(train_circuits)
+
     train_dataset = Dataset(
                 train_circuits,
                 train_labels,
@@ -890,62 +973,19 @@ print(f'RUNNING WITH {nlayers} layers')
     assert len(val_circuits)== len(val_labels)
     assert len(test_circuits)== len(test_labels)
 
-    """
-    #this is a;;wandb crap,- i was trying to automate a sweep across parameters. 
-    Turned out to be more  hurting than helping. Will think about this as and when we get to expt running stage
-    # comment out if becoming a pain in the butt. MLFlow is better than wandb imho
-    sweep_config = {
-        'method': 'random'
-        }
-    metric = {
-        'name': 'loss',
-        'goal': 'minimize'
-        }
-
-    sweep_config['metric'] = metric
-
-    parameters_dict = {
-        'LEARNING_RATE': {
-            'values': [0.3, 0.03, 0.003,0.0003]
-            },
-        }
-
-    sweep_config['parameters'] = parameters_dict
-
-    parameters_dict.update({
-        'epochs': {
-            'value': 1}
-        })
-
-    import pprint
-    
-    pprint.pprint(sweep_config)
-    # sweep_id = wandb.sweep(sweep_config, project="uspantekan_spider_tuning")
-    # wandb_logger = WandbLogger()"""
 
     trainer = trainer_to_use(
             model=qnlp_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
-            use_tensorboard=True,
+            use_tensorboard=True, #todo: why isnt any visualization shown despite use_tensorboard=True
             epochs=EPOCHS,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
             seed=SEED)
     
-    # trainer = QuantumTrainer(
-    #     qnlp_model,        
-    #     loss_function=torch.nn.BCEWithLogitsLoss(),
-    #     epochs=EPOCHS,
-    #     optimizer=SPSAOptimizer,
-    #     optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.01*EPOCHS},
-    #     evaluate_functions=eval_metrics,
-    #     evaluate_on_train=True,
-    #     verbose = 'text',
-    #     seed=seed
-    # )
 
     #get the embeddings etc to be used in models 2 through 4. Note
     # that one very interesting thing that happens as far as model 1is considered is that
@@ -953,30 +993,24 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    train_embeddings, val_embeddings, max_w_param_length = generate_initial_parameterisation(
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
         train_circuits, val_circuits, embedding_model, qnlp_model)
 
-    #run ONLY the QNLP model.i.e let it train on the train_dataset. and test on val_dataset
-    #todo:  somewhere you use the term val and somehwere else you use the term test.
-    #  Fix it/use only one everywhere-bottomline: make val/dev explicitly different than test
-
-    
-    
+    """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
+    # and test on val_dataset. todo: find out how to add early stopping.
+    # I vaguely remember seeing callbacks somewhere"""
     trainer.fit(train_dataset, log_interval=1)
 
     """#for experiments on october 14th 2024. i.e 
     just use 1 off the shelf model and spread spectrum/parameter search
-      for out of hte box for usp"""
+      for out of hte box for uspantek"""
     
 
     """
-    Uncomment this code eventually. Here he is using the model trained above on training circuits 
-    itself, just to get training accuracy
-    todo: do we want to bring in dev here now, and keep testing below as TEST partition? 
-    else what is the point in doing prediction on training data- obviously it will  be 100%
-    -on the bright side_ maybe it is a sanity check to ensure our model is getting trained atleast"""
-
-    """error@ 16th 2024- 
+    comment@nov 6th2024. Below is the chronological log of my encounter 
+    with a bug and how i fixed it. todo: move it eventually to a bug fix faq from code comment
+    
+    error@ oct16th 2024- 
     below code is egiving the error,  i.e when trying to evaluate on val dataset
 
      File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/lambeq/training/pytorch_model.py", line 142, in get_diagram_output
@@ -1028,51 +1062,69 @@ tensor([-0.0098,  0.7008], requires_grad=True)
        WE ARE NOT SUPPOSED TO USE THE BASIC QNLP MODEL ON VAL dataset
        because
         a) qnlp_model is by definition handicapped. i.e it doesn't know
-         what to do with OOV words.SO using it for prediction on val dataset itself
+         what to do with OOV words. I was using it for prediction 
+         on val dataset itself in the below code i.e val_preds
+         instead of train_preds
          is wrong methodology because Qnlp_model doesn't know how to handle OOV
           b)  the whole purpose of creating all the models 2, 3,4 and then 
        the OOV_prediction model is those 4 models below, which KNOW HOW TO 
        HANDLE OOV
        I.E the final accuracy calculation on val/dev SHOULD ONLY BE DONE
-       USING THESE 4 models and NEVER using the base qnlp_model.
-
-
-    
-
+       USING THESE 4 models and NEVER using the base qnlp_model.- unless oov count ==0
     """
-    # val_preds = qnlp_model.get_diagram_output(val_circuits)
-    # loss_function = torch.nn.BCEWithLogitsLoss()
-    # val_labels_pytorch_tensor= torch.Tensor(val_labels)
-    # val_loss = loss_function(val_preds, val_labels_pytorch_tensor)
-    # val_acc = accuracy(val_preds, val_labels_pytorch_tensor)
-    # print(f'Val STATS: {val_loss, val_acc}')
+
+    """#TAKE THE TRAINED model (i.e end of all epochs of early stopping and run it on train_circuits.
+    #note:this is being done More for a sanity check since ideally you will see the values
+    # printed during training in .fit() itself."""
+
+    # print val accuracy
+    # val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+    # print('validation accuracy:', val_acc.item())
+
+
+    # train_preds = qnlp_model.get_diagram_output(train_circuits)    
+    # loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+    # train_loss= loss_pyTorch(val_preds, torch.tensor(train_labels))
+    # train_acc =accuracy(val_preds, torch.tensor(train_labels))
+    # print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
+
+
+    """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
+    if oov_word_count==0:
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
+
+        ax_tl.set_title('Training set')
+        ax_tr.set_title('Development set')
+        ax_bl.set_xlabel('Epochs')
+        ax_br.set_xlabel('Epochs')
+        ax_bl.set_ylabel('Accuracy')
+        ax_tl.set_ylabel('Loss')
+
+        colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+        range_ = np.arange(1, trainer.epochs+1)
+        ax_tl.plot(range_, trainer.train_epoch_costs, color=next(colours))
+        ax_bl.plot(range_, trainer.train_eval_results['acc'], color=next(colours))
+        ax_tr.plot(range_, trainer.val_costs, color=next(colours))
+        ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
+
+
+        val_preds = qnlp_model.get_diagram_output(val_circuits)    
+        loss_pyTorch =torch.nn.BCEWithLogitsLoss()
+        val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
+        val_acc =accuracy(val_preds, torch.tensor(val_labels))
+        print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
+
+        # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
+        val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+        print('Val accuracy:', val_acc.item())
     
-    # import sys
-    # sys.exit(1)
+        import sys
+        sys.exit()
 
-    train_preds = qnlp_model.get_diagram_output(train_circuits)
-    # loss_pyTorch = nn.CrossEntropyLoss()
-    loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    train_loss= loss_pyTorch(train_preds, torch.tensor(train_labels))
-    train_acc =accuracy(train_preds, torch.tensor(train_labels))
-    print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
-
-
-
-
-    """
-    
-
-  
-
-    
-
-    # train_loss = loss(train_preds, train_labels)
-    # train_acc = acc(train_preds, train_labels)
-    # print(f'TRAIN STATS: {train_loss, train_acc}')"""
-
-
-    """by here the actual QNLP model is trained. Next is we are going to connect the model which learns
+    """So by nowthe actual QNLP model (i.e model 1) is trained. Next is we are going to connect the model which learns
     #  relationsihp between fasttext emb and angles. look inside the function
     generate_initial_parameterisation for more specific comments
 
@@ -1081,12 +1133,22 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     i.e the QNLP model. 
     and embeddings of model 2
     i.e model 3=model(a,b) where a = embeddings and b = angles
-    todo: find the difference between angles nad weights- why is it per word? """
+    todo: find the difference between angles nad weights- why is it per word?
+     update: read 2010 discocat paper for answers. In short in QNLP land
+      words are the ones which have n qbits assigned to it, and each qbit has
+       a corresponding  gate. i.e if the word likes has 3 qbits (after lambeq
+       calculus addition in 2010 discocat)- then it will have 3 gates and hence 3 angles """
 
-    """"#model 3- i.e nn-model is the model which learns mapping between fasttext ka embeddings and QNlp model (i.e model 1) ka learned weights
-    or in other words , if you give the embedding of a new sentence model 3 (NN_model) will
+    """" here hey create model 3- i.e nn-model is the model which learns mapping between
+      fasttext ka embeddings and QNlp model (i.e model 1) ka learned weights
+    or in other words , if you give the embedding of a new
+      sentence model 3 (NN_model) will
     give you the corresponding weights of model 1 (i.e QNLP model) which can then be used for
-    predicting class of the new sentence"""
+    predicting class of the new sentence. update @6thnov2024. I feel what robert oppenheimer felt 
+    as the first scientist to bring quantum mechanics to the USA. Phew this was really
+    cutting some avant garde territory trying to understand lambeq top down- terrible documentation for bottom up
+    aka only those 17+ research papers that i had to dig up historically to finally
+    understand WTF is lambeq doing. especialy 2010 discocat"""
     NN_model,trained_wts = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
 
     """#this is model 4, a separate model1 like model used only for predicting 
@@ -1096,7 +1158,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     if you give the circuits, it will multiply by its weights and tell you
     the exact class the circuit belongs to. however, remember, it has no idea how 
     to convert an OOV word to circuit. Which is why we went back to fasttext
-    embeddings. But then we realized, just having fast tet embeddings of thew new
+    embeddings. But then we realized, just having fast text embeddings of thew new
     dev/val data is not alone enough, but we want to instead get the corresponding
     weights of it from model 1. That is why we trained another NN model called
     model3 (aka NN_model) which gives you the corresponding weights of the new sentences.
@@ -1108,7 +1170,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     if it could) and ask it to multiply circuitsx weights and give a class prediction.
     """
     
-    #note/todo: differentiate difference between test and val. If it is val here, then make sure we are not passing val inside model1.fit()--done
+    
     prediction_model = model_to_use.from_diagrams(val_circuits)
 
     trainer = trainer_to_use(
@@ -1128,13 +1190,18 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     in the first few lines of  generate_OOV_parameterising_model. 
     a) check if this is my mistake or its same in his original code
     b) debug and check if values are same. i.e in generate_oov_* and here. if yes, return from generate_oov_* 
+    update: yeah values are same. Going to pass it directly from 
+    the function generate_OOV_parameterising_model
     """
     # trained_wts = trained_params_from_model(qnlp_model, train_embeddings, max_w_param_length)
 
 
-    """ now that we have 2 models ready, the OOV model, i.e model 3 (of 
-    which there are 3 different types as shown below) and the
-    original QNLP model 1, both well trained, let's evaluate it on the dev (and
+    """ now that we have 2 models ready, 
+    1) the OOV model, i.e model 3 (of 
+    which there are 3 different types as shown below)
+     2)  and the model4- which is a copy of 
+    original QNLP model 1 but this time with weights of the val/test dataset
+    , both well trained, let's evaluate it on the dev (and
     eventually test) set
     """
 
@@ -1149,66 +1216,83 @@ tensor([-0.0098,  0.7008], requires_grad=True)
                                                 OOV_model=NN_model)
     print(f"value of smart_loss={smart_loss} and value of smart_acc ={smart_acc}")
     print('Evaluating EMBED model')
-    #This is where he is directly using the embeddings of fasttext model as the weigh of prediction model- absolute crap/used only for creating random baseline
-    embed_loss, embed_acc = evaluate_val_set(prediction_model,
-                                              val_circuits,
-                                                val_labels,
-                                              trained_wts,
-                                              val_embeddings,
-                                              max_w_param_length,
-                                              OOV_strategy='embed')
-    
-    print('Evaluating ZEROS model')
-    zero_loss, zero_acc = evaluate_val_set(prediction_model,
-                                              val_circuits,
-                                                val_labels,
-                                              trained_wts,
-                                              val_embeddings,
-                                              max_w_param_length,
-                                              OOV_strategy='zeros')
 
-    rand_losses = []
-    rand_accs = []
-
-   
-    print('Evaluating RAND MODEL')
-    """
-    even though random model is yet another random number generator, he is using it 
-    across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
-    crap its called. i.e he is trying to make it as stupid/random as possible.
-
-    update@oct30th2024. Random model is giving some semaphore shit. commenting out for now
-    """
-    # for _ in range(10):
-    #     rl, ra  = evaluate_val_set(prediction_model,
+    """#This is where he is directly using the embeddings of fasttext model as the weigh of prediction model- 
+    # i.e instead of using a learned model/model 3 to predict the weights
+    # absolute crap/used only for creating random baseline
+    # note: as of nov 6th2024 both smart and embed models are giving same value
+    # todo/confirm if the weight initialization done in model 3/smart model is not being
+    # reflected. this will show up whne we try to reproduce khatri values"""
+    # embed_loss, embed_acc = evaluate_val_set(prediction_model,
     #                                           val_circuits,
     #                                             val_labels,
     #                                           trained_wts,
     #                                           val_embeddings,
     #                                           max_w_param_length,
-    #                                           OOV_strategy='random')
+    #                                           OOV_strategy='embed')
+    
+    # print('Evaluating ZEROS model')
+    # zero_loss, zero_acc = evaluate_val_set(prediction_model,
+    #                                           val_circuits,
+    #                                             val_labels,
+    #                                           trained_wts,
+    #                                           val_embeddings,
+    #                                           max_w_param_length,
+    #                                           OOV_strategy='zeros')
+
+    # rand_losses = []
+    # rand_accs = []
+
+   
+    # print('Evaluating RAND MODEL')
+    # """
+    # even though random model is yet another random number generator, he is using it 
+    # across multiple times, am guesssing to make sure its normalized, accuracy avg or whatever
+    # crap its called. i.e he is trying to make it as stupid/random as possible.
+
+    # update@oct30th2024. Random model is giving some semaphore shit (can you believe, from python?
+    # its like generating/creating/doing some real random shit coding that 
+    # created C level seg faults from python, which i myself had once created during phd :-D).
+    #   commenting out for now
+    # """
+    # # for _ in range(10):
+    # #     rl, ra  = evaluate_val_set(prediction_model,
+    # #                                           val_circuits,
+    # #                                             val_labels,
+    # #                                           trained_wts,
+    # #                                           val_embeddings,
+    # #                                           max_w_param_length,
+    # #                                           OOV_strategy='random')
         
 
-    #     rand_losses.append(rl)
-    #     rand_accs.append(ra)
+    # #     rand_losses.append(rl)
+    # #     rand_accs.append(ra)
     
-    """#so by now, we have predictions on the test/dev/val set, using 4 different models. 1 is our trained NN model called 
+    """#so by now, we have predictions on the test/dev/val set,
+      using 4 different models. 1 is our trained NN model called 
     'model' and the rest are all baselines.
-    He collects all the results (loss and accuracy of all 5 experiments)
+    He collects all the results (loss and accuracy of all
+      5 experiments including training using model1) into a dictionary called res
     1. training using QNLP/model 1 and am guessing he is evaluating on a part of trained model itself
     2. using NN (aka model 2 lines above): which is our model 3 trained to learn mapping between fasttext embeddings and qnlp-model-1s weights 
     #rest are all the baselines models
     """
-    res =  {'TRAIN': (train_loss, train_acc),
-            'NN': (smart_loss, smart_acc),
-            'EMBED': (embed_loss, embed_acc),
-            'ZERO': (zero_loss, zero_acc)
+    # res =  {'TRAIN': (train_loss, train_acc),
+    #         'NN': (smart_loss, smart_acc),
+    #         'EMBED': (embed_loss, embed_acc),
+    #         'ZERO': (zero_loss, zero_acc)
+    #        }
+    
+    res =  {
+            'NN': (smart_loss, smart_acc)
+            
+            
            }
-    print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
-    print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
-    print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model ZERO: {res["ZERO"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model EMBED: {res["EMBED"][1]}')
+    # print(f'for the seed={SEED} the accuracy given by the model NN: {res["NN"][1]}')
 
-    return res
+    return smart_loss.item(), smart_acc.item()
 
 
 
@@ -1219,14 +1303,20 @@ todo: why is he setting random seed, that tooin tensor flow
 import tensorflow as tf
 compr_results = {}
 
+#ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
 tf_seeds = [2]
 
 for tf_seed in tf_seeds:
     tf.random.set_seed(tf_seed)
     this_seed_results = []
+    """#note: nl is number of layers. should ideally run for 1,2,3 i.e all layers. but current laptop didnt have enough memory.
+    #  so commenting this out until we move it to cyverse/hpc
+    #todo: find the relevance/signfincance of models from 2010 discocat paper"""
     for nl in [3]:
-        this_seed_results.append(run_experiment(nl, tf_seed))
+        this_seed_results.append([run_experiment(nl, tf_seed)])
     compr_results[tf_seed] = this_seed_results
 
-print(f"value of all evaluation metrics across all seeds is {compr_results}")
-
+print(f"\nvalue of all evaluation metrics across all seeds is :")
+#todo: cleanly print this dict below
+for k,v in compr_results.items():
+    print(f"\n{k}: {v}\n")

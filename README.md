@@ -1,7 +1,7 @@
 # QNLP
 Requirements:
 - minimum 16 GB ram to load the fasttext model and lambeq models
-## steps to run this code
+- steps to run this code
 - download data files  (e.g. spanish_test.txt)from [this](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)  repo to the same location where this code is
 - `conda create --name qnlp_temp7 python==3.11.10`
 - `conda activate qnlp_temp7` 
