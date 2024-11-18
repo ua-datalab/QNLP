@@ -49,6 +49,9 @@ Made a big break through yesterday night. Atleast I think so.
   	- but then i noticed our loss values were not decreasing (and the model weights not being updated) in the first .fit()/training of the QNLP model
    	- I went digging and realized, that it is the generate_initial_param thing Khatri does which is screwing up things. I still am not sure what that function does. We are already initializing model1 with random values. anyway, the moment i commented that out,model 1 loss started dropping and hit like 99% accuracy. Even better, model 4( the prediction version of model 1 combined with values of OOV)- gave 82% accuracy. Now IMHO that is huge. i.e a model not seeing val data, training only on 70 sentences, vs 30 in val. 
     - todo confirm that the flow is right and this is not a fluke
+    - looks good tome
+- QN) so the ideal flow of events during prediction should be, we go thro ugh each word in val, check if it exists in train vocab, if yes get its already trained weights from model1, i,e the first qnlp model. IF NOT then go get the corresponding embeddings from fasttext, give it to model3, which will output a new weight vector for you, which then you attach to the prediction model, i.e model4, saying this is the missing piece. Todo: confirm if this is how khatri is doing it
+- Ans: No. He is taking every word in val, giving its embedding to model3 i.e the OOV model, which then gives its weights, and which he is using. I mean, ideally the weights that the OOV model predicts for the val word must be same or very close what the model1 had learned. ...but either way, this is a nice todo: run experiment with our flow chart idea and see if that changes anything.
     
   
 ## Nov 17th
