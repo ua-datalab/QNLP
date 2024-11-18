@@ -453,7 +453,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     for x,y in zip(qnlp_model.weights, initial_param_vector):
         assert len(x) == len(y)
 
-    qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    # qnlp_model.weights = nn.ParameterList(initial_param_vector)
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
@@ -1008,8 +1008,8 @@ print(f'RUNNING WITH {nlayers} layers')
     # model ka weights (i.e the angles of gates)
     # gets initialized with initial fast text embeddings of each word in training
 
-    # train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
-    #     train_circuits, val_circuits, embedding_model, qnlp_model)
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
+        train_circuits, val_circuits, embedding_model, qnlp_model)
 
     """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
     # and test on val_dataset. todo: find out how to add early stopping.
@@ -1103,7 +1103,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     # train_acc =accuracy(val_preds, torch.tensor(train_labels))
     # print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
 
-
+    
     """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
     if oov_word_count==0:
         import matplotlib.pyplot as plt
