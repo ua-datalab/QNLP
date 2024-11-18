@@ -32,12 +32,13 @@ from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
 from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
-from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
+from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz, IQPAnsatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
 import wget
 import wandb
-
+from pytket.extensions.qiskit import AerBackend
+from lambeq import BinaryCrossEntropyLoss
 
 # bobCatParser=BobcatParser()
 bobCatParser=BobcatParser(root_cats=["N","S","NP"])
@@ -45,9 +46,9 @@ bobCatParser=BobcatParser(root_cats=["N","S","NP"])
 tree_reader = TreeReader()
 
 parser_to_use = bobCatParser  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
-ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
-model_to_use  =  PytorchModel #[numpy, pytorch]
-trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
+model_to_use  =  TketModel #[numpy, pytorch,TketModel]
+trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 
 
@@ -67,6 +68,7 @@ arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}+{embedd
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 BASE_DIMENSION_FOR_NOUN =2 
 BASE_DIMENSION_FOR_SENT =2 
+BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
 EPOCHS_TRAIN = 30
@@ -118,17 +120,17 @@ wandb.init(
     config={
     "learning_rate": LEARNING_RATE,
     "architecture": arch,
-    "BASE_DIMENSION_FOR_NOUN": BASE_DIMENSION_FOR_NOUN ,
-    "BASE_DIMENSION_FOR_SENT":BASE_DIMENSION_FOR_SENT ,
-    "MAXPARAMS" :MAXPARAMS,
-    "BATCH_SIZE":BATCH_SIZE,
-    "EPOCHS" :EPOCHS_TRAIN,
-    "LEARNING_RATE" : LEARNING_RATE,
-    "SEED" : SEED ,
-    "DATA_BASE_FOLDER":DATA_BASE_FOLDER,
-    "EPOCHS_DEV":EPOCHS_DEV,
-    "TYPE_OF_DATA_TO_USE":TYPE_OF_DATA_TO_USE,
-    "embedding_model_to_use":embedding_model_to_use
+    "BASE_DIMENSION_FOR_NOUN".lower(): BASE_DIMENSION_FOR_NOUN ,
+    "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
+    "MAXPARAMS".lower() :MAXPARAMS,
+    "BATCH_SIZE".lower():BATCH_SIZE,
+    "EPOCHS".lower() :EPOCHS_TRAIN,
+    "LEARNING_RATE".lower() : LEARNING_RATE,
+    "SEED".lower() : SEED ,
+    "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
+    "EPOCHS_DEV".lower():EPOCHS_DEV,
+    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATA_TO_USE,
+    "embedding_model_to_use".lower():embedding_model_to_use
     })
 
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
@@ -926,9 +928,15 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
-                    })
+    if(ansatz_to_use)==IQPAnsatz or Sim15Ansatz or Sim14Ansatz:
+        ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
+                    AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
+                    AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
+    else:
+        ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )    
+    
+   
     
     
 
@@ -958,7 +966,16 @@ print(f'RUNNING WITH {nlayers} layers')
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
-    qnlp_model = model_to_use.from_diagrams(train_circuits)
+    if(model_to_use==TketModel):
+        backend = AerBackend()
+        backend_config = {
+                    'backend': backend,
+                    'compilation': backend.default_compilation_pass(2),
+                    'shots': 8192
+                }
+        qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
+    else:
+        qnlp_model = model_to_use.from_diagrams(train_circuits)
 
     train_dataset = Dataset(
                 train_circuits,
@@ -975,7 +992,21 @@ print(f'RUNNING WITH {nlayers} layers')
     assert len(test_circuits)== len(test_labels)
 
 
-    trainer = trainer_to_use(
+    if(trainer_to_use==QuantumTrainer):
+        trainer = QuantumTrainer(
+        model=qnlp_model,
+        loss_function=BinaryCrossEntropyLoss(),
+        epochs=EPOCHS_TRAIN,
+        optimizer=SPSAOptimizer,
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN},
+        evaluate_functions=eval_metrics,
+        evaluate_on_train=True,
+        verbose='text',
+        log_dir='RelPron/logs',
+        seed=SEED
+        )
+    else:
+        trainer = trainer_to_use(
             model=qnlp_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
