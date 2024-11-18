@@ -32,7 +32,7 @@ from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
 from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
-from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz, IQPAnsatz
+from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz, IQPAnsatz,Sim14Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
 import wget
@@ -41,16 +41,18 @@ from pytket.extensions.qiskit import AerBackend
 from lambeq import BinaryCrossEntropyLoss
 
 # bobCatParser=BobcatParser()
-bobCatParser=BobcatParser(root_cats=["N","S","NP"])
+
 
 tree_reader = TreeReader()
 
-parser_to_use = bobCatParser  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
-ansatz_to_use = IQPAnsatz #[IQPAnsatz, Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
-model_to_use  =  TketModel #[numpy, pytorch,TketModel]
-trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
+parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
+ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
+model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
+trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 
+if(parser_to_use==BobcatParser):
+    parser_to_use_obj=BobcatParser(root_cats=["N","S","NP"])
 
 if(embedding_model_to_use=="spanish"):
     # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
@@ -62,7 +64,7 @@ if(embedding_model_to_use=="english"):
     embedding_model = ft.load_model('cc.en.300.bin')
 
 
-arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
+arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
 
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
@@ -78,15 +80,11 @@ SEED = 0
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA=False
-USE_USP_DATA=False
-USE_FOOD_IT_DATA = True
-USE_MRPC_DATA=False
-
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
 TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
+
 
 if(TYPE_OF_DATA_TO_USE== "uspantek"):
     TRAIN="uspantek_train.txt"
@@ -146,7 +144,7 @@ def accuracy(y_hat, y):
 eval_metrics = {"acc": accuracy}
 spacy_tokeniser = SpacyTokeniser()
 
-if(USE_SPANISH_DATA) or (USE_USP_DATA):
+if TYPE_OF_DATA_TO_USE in ["uspantek","spanish"]:
     spanish_tokeniser=spacy.load("es_core_news_sm")
     spacy_tokeniser.tokeniser = spanish_tokeniser
 else:
@@ -823,7 +821,7 @@ def convert_to_diagrams(list_sents,labels):
                 print(f"no of tokens in this sentence is {len(tokenized)}")
                 sent_count_longer_than_32+=1
                 continue
-        spiders_diagram = parser_to_use.sentence2diagram(sentence=sent)
+        spiders_diagram = parser_to_use_obj.sentence2diagram(sentence=sent)
 
        
         list_target.append(spiders_diagram)
@@ -844,9 +842,9 @@ def convert_to_diagrams(list_sents,labels):
 # val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
 # test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
 
-train_diagrams = parser_to_use.sentences2diagrams(train_data)
-val_diagrams = parser_to_use.sentences2diagrams(val_data)
-test_diagrams = parser_to_use.sentences2diagrams(test_data)
+train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
 
 """#assignign teh labels back to s`ame old lable
 # doing because didnt want same variable going into th function and returning it.
@@ -928,7 +926,7 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    if(ansatz_to_use)==IQPAnsatz or Sim15Ansatz or Sim14Ansatz:
+    if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
                     AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
                     AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
