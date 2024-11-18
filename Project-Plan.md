@@ -42,6 +42,15 @@
 
 # Meeting Notes
 
+## Nov 18th 2024
+Made a big break through yesterday night. Atleast I think so.
+	- their lambeq code was initializing the QNLP model with train and val circuits
+ 	- i initialized just with just training circuits
+  	- but then i noticed our loss values were not decreasing (and the model weights not being updated) in the first .fit()/training of the QNLP model
+   	- I went digging and realized, that it is the generate_initial_param thing Khatri does which is screwing up things. I still am not sure what that function does. We are already initializing model1 with random values. anyway, the moment i commented that out,model 1 loss started dropping and hit like 99% accuracy. Even better, model 4( the prediction version of model 1 combined with values of OOV)- gave 82% accuracy. Now IMHO that is huge. i.e a model not seeing val data, training only on 70 sentences, vs 30 in val. 
+    - todo confirm that the flow is right and this is not a fluke
+    
+  
 ## Nov 17th
 - todo from yesterday; start experiments, especially with bobcat and classification.
 	- for no pair:
