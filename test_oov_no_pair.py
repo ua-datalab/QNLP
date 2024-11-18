@@ -19,9 +19,9 @@ class TestClass:
                     assert trainer_to_use == PytorchTrainer
 
                     smart_loss, smart_acc= run_experiment(nlayers=3, seed=2)                                        
-                    assert round(smart_loss,2)  == 0.69 
-                    assert round(smart_acc,1)  >= 0.5 
-                    assert round(smart_acc,1)  <= 0.6 
+                    assert round(smart_loss,2)  == 0.32
+                    assert round(smart_acc,1)  >= 0.8 
+                    assert round(smart_acc,1)  <= 0.9 
                     
 
     # def test_run_expt_spanish(self):

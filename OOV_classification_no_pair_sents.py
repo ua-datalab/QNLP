@@ -40,10 +40,8 @@ import wandb
 from pytket.extensions.qiskit import AerBackend
 from lambeq import BinaryCrossEntropyLoss
 
-# bobCatParser=BobcatParser()
+TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
 
-
-tree_reader = TreeReader()
 
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
@@ -52,7 +50,7 @@ trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 
 if(parser_to_use==BobcatParser):
-    parser_to_use_obj=BobcatParser(root_cats=["N","S","NP"])
+    parser_to_use_obj=BobcatParser(verbose='text')
 
 if(embedding_model_to_use=="spanish"):
     # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
@@ -83,7 +81,7 @@ DATA_BASE_FOLDER= "data"
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
-TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
+
 
 
 if(TYPE_OF_DATA_TO_USE== "uspantek"):
@@ -455,7 +453,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     for x,y in zip(qnlp_model.weights, initial_param_vector):
         assert len(x) == len(y)
 
-    qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    # qnlp_model.weights = nn.ParameterList(initial_param_vector)
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
@@ -513,7 +511,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     dict_training_symbols_vs_qnlp_trained_weights is a dictionary that map symbols in the trained QNLP model to 
     its weights at the end of QNLP training i.e the training that happened to model 1 i.e the QNLP model
     
-    #todo: print and confirm if symbol means word
+    #todo: print and confir6546m if symbol means word
     #update@sep 11th 2024 : symbol is not word, it is word+ that idx number- 
     # which i am suspecting is the number of Types a same word can have
     # for example if you read 1958 Lambek paper youc an see that adverb Likes can have two different TYPE representations.
@@ -735,8 +733,8 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     assert len(pred_model.symbols) == len(pred_weight_vector)
     assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
     #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    # for x,y in zip(pred_model.weights, pred_weight_vector):
-    #     assert len(x) == len(y)  
+    for x,y in zip(pred_model.weights, pred_weight_vector):
+        assert len(x) == len(y)  
     pred_model.weights = nn.ParameterList(pred_weight_vector)
 
     
@@ -748,26 +746,14 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     return l, a
 
-def read_data(filename):
-    labels, sentences = [], []
-    with open(filename) as f:
-        for line in f:
-
-            # todo: find why this is float- i think unlike classicalNLP they are not taking lables
-            #but are taking the logits in QNLP - which can translate to weights of words...IMHO but do confirm
-            t = float(line[0])
-            """#todo find why pytorch model needs labels in [a, 1-a] format.
-            answer/update: in all examples of lambeq they use this format, classical or quantum            
-            Todo: uncomment the plain 0 or 1 code if and when this gives issue- which usually shows up as size mismatch in
-            .fit()
-            # if model_to_use == PytorchModel:              
-            # else:
-            #     labels.append(int(t))
-            
-            """
-            labels.append([t, 1-t])            
-            sentences.append(line[1:].strip())
-    return labels, sentences
+def read_data(filename):         
+            labels, sentences = [], []
+            with open(filename) as f:
+                for line in f:           
+                    t = float(line[0])            
+                    labels.append([t, 1-t])            
+                    sentences.append(line[1:].strip())
+            return labels, sentences
 
 #back to the main thread after all functions are defined.
 
@@ -973,7 +959,7 @@ print(f'RUNNING WITH {nlayers} layers')
                 }
         qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
     else:
-        qnlp_model = model_to_use.from_diagrams(train_circuits)
+        qnlp_model = model_to_use.from_diagrams(train_circuits )
 
     train_dataset = Dataset(
                 train_circuits,
@@ -1008,8 +994,7 @@ print(f'RUNNING WITH {nlayers} layers')
             model=qnlp_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
-            learning_rate=LEARNING_RATE,
-            use_tensorboard=True, #todo: why isnt any visualization shown despite use_tensorboard=True
+            learning_rate=LEARNING_RATE,            
             epochs=EPOCHS_TRAIN,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
@@ -1029,7 +1014,7 @@ print(f'RUNNING WITH {nlayers} layers')
     """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
     # and test on val_dataset. todo: find out how to add early stopping.
     # I vaguely remember seeing callbacks somewhere"""
-    trainer.fit(train_dataset, log_interval=1)
+    trainer.fit(train_dataset,eval_interval=1, log_interval=1)
 
     """#for experiments on october 14th 2024. i.e 
     just use 1 off the shelf model and spread spectrum/parameter search
@@ -1118,7 +1103,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
     # train_acc =accuracy(val_preds, torch.tensor(train_labels))
     # print(f"value of train_loss={train_loss} and value of train_acc ={train_acc}")
 
-
+    
     """if there are no OOV words, we dont need the model 2 through model 4. just use model 1 to evaluate and exit"""
     if oov_word_count==0:
         import matplotlib.pyplot as plt
