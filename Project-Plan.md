@@ -3,12 +3,16 @@
 * Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
 	* QNLP dataset: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
 	* QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
-* Link to white paper: [https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4](https://www.google.com/url?q=https://www.overleaf.com/4483532232tcfnfdrrcbdc%2312a1b4&sa=D&source=editors&ust=1717607867015283&usg=AOvVaw0VwgWn_tu2jNMuTmaj2PDL)
+* Overleaf links:
+	* [NAACL Draft](https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4)
+ 	* [Older paper](https://www.overleaf.com/project/6671e31902ea604ff3211946)
 * All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
 	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link](https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link)
  	- Spanish data: [https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link](https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link) 
 * Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)     
-* [Miro Whiteboard](https://miro.com/app/board/uXjVKVPCIK4=/?share_link_id=77584526552) 
+* [Miro Whiteboard]
+	* history of QNLP (https://miro.com/app/board/uXjVKVPCIK4=/?share_link_id=77584526552)
+	* our [workspace](https://miro.com/welcomeonboard/ajBQR05rQ0VZL1BEVDJHQTdxOXdmVHJqYzRWZ09QS1BGWEQ2OWgwbHU0dk5wRTVJRnZWWk5LU3p6bW5xZkxRMDdpTytpWndrTHMrNTFjUWpFM1NiYUhCQjRNQVY0U2MzcU9wcXY5ZWtlbXRhUTR5dnpVT3FsMkt6ZFF2Mi94cEEhZQ==?share_link_id=42173029695)
 * Papers:
 	* the most fundamental paper which introduces QNLP is 2010 DISCOCAT [paper](https://drive.google.com/file/d/1T7H5WH1q0mKng-zwqOYrlqEkBpOIcUDR/view?usp=sharing)
  	* To undrestand that, you need to understand 1998 Lambeks paper on math===language: [here](https://drive.google.com/file/d/1WmHNND7geQTfO3sRK-NDoOBHtKZL7pAa/view?usp=sharing)
@@ -21,6 +25,14 @@
 	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
  	- Khatri et al, for Spanish: [https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb)
   	- Khatri et al, for Uspantekan: [https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb)
+  	- bobs paper for the FOOD-IT classification is kept (here)[https://jair.org/index.php/jair/article/view/14329]
+
+# New ideas
+1. NN model even if the words are same in dev and train, you still wont get 100% accuracy. However, QNLP food-it classification does it (note that OOV problem is not addressed)
+2. Uspantek- intermediary translation system- since its a completely new language/low resource languages
+3. Right now all machine translation is done as start with English- and map it to a new language. But what if QNLP can be the native model, which can learn from a new language itself, and for that matter, low resource languages.
+4. Ask GPT interesting qns in a new language like malayalam,- and try to break it. Because most likely it was trained on english first and then an embedding aligner. 
+5. same thing- that enrique said- see if we can fine tune LLM on uspantek, and check if QNLP can be an adaptor. One does not have to revolutionize the field by creating a new native model, but if it can enhance the existing LLM ability to do well on a non-english language-  can be a good introduction paper for QNLP
 
 # Working Group Best Practices
 - Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
@@ -29,6 +41,212 @@
 
 
 # Meeting Notes
+
+## Nov 17th
+- todo from yesterday; start experiments, especially with bobcat and classification.
+	- for no pair:
+ 		- add unit tests to CI on github
+   			- update: done till fasttext model loading issue.
+      			- cache fasttext model so that you dont have to download it every time
+         		- update. can't cache fasttext during continous integrations since its a fresh ubuntu virtual machine every time.  
+   		
+ 		- move wandb to no pair file. **---done**
+   			- add parameters  in wandb
+			- separate out dev and train epochs variable names
+   			- turn on wandb and ensure you can see them on web browser
+ 		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
+   		- use english fasttext embeddings **---done**
+     		- create a variable dataset to use- and add it to arch and then into wandbparams.
+       		-  add unit tests **---done**
+         	-  - move dev epochs count to wandb param **---done**
+          	- add type of data also to wandb arch **---done**
+          	- - map out possible combinations in spreadsheet --done. rather building it (here)[https://docs.google.com/spreadsheets/d/1w6u7xbR3Q37fh8uhgIJw230yWQetXdrZlvK42msIy80/edit?usp=sharing]
+          	- change expected value in test file based on new config. eg. english vs spanish embeddings
+          	- add early stopping to training data 	
+       		- move to cyverse         	
+          	- increase the food it dataset to max size- currently seems to be only 18 in training. should be close to 100
+          	- create a main function so that pytest doesnt have to call it twice.
+          	- go through every single line of code in yes pair manually and check if it has been ported to no pair code
+	-  for yes pair
+ 	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
+
+planning for experiments.
+- Qn)
+	- Ans:
+- Qn) Did you add test cases?
+	- Ans: yes. test_oov_no_pair.py. Can be run using the command `pytest` on command line.
+ 	-  todo: either add this to a start up file, or to continous integration on github
+- Qn) What was the accuracy on dev set when you ran Food IT code +oov with spanish embeddings
+	- Ans:43.3%
+- Qn)Did you try running food IT code with english fast text embeddings.
+	- Ans: No not yet.
+	- update: just did. accuracy in dev is  51.66%. As much as this is not great, but this 8 points bump is huge IMHO, which means the patient is alive and is responding to meds.
+ - - Qn) Remind me, what exactly are we using OOV for?
+	- Ans: So in FOOD_IT, there was exactly one symbol (not word) that was out of vocabulary. it was person_n@n.l or something. So when we test using the model that was 
+- Qn) What is the configuration you are currently using for FOOD-IT?
+	- Ans:
+ 		- parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
+		- ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
+		- model_to_use  =  PytorchModel #[numpy, pytorch]
+		- trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+		- embedding_model_to_use = "english"
+- Qn) what is the plan forward?
+	- Ans: High level: slowly bring in quantum stuff. Especially a quantum ansatz
+- Qn) What is the detailed level plan forward.
+	- Ans:
+- Qn)
+	- Ans:
+
+
+## Nov 16th- Mithun working on reproducing khatri values
+"stopping/giving up on trying to reproduce khatri code. Main issue is he uses depccg parser, which is impossible to setup. I tried bobcat parser, and spiders reader and even tree reader. bobcat parser, doesnt do well with remove cups, spider and tree does, but then they hit the ansatz error saying circuits vs diagrams.its amess. time to call it quits"
+- todo: update code with code for 1 sent (no pair)
+- update: done. we have 2 files now, one for yes pair of sentences (OOV_classification_yes_pair_sent.py) and other for nopair -classifcation of food IT(OOV_classification_no_pair_sents.py)
+- todo; start experiments, especially with bobcat and classification.
+	- for no pair:
+ 		- move wandb to no pair file
+ 		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
+   		- use english fasttext embeddings
+     		- add unit tests
+       		- add unit tests to CI on github
+       		- move to cyverse
+         	- map out possible combinations in spreadsheet
+	-  for yes pair
+ 	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
+- everythign is in mithun_dev branch as of today
+
+## Nov 14th- Mithun working on reproducing khatri values
+- using just one file OOV_classification now on+ passing arguments as to pair based dataset or not. THe pair no pair file difference was causing too many versions.
+## nov 13th
+1. megh pointed out that even thoughy i have end to end code OOV for food-IT, it is not correct, because I am using spanish embeddings. So as of now, we DONT have any end to end code. I was using spanish embeddings for english. We tried giving spanish data, and teh parser itself barfed. but remember it was bobcat parser. todo: try with spider parser, spider ansatz
+   	- update: we finally have an end to end - system.  working for spanish embeddings. dev accuracy with OOV model is 59percent
+3. also, get gpt or fasttext embedding for english- and rerun food-IT again with OOV issue.
+ 	- megh asked: why not start with Glove. since its english- fasttext is not really having any semantic richness. So its important to keep it at word level. since QNLP is a model which relies so much on semantic/word level stuff- so maybe using fasttext (and even gpt) is a bad idea with QNLP
+  	- nevertheless all these experiments should be done one way or other   
+  	- maybe fasttext is useful for spanish, uspantek
+   		- also another brilliant idea from megh is: maybe for new languages- it makes sense to use Byte pair based encodings.
+     		- and/or (again from megh ) is, say you are given an entirely new language, and you want to know what the noun is...new language in the sense you dont speak or understand it. Say spanish. Bobcatparser combined with spanish tokenizer can still tell you what the noun is, what the transitive bverb is etc. This will be really useful if this can be extended to USPANTEK- because that means, a human curator doesnt need to necessarily understand or speak uspantek- or even a ML model, it will still give good results. Now note that all this is discussion level ideas- IFFF this is substantiated by results. For example if we can show that when using GLOVE+ bobcatparser we get higher accuracy that when using FASTTEXT or GPT based embedding+ bobcatparser, then we can argue that since QNLP/bobcatparser by definition is living in the semantic world (ofcourse with abilities to understand syntax also), then it makes sense to use a GLOVE kind of embedding which lives at semantic level (e.g king is closer to queen) as opposed to a n-gram based mechanism like FASTTEXt. Then we had the discussion on, but word level doesnt mean sentence level right. For example the sentence king is the ruler of a country and queen is the ruler of a country- inherently tells a human reader atleast, that king and queen are nouns. So shouldnt we want an embedding form that also understands it at SENTENCE level- so another idea is , can QNLP be used to create embeddings. - which can inturnbe used by NN based models. the advantage is, QNLP modesl function at the sentence level, and innately uses syntax, because of which in the aforementioned 2 examples, it goes closer to human intuition, tha tofcourse now it makes sense that King and Queen ka embeddings ended up next to each other. ..this is a very good discussion for future...
+       - # todo
+       - start with GLOVE on FOOD-IT and climb up to FASTtext and GPT- if nothing else/no ground breaking results, that itself will be a good paper/discussion.
+       	- also do note that FOOD-It is completely living in classical land, i.e spider ansatz and pytorch models- so we might want to experiment Glove+FOODIT on quantum tariner, quantum models and IQP ansatz before calling it a failure/moving to GPT/Fasttext land
+       	- find if in the FOOD_IT paper do they explicitly say that they know they are feeding val data during training itself. Either way, do drop an email or a pull request for their lambeq documentation - to explicitly state this fact. Otherwise this is pure cheating, where youare telling the world here is a pathbreaking model which gives 100% accuracy on 100 sentences, and you will still get another Mithun kinda poor guy down a rabbit hole for 3 years, because they blindly belived it was the models ability which gave 100% as opposed to the simple fact that they were showing val data to model during training itself.
+
+## Nov 12th- Mithun's logs
+- We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
+- Next goal in sanity check: try to get values of Khatri back. Note khatri uses Depccg parser, IQPansatz, Numpymodel, quantum trainer. We definitely cant use DEpccg parser. Thats a nasty rabbit hole I dont want to go in.
+1. change data to MRPC -original, not the hacked version we have been using for classification toy experiments
+2. add in his change of quantum circuits including the equality_comparator
+3. rewrite code for a pair of input, instead of just one
+4. and try to use all models and parser same as his.
+
+## Nov 11th- Mithuns logs
+- Found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
+- However when you use OOV model, it flat predicts only 2 values. So if you hit a word with 4 tensor length, the 2 value is not enough to represent weights
+ - Three solutions:
+	- Easy way
+ 		- max params must be a value of product of dimensions of basic type, and the length of the dimension of the word i.e if bakes_2_n@n.r@s- and we assign n=dim(2) s=dim(2), we need to have a vector of size 4 prepared to store its weights
+   		- so create dict2/np.zeroes based on that max value
+   		- find why last layer of NN model is predicting 2 instead of 4 values (most likely linked to max params)
+   		- or trained_qnlp_model itself has staggered params so why the fuck would your weight vector have only 2
+	- Right way
+		- try tensoransatz instead of spideranstaz. I Have a bad feeling spideransatz is not writing the params per word correctly. I dont know what spideransatz is or what spideransatz does, it was a vestigial choice from almost a year ago- because spider parser was the only one that was not bombing for the data we were using then. now bobcatparser is easily reading the data.-and our experiments arein classical land, so use the flagship of classical functors, i.e TensorAnsatz, (with bobcatparser, pytorchmodel and ppytorch trainer)- plus eventually once we move to quantum world, I think most of these issues will go. But even then its important that our foundation in classical equivalent (i.e tensors) is very strong.
+  
+## Nov 8th 2024
+Mithun's coding log
+
+Todo: 
+- add their differences 1,2,5,6 (from yesterday's notes) to our code --done
+- does it replicate an accuracy of one , even though the model is initlized with train, dev and test circuits. i.e dont test on val during training but instead let it run for 30 epochs,and use that model to instead test on val- Ans: yes, gives 100% accuracy
+- english
+	- add our OOV trick and see what accuracy you get for food IT (without all circuits initialized inside model 1)
+ 		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding
+   		- update: getting this error:  `shape [2, 2] is invalid for input of size 2 ` inside trainer.fit()	 - sounds like label vs dimension issue. update: found out what the issue is. The dimension for each of the entry in qnlp.weights, must exactly match that of initial param vector. Infact that dimension is  decided by a) how many qbits/dimensions you assigned to
+                    n and s during the ansatz creationg an b) how complex the word's representation is.
+                    for example let's say you gave n=2 and s=4 qbits. So john_n will have a dimension of 2
+                    since it has only one noun. however, now look at prepares_0_n.r@s. This will have a dimension of 8 because
+                    it is the product of a nount and a sentence. therefore 2x4=8. Therefore the initial param vector
+                    also should have a tensor of dimension 8. i.e in the below code, am hard coding exactly 2 dimensions
+                    for all words. THAT IS WRONG. the number of dimensions must be picked from qnlp.weights 
+                    and the a initial parameter prepared, by that size. Now note that khatri is simply picking the 
+                    first n cells of the embedding vector- it is as good as initializing randomly. that's ok
+                    he has to start somewhere and this is a good experiment to mix and match. However, first and
+                    foremost the dimensions hs to match
+       		- manually look at the corresponding weights and pass this bug. this is a band aid. Ideally, todo: understand deeply dimensions and qbit assignments
+         	- update: getting another error at model3 (nn).fit- expected shape[2] given shape[3]
+          	- solution: this was because i was creating the vectors in NN_train_Y using maxparamlength+1- should have been just maxparamlength alone
+          	- update: passed nn.fit() error for model3. Now another error inside evaluate_val_set. `index 2 is out of bounds for axis 0 with size 2`- Solution: this was because i was hardcoding parameters to be always a tuple of 2. that is not true- it depends on the _0 and _1 ka value.
+          	- update: error in pred_model. get_diagram_output(val_circuits) which is `RuntimeError: shape '[2, 2]' is invalid for input of size `
+	-  inject oov words in val to their data and try above
+ 	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
+  	-  reading
+  		- todo of 1: read more on sentences2diagram
+  	 	-  todo of 2: why ansatz dimension 2 and 2
+  	  	-  todo of 5 above: why no remove cups
+  	   	- todo of 7 above: why staggered weights  	
+ -  Spanish
+ 	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.
+  
+## Nov 7
+- Discussion on Fasttext embeddings
+	- For spanish, we have an executable `.bin` file. It can't be opened, but when we execute it and provide it a word, it will return an embedding.
+ 	- English has word-level embeddings, Spanish has n-gram level embeddings
+- details from Mithuns coding
+  
+	- able to replicate the Food IT classification using our code.- the file is called: replicating_food_it.py
+ 	  - however few things to note
+ 	  - Qn) Does their code barf if we provide a new unknown word in dev or tst?
+	  	- ans: No
+ 	  - Qn) Why?
+ 		- Ans: because they are "smartly" using circuits of val and test data during initialization of the model
+ 		- i.e `all_circuits = train_circuits + val_circuits + test_circuits`
+ 		- `model = PytorchModel.from_diagrams(all_circuits)`
+		- Qn) will their model barf/complain about OOV if we initialize it only on train_circuits.
+			- Ans: yes
+		- Qn) does Khatri initialize it with only train_circuits or all?
+			- ans: only train_circuits
+		- Qn) what accuracy will we get on val data, if we initialize only on train_circuits, and do the training for 30 epochs and then use that model to test on val?
+			- ans: hits lots of OOV, but this time at an interesting level. person_0_n was a symbol present in the trained qnlp_model.symbols and had a weight corresponding inside qnlp_model.weights. However, the word person in val was n@n.l...or something complex. and that was called as OOV...fucking ma ka lavda. their code is dumb as fuck.
+		- Qn) same above scenario what accuracy do you get at the end of 30 epochs on training data?
+			- ans: 92.86 percentage (obviously, overfitting)
+		- Qn) what other major changes/differences are there between their code and ours
+			- ans
+
+				1. they use sentences2diagrams while we use sentence2diagram. todo: Use their method. Our way was giving arrow/cod/dom level errors.
+				2. in ansatz definition they give dim 2 for both noun and sentence. we were giving 4. If I gave 4 in their code, error occurs. weird. todo: read more on this. Thought sentences were supposed to live in a dimension higher than nouns as per lambek
+				3. they initialize their model on all_circuits like shown above. TODO: Nothing in our code/continue initializing only on training
+				4. they pass val_dataset during .fit() function itself. TODO: Nothing. Our code will barf due to OOV. SO its better we keep training and evaluation separate
+				5. they dont use removecups -atleast not in classical todo: find why
+				6. They use bobcatparser instead of spiderparser. Everything else (spideransatz, pythontrainer, pytorch model remains same as ours)
+				7. their qnlp_model.weights have staggered sizes. i.e some words have tensor of 2 while some others have tensor of 4. i think this is dependant on how a word is finally converted using lambek calculus. i.e if there is just one basic type n or s it will use 2 dimensions (since everything in foodIT code is in tensor level) while complex ones get more.example below. Todo: read and understand and debug more into this.
+for example:
+
+```
+qnlp_model.symbols[24]
+woman_0__n@n.l
+qnlp_model.weights[24]
+Parameter containing:
+tensor([ 0.8845, -0.4794, -1.3659,  1.3689], requires_grad=True)
+qnlp_model.symbols[23]
+woman_0__n
+qnlp_model.weights[23]
+Parameter containing:
+tensor([-0.4763, -1.8438], requires_grad=True)
+```
+
+## Nov 5
+- ToDo Megh:
+	- set up ML flow for the project
+	- Start working on the NAACL draft
+ 	- Work on a for-loop of model requirements
+  	- Find english embeddings for testing the english model
+  - Tested `requirements.txt` setup in a new environment
+  	- Code uses cached `numpy`, and fails to install spaCy.
+   	- `matplotlib` issues
+    	- Solution: created a shell script to install all requirements in python 3.11.10
+     	- Merged all changes into `main`
+    - ToDo English embeddings: find them online, and if not, figure out how to incorporate english vector files into our code.
+    - Chronology: word2vec, BERT, Fasttext, Byte-Pair (used by GPT). We would ultimately need the n-gram embeddings. Fasttext is used to build words, by training on natural language, n-grams, and thus creating relations between words. Richer because it has seen more data
+    	- Why do we need gpt embeddings- they have learnt word meanings after a level of training on the sub-word embeddings.  
 
 ## Nov 4
 - Model breakdown:
