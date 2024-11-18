@@ -511,7 +511,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     dict_training_symbols_vs_qnlp_trained_weights is a dictionary that map symbols in the trained QNLP model to 
     its weights at the end of QNLP training i.e the training that happened to model 1 i.e the QNLP model
     
-    #todo: print and confirm if symbol means word
+    #todo: print and confir6546m if symbol means word
     #update@sep 11th 2024 : symbol is not word, it is word+ that idx number- 
     # which i am suspecting is the number of Types a same word can have
     # for example if you read 1958 Lambek paper youc an see that adverb Likes can have two different TYPE representations.
@@ -733,8 +733,8 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     assert len(pred_model.symbols) == len(pred_weight_vector)
     assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
     #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    # for x,y in zip(pred_model.weights, pred_weight_vector):
-    #     assert len(x) == len(y)  
+    for x,y in zip(pred_model.weights, pred_weight_vector):
+        assert len(x) == len(y)  
     pred_model.weights = nn.ParameterList(pred_weight_vector)
 
     
