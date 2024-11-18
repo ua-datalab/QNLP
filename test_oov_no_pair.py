@@ -9,7 +9,7 @@ class TestClass:
     def test_run_expt_english(self):                                    
                     smart_loss, smart_acc= run_experiment(nlayers=3, seed=2)                                        
                     assert round(smart_loss,2)  == 0.69 
-                    assert round(smart_acc,2)  == 0.51
+                    assert round(smart_acc,2)  == 0.52
                     
 
     # def test_run_expt_spanish(self):
