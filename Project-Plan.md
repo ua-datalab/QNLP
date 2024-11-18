@@ -64,6 +64,7 @@
          	- map out possible combinations in spreadsheet --done. rather building it (here)[https://docs.google.com/spreadsheets/d/1w6u7xbR3Q37fh8uhgIJw230yWQetXdrZlvK42msIy80/edit?usp=sharing]
           	- change expected value in test file based on new config. eg. english vs spanish embeddings
           	- increase the food it dataset to max size- currently seems to be only 18 in training. should be close to 100
+          	- create a main function so that pytest doesnt have to call it twice.
           	- go through every single line of code in yes pair manually and check if it has been ported to no pair code
 	-  for yes pair
  	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
