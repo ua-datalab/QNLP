@@ -49,20 +49,21 @@
    			- update: done till fasttext model loading issue.
       			- cache fasttext model so that you dont have to download it every time
          		- update. can't cache fasttext during continous integrations since its a fresh ubuntu virtual machine every time.  
-   		- add early stopping to training data 	
- 		- move wandb to no pair file. ---done
+   		
+ 		- move wandb to no pair file. **---done**
    			- add parameters  in wandb
 			- separate out dev and train epochs variable names
    			- turn on wandb and ensure you can see them on web browser
  		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
-   		- use english fasttext embeddings----done
+   		- use english fasttext embeddings **---done**
      		- create a variable dataset to use- and add it to arch and then into wandbparams.
-       		-  add unit tests ---done
-         	-  - move dev epochs count to wandb param --done
-          	- add type of data also to wandb arch --done
-       		- move to cyverse
-         	- map out possible combinations in spreadsheet --done. rather building it (here)[https://docs.google.com/spreadsheets/d/1w6u7xbR3Q37fh8uhgIJw230yWQetXdrZlvK42msIy80/edit?usp=sharing]
+       		-  add unit tests **---done**
+         	-  - move dev epochs count to wandb param **---done**
+          	- add type of data also to wandb arch **---done**
+          	- - map out possible combinations in spreadsheet --done. rather building it (here)[https://docs.google.com/spreadsheets/d/1w6u7xbR3Q37fh8uhgIJw230yWQetXdrZlvK42msIy80/edit?usp=sharing]
           	- change expected value in test file based on new config. eg. english vs spanish embeddings
+          	- add early stopping to training data 	
+       		- move to cyverse         	
           	- increase the food it dataset to max size- currently seems to be only 18 in training. should be close to 100
           	- create a main function so that pytest doesnt have to call it twice.
           	- go through every single line of code in yes pair manually and check if it has been ported to no pair code
