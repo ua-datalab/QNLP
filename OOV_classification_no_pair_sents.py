@@ -32,92 +32,84 @@ from lambeq.backend.tensor import Dim
 from lambeq import AtomicType
 from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
-from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz
+from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz, IQPAnsatz,Sim14Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
-
+import wget
 import wandb
+from pytket.extensions.qiskit import AerBackend
+from lambeq import BinaryCrossEntropyLoss
 
 # bobCatParser=BobcatParser()
-bobCatParser=BobcatParser(root_cats=["N","S","NP"])
+
 
 tree_reader = TreeReader()
 
-parser_to_use = bobCatParser  #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
-ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
-model_to_use  =  PytorchModel #[numpy, pytorch]
+parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
+ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
+model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 
+if(parser_to_use==BobcatParser):
+    parser_to_use_obj=BobcatParser(root_cats=["N","S","NP"])
+
 if(embedding_model_to_use=="spanish"):
+    # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
     embedding_model = ft.load_model('./embeddings-l-model.bin')
 if(embedding_model_to_use=="english"):
+    import os.path
+    if not (os.path.isfile('cc.en.300.bin')):
+        filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
     embedding_model = ft.load_model('cc.en.300.bin')
 
 
-arch = f"{ansatz_to_use}+{parser_to_use}+{trainer_to_use}+{model_to_use}"
-DB_WANDBLOGGING= ""
+arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
+
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
 BASE_DIMENSION_FOR_NOUN =2 
 BASE_DIMENSION_FOR_SENT =2 
+BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS = 30
+EPOCHS_TRAIN = 30
+EPOCHS_DEV = 100
 LEARNING_RATE = 3e-2
 SEED = 0
 DATA_BASE_FOLDER= "data"
 
 
-USE_SPANISH_DATA=False
-USE_USP_DATA=False
-USE_FOOD_IT_DATA = True
-USE_MRPC_DATA=False
-
 #setting a flag for TESTING so that it is done only once.
 #  Everything else is done on train and dev
 TESTING = False
+TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
 
 
-if(USE_USP_DATA):
+if(TYPE_OF_DATA_TO_USE== "uspantek"):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
     TEST="uspantek_test.txt"
-    DB_WANDBLOGGING="uspantek"
+    
 
-if(USE_SPANISH_DATA):
+if(TYPE_OF_DATA_TO_USE== "spanish"):
     TRAIN="spanish_train.txt"
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
-    DB_WANDBLOGGING="spanish"
+    
 
-if(USE_MRPC_DATA):
+if(TYPE_OF_DATA_TO_USE== "msr_paraphrase_corpus"):
     TRAIN="msr_paraphrase_train.txt"
     DEV="msr_paraphrase_test.txt"
     TEST="msr_paraphrase_test.txt"
-    DB_WANDBLOGGING="english_MRPC"
     type_of_data = "pair"
 
-if(USE_FOOD_IT_DATA):
+if(TYPE_OF_DATA_TO_USE== "food_it"):
     TRAIN="mc_train_data.txt"
     DEV="mc_dev_data.txt"
     TEST="mc_test_data.txt"
-    DB_WANDBLOGGING="english_food_IT"
+    
 
-# #todo: actual MRPC is a NLi kind of task.- the below MRPC is a hack which has only the 
-# premise mapped to a lable of standard MRPC
-# # Use the 2 classes of information technology and food 
-# # thing dataset instead if you want something for testing one class alone
-
-if(USE_MRPC_DATA):
-    TRAIN="mrpc_train_80_sent.txt"
-    DEV="mrpc_dev_10_sent.txt"
-    TEST="mrpc_test_10sent.txt"
-
-if(USE_FOOD_IT_DATA):
-    TRAIN="mc_train_data.txt"
-    DEV="mc_dev_data.txt"
-    TEST="mc_test_data.txt"
 
 wandb.init(
     # set the wandb project where this run will be logged
@@ -126,8 +118,17 @@ wandb.init(
     config={
     "learning_rate": LEARNING_RATE,
     "architecture": arch,
-    "dataset": DB_WANDBLOGGING,
-    "epochs": EPOCHS,
+    "BASE_DIMENSION_FOR_NOUN".lower(): BASE_DIMENSION_FOR_NOUN ,
+    "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
+    "MAXPARAMS".lower() :MAXPARAMS,
+    "BATCH_SIZE".lower():BATCH_SIZE,
+    "EPOCHS".lower() :EPOCHS_TRAIN,
+    "LEARNING_RATE".lower() : LEARNING_RATE,
+    "SEED".lower() : SEED ,
+    "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
+    "EPOCHS_DEV".lower():EPOCHS_DEV,
+    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATA_TO_USE,
+    "embedding_model_to_use".lower():embedding_model_to_use
     })
 
 # loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss
@@ -143,7 +144,7 @@ def accuracy(y_hat, y):
 eval_metrics = {"acc": accuracy}
 spacy_tokeniser = SpacyTokeniser()
 
-if(USE_SPANISH_DATA) or (USE_USP_DATA):
+if TYPE_OF_DATA_TO_USE in ["uspantek","spanish"]:
     spanish_tokeniser=spacy.load("es_core_news_sm")
     spacy_tokeniser.tokeniser = spanish_tokeniser
 else:
@@ -642,7 +643,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
     #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=100,callbacks=[callback])
+    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_DEV,callbacks=[callback])
     print(hist.history.keys())
     print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
     plt.plot(hist.history['loss'], label='loss')
@@ -820,7 +821,7 @@ def convert_to_diagrams(list_sents,labels):
                 print(f"no of tokens in this sentence is {len(tokenized)}")
                 sent_count_longer_than_32+=1
                 continue
-        spiders_diagram = parser_to_use.sentence2diagram(sentence=sent)
+        spiders_diagram = parser_to_use_obj.sentence2diagram(sentence=sent)
 
        
         list_target.append(spiders_diagram)
@@ -841,9 +842,9 @@ def convert_to_diagrams(list_sents,labels):
 # val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
 # test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
 
-train_diagrams = parser_to_use.sentences2diagrams(train_data)
-val_diagrams = parser_to_use.sentences2diagrams(val_data)
-test_diagrams = parser_to_use.sentences2diagrams(test_data)
+train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
 
 """#assignign teh labels back to s`ame old lable
 # doing because didnt want same variable going into th function and returning it.
@@ -925,9 +926,15 @@ def run_experiment(nlayers=1, seed=SEED):
     - go back and confirm the original 1958 paper by lambek. also how
     is the code in LAMBEQ deciding the dimensions or even what  data types to use?
     answer might be in 2010 discocat paper"""
-    ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)                        
-                    })
+    if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
+        ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
+                    AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
+                    AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
+    else:
+        ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )    
+    
+   
     
     
 
@@ -957,7 +964,16 @@ print(f'RUNNING WITH {nlayers} layers')
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
-    qnlp_model = model_to_use.from_diagrams(train_circuits)
+    if(model_to_use==TketModel):
+        backend = AerBackend()
+        backend_config = {
+                    'backend': backend,
+                    'compilation': backend.default_compilation_pass(2),
+                    'shots': 8192
+                }
+        qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
+    else:
+        qnlp_model = model_to_use.from_diagrams(train_circuits)
 
     train_dataset = Dataset(
                 train_circuits,
@@ -974,13 +990,27 @@ print(f'RUNNING WITH {nlayers} layers')
     assert len(test_circuits)== len(test_labels)
 
 
-    trainer = trainer_to_use(
+    if(trainer_to_use==QuantumTrainer):
+        trainer = QuantumTrainer(
+        model=qnlp_model,
+        loss_function=BinaryCrossEntropyLoss(),
+        epochs=EPOCHS_TRAIN,
+        optimizer=SPSAOptimizer,
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN},
+        evaluate_functions=eval_metrics,
+        evaluate_on_train=True,
+        verbose='text',
+        log_dir='RelPron/logs',
+        seed=SEED
+        )
+    else:
+        trainer = trainer_to_use(
             model=qnlp_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
             use_tensorboard=True, #todo: why isnt any visualization shown despite use_tensorboard=True
-            epochs=EPOCHS,
+            epochs=EPOCHS_TRAIN,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
@@ -1178,7 +1208,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
-            epochs=EPOCHS,
+            epochs=EPOCHS_TRAIN,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
