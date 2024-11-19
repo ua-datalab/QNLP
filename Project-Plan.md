@@ -48,6 +48,7 @@
 2. find how to add early stopping to the model 1s training
 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%, - find if early stopping is stopping too early
 4. when we dont show the val_cicruit- we get 83% when we showed the val_circuit - with one new symbol 98%- now try asking chatgpt to find more sentences with more oov for val and see how our model does. in both scenarios above. with and without showing val during initialization of model.
+5. keep a copy of the code with inline comments, and create a version without any comments.
 
 
      
