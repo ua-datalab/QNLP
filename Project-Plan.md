@@ -44,7 +44,13 @@
 
 # Meeting Notes
 ## nov 19th 2024
-1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp
+1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp- update this might be requires_grad
+2. find how to add early stopping to the model 1s training
+3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%, - find if early stopping is stopping too early
+4. when we dont show the val_cicruit- we get 83% when we showed the val_circuit - with one new symbol 98%- now try asking chatgpt to find more sentences with more oov for val and see how our model does. in both scenarios above. with and without showing val during initialization of model.
+
+
+     
 ## Nov 18th 2024
 - Runthrough of current code
 	- For English, current performance with Fembeddings and Bobcat parser is 82%
