@@ -43,7 +43,8 @@
 
 
 # Meeting Notes
-
+## nov 19th 2024
+1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp
 ## Nov 18th 2024
 - Runthrough of current code
 	- For English, current performance with Fembeddings and Bobcat parser is 82%
