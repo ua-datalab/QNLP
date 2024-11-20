@@ -40,7 +40,7 @@ import wandb
 from pytket.extensions.qiskit import AerBackend
 from lambeq import BinaryCrossEntropyLoss
 
-TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
+TYPE_OF_DATA_TO_USE = "uspantek" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
 
 
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
@@ -66,9 +66,9 @@ arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{em
 
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
-BASE_DIMENSION_FOR_NOUN =2 
-BASE_DIMENSION_FOR_SENT =2 
-BASE_DIMENSION_FOR_PREP_PHRASE= 2
+BASE_DIMENSION_FOR_NOUN = 1
+BASE_DIMENSION_FOR_SENT = 1
+BASE_DIMENSION_FOR_PREP_PHRASE= 1
 MAXPARAMS = 300
 BATCH_SIZE = 30
 EPOCHS_TRAIN = 30
