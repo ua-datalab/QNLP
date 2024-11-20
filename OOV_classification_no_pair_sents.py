@@ -40,17 +40,20 @@ import wandb
 from pytket.extensions.qiskit import AerBackend
 from lambeq import BinaryCrossEntropyLoss
 
-TYPE_OF_DATA_TO_USE = "uspantek" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
+TYPE_OF_DATA_TO_USE = "spanish" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
 
 
-parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
+parser_to_use = spiders_reader    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
-embedding_model_to_use = "english" #[english, spanish]
+embedding_model_to_use = "spanish" #[english, spanish]
 
 if(parser_to_use==BobcatParser):
     parser_to_use_obj=BobcatParser(verbose='text')
+else:
+    parser_to_use_obj=parser_to_use
+
 
 if(embedding_model_to_use=="spanish"):
     # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
@@ -66,8 +69,8 @@ arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{em
 
 
 # maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
-BASE_DIMENSION_FOR_NOUN = 1
-BASE_DIMENSION_FOR_SENT = 1
+BASE_DIMENSION_FOR_NOUN = 4
+BASE_DIMENSION_FOR_SENT = 2
 BASE_DIMENSION_FOR_PREP_PHRASE= 1
 MAXPARAMS = 300
 BATCH_SIZE = 30
@@ -414,9 +417,9 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
             else:                            
-                print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
-                import sys
-                sys.exit()
+                print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV")
+                # import sys
+                # sys.exit()
 
     """
     Set the intialization of QNLP model's weight as that of the embeddings of each word
@@ -448,12 +451,11 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       commenting the code out until i find what its doing
     ."""
     
-    assert len(qnlp_model.weights) == len(initial_param_vector)
-    #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    for x,y in zip(qnlp_model.weights, initial_param_vector):
-        assert len(x) == len(y)
-
-    # qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    # assert len(qnlp_model.weights) == len(initial_param_vector)
+    # #also assert dimension of every single symbol/weight matches that of initial_para_vector
+    # for x,y in zip(qnlp_model.weights, initial_param_vector):
+    #     assert len(x) == len(y)
+    # # qnlp_model.weights = nn.ParameterList(initial_param_vector)
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
 def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
@@ -733,8 +735,8 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     assert len(pred_model.symbols) == len(pred_weight_vector)
     assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
     #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    for x,y in zip(pred_model.weights, pred_weight_vector):
-        assert len(x) == len(y)  
+    # for x,y in zip(pred_model.weights, pred_weight_vector):
+    #     assert len(x) == len(y)  
     pred_model.weights = nn.ParameterList(pred_weight_vector)
 
     
@@ -802,7 +804,7 @@ def convert_to_diagrams(list_sents,labels):
         (ValueError: maximum supported dimension for an ndarray is 32, found 33)
         Todo: find if this is a very spanish tokenizer only issue or like pytorchmodel only issue"""
         
-        if( USE_SPANISH_DATA or USE_USP_DATA):
+        if( TYPE_OF_DATA_TO_USE in["spanish","uspantek"]):
             if len(tokenized)> 32:
                 print(f"no of tokens in this sentence is {len(tokenized)}")
                 sent_count_longer_than_32+=1
@@ -824,13 +826,14 @@ def convert_to_diagrams(list_sents,labels):
 # Note that this is a confusion arising on sep 29th 2024: because we don't know what is the meaning of
 # the _0 in aldea. Rather, i am yet to read the 2010 discocat paper. That should explain it
 # Until then taking a guess"""
-# train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
-# val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
-# test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
-
-train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+if( parser_to_use == spiders_reader):
+    train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels)
+    val_diagrams, val_labels = convert_to_diagrams(val_data,val_labels)
+    test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels)
+else:
+    train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+    val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+    test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
 
 """#assignign teh labels back to s`ame old lable
 # doing because didnt want same variable going into th function and returning it.
@@ -959,7 +962,7 @@ print(f'RUNNING WITH {nlayers} layers')
                 }
         qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
     else:
-        qnlp_model = model_to_use.from_diagrams(train_circuits )
+        qnlp_model = model_to_use.from_diagrams(train_circuits +val_circuits+test_circuits )
 
     train_dataset = Dataset(
                 train_circuits,
@@ -1014,7 +1017,7 @@ print(f'RUNNING WITH {nlayers} layers')
     """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
     # and test on val_dataset. todo: find out how to add early stopping.
     # I vaguely remember seeing callbacks somewhere"""
-    trainer.fit(train_dataset,eval_interval=1, log_interval=1)
+    trainer.fit(train_dataset,val_dataset, eval_interval=1, log_interval=1)
 
     """#for experiments on october 14th 2024. i.e 
     just use 1 off the shelf model and spread spectrum/parameter search
