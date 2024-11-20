@@ -44,6 +44,12 @@
 
 
 # Meeting Notes
+## Nov 20th 2024
+
+Trying to load uspantek
+- todo
+	- open up remove cups writer if bobcat parser is used. test for english first.
+
 ## nov 19th 2024
 1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp- update this might be requires_grad
 2. find how to add early stopping to the model 1s training
