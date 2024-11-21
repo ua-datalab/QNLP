@@ -56,7 +56,11 @@ Trying to load uspantek
 
  after 7pm coding:
 
-- Sanity check
+- model1 Sanity check
+	- why stop at 30 epochs.
+ 	- if val data is provided, can we implement early_stopping inside the code itself
+  		- why not even provide a hardcoded val_v2 data, just for early_stopping checking. Maybe the last check can be on testing 
+- model 3- Sanity check
 	- Make sure the OOV code is completely working.
 	- Check how early stopping ka dev is done
 	- 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%,
