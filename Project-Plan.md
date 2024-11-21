@@ -45,6 +45,7 @@
 
 # Meeting Notes
 
+
 ## Nov 20th 2024
 - Mini hackathon for setting up Uspantekan demo
 	- Going back to [code from Spe 4](https://github.com/ua-datalab/QNLP/blob/abbe80fd0d5a40f8920505c68780a9f57f76d8cc/v7_merging_best_of_both_v6_andv4) (last date of demo)
@@ -65,15 +66,43 @@
 - Todo
 	- open up remove cups writer if bobcat parser is used. test for english first.
 
+Trying to load uspantek
+- todo
+-  open up remove cups writer if bobcat parser is used. test for english first.
+- run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
+	- note, early stopping should be done on the val data- otherwise training loss is always going to keep changing/decreasing/overfitting. what is our dev in model 3?
+
+ - update: didnt og anywhere. Pushed in a separate branch
+
+ - after 7pm coding:
+
+  - model1 Sanity check
+    - why stop at 30 epochs.
+    - if val data is provided, can we implement early_stopping inside the code itself
+    - why not even provide a hardcoded val_v2 data, just for early_stopping checking. Maybe the last check can be on testing 
+  - model 3- Sanity check
+    - Make sure the OOV code is completely working.
+    - Check how early stopping ka dev is done
+    - 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%,
+    - find if early stopping is stopping too early
+    - also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
+  - Tune model 3 to the maximum so that you get 100% on model1’s dev data. THings to tune can be
+    - USE IN BUILT KERAS [TUNER](https://keras.io/guides/keras_tuner/getting_started/)
+    - Adam optimizer values
+    - other optimizers SGD
+    - OTHER LOSS FUNCTIONS binary_crossentropy
+    - Why only two layers
+    - Encoder decoder?
+    - 
+Code clean up: keep a copy of the code with inline comments, and create a version without any comments.
+
 ## nov 19th 2024
 1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp- update this might be requires_grad
 2. find how to add early stopping to the model 1s training
 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%, - find if early stopping is stopping too early
 4. when we dont show the val_cicruit- we get 83% when we showed the val_circuit - with one new symbol 98%- now try asking chatgpt to find more sentences with more oov for val and see how our model does. in both scenarios above. with and without showing val during initialization of model.
 5. keep a copy of the code with inline comments, and create a version without any comments.
-
-
-     
+    
 ## Nov 18th 2024
 - Runthrough of current code
 	- For English, current performance with Fembeddings and Bobcat parser is 82%
@@ -88,34 +117,35 @@
   		- but then i noticed our loss values were not decreasing (and the model weights not being updated) in the first .fit()/training of the QNLP model
    		- I went digging and realized, that it is the generate_initial_param thing Khatri does which is screwing up things. I still am not sure what that function does. We are already initializing model1 with random values. anyway, the moment i commented that out,model 1 loss started dropping and hit like 99% accuracy. Even better, model 4( the prediction version of model 1 combined with values of OOV)- gave 82% accuracy. Now IMHO that is huge. i.e a model not seeing val data, training only on 70 sentences, vs 30 in val. 
     	- todo confirm that the flow is right and this is not a fluke
-    	- looks good to me. If my hunch is right ***this result Is a paper in itself***
-	- QN) so the ideal flow of events during prediction should be, we go thro ugh each word in val, check if it exists in train vocab, if yes get its already trained weights from model1, i,e the first qnlp model. IF NOT then go get the corresponding embeddings from fasttext, give it to model3, which will output a new weight vector for you, which then you attach to the prediction model, i.e model4, saying this is the missing piece. Todo: confirm if this is how khatri is doing it
+    	- update: looks good to me. If my hunch is right ***this result Is a paper in itself*** update@nov20th2024. Dissecting with megh acting as devil's advocate ongoing
+	- QN) so the ideal flow of events during prediction should be, we go thro ugh each word in val, check if it exists in train vocab, if yes get its already trained weights from model1, i,e the first qnlp model. IF NOT then go get the corresponding embeddings from fasttext, give it to model3, which will output a new weight vector for you, which then you attach to the prediction model, i.e model4, saying this is the missing piece. Todo: confirm if this is how khatri is doing it  ***--done***
 		- Ans: No. He is taking every word in val, giving its embedding to model3 i.e the OOV model, which then gives its weights, and which he is using. I mean, ideally the weights that the OOV model predicts for the val word must be same or very close what the model1 had learned. ...but either way,
+  		- update@nov 20th: found that he is using dict.get() . i.e his logic is same as what we mentioned above. i.e he gets the word's weights from modlel1 ka trained weights if it exists. IF NOT THEN ONLY does he go to embedding space and model 3. Brilliant 
 	- this is a nice todo:
 		- run experiment with our flow chart idea and see if that changes anything.
 		- also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
- 	- also note, i had deleted the mithun_dev branch upstream while my laptop still thinks it exists. create a new branch asap locally and push to remote. else all the changes and commits will be lost - do the nasty way of cp -r and new folder for now 
+ 	- also note, i had deleted the mithun_dev branch upstream while my laptop still thinks it exists. create a new branch asap locally and push to remote. else all the changes and commits will be lost - do the nasty way of cp -r and new folder for now  ***--done***
 
 ## Nov 17th
 - todo from yesterday; start experiments, especially with bobcat and classification.
 	- for no pair:
- 		- add unit tests to CI on github
+ 		- add unit tests to CI on github ***--done***
    			- update: done till fasttext model loading issue.
       			- cache fasttext model so that you dont have to download it every time
          		- update. can't cache fasttext during continous integrations since its a fresh ubuntu virtual machine every time.  
    		
  		- move wandb to no pair file. **---done**
-   			- add parameters  in wandb
-			- separate out dev and train epochs variable names
-   			- turn on wandb and ensure you can see them on web browser
- 		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
+   			- add parameters  in wandb ***--done***
+			- separate out dev and train epochs variable names ***--done***
+   			- turn on wandb and ensure you can see them on web browser ***--done***
+ 		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair ***--done***
    		- use english fasttext embeddings **---done**
-     		- create a variable dataset to use- and add it to arch and then into wandbparams.
+     		- create a variable dataset to use- and add it to arch and then into wandbparams. ***--done***
        		-  add unit tests **---done**
          	-  - move dev epochs count to wandb param **---done**
           	- add type of data also to wandb arch **---done**
           	- - map out possible combinations in spreadsheet --done. rather building it (here)[https://docs.google.com/spreadsheets/d/1w6u7xbR3Q37fh8uhgIJw230yWQetXdrZlvK42msIy80/edit?usp=sharing]
-          	- change expected value in test file based on new config. eg. english vs spanish embeddings
+          	- change expected value in test file based on new config. eg. english vs spanish embeddings ***--done***
           	- add early stopping to training data 	
        		- move to cyverse         	
           	- increase the food it dataset to max size- currently seems to be only 18 in training. should be close to 100
