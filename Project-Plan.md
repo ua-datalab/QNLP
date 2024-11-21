@@ -67,10 +67,13 @@ Trying to load uspantek
     	- find if early stopping is stopping too early
 	- also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
 - Tune model 3 to the maximum so that you get 100% on model1’s dev data. THings to tune can be
-	- Adam optimizer values
- 	- other optimizers 
+	- USE IN BUILT KERAS [TUNER](https://keras.io/guides/keras_tuner/getting_started/)
+ 	- Adam optimizer values
+ 	- other optimizers SGD
+  	- OTHER LOSS FUNCTIONS binary_crossentropy
 	- Why only two layers
 	- Encoder decoder?
+ 	- 
 Code clean up: keep a copy of the code with inline comments, and create a version without any comments.
 
 
