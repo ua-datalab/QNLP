@@ -48,7 +48,8 @@
 
 Trying to load uspantek
 - todo
-	- open up remove cups writer if bobcat parser is used. test for english first.
+-  open up remove cups writer if bobcat parser is used. test for english first.
+- run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
 
 ## nov 19th 2024
 1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp- update this might be requires_grad
