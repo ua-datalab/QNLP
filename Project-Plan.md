@@ -74,6 +74,7 @@ Trying to load uspantek
     - USE IN BUILT KERAS [TUNER](https://keras.io/guides/keras_tuner/getting_started/)
     - Adam optimizer values
     - other optimizers SGD
+    - no of layers
     - OTHER LOSS FUNCTIONS binary_crossentropy
     - Why only two layers
     - Encoder decoder?
