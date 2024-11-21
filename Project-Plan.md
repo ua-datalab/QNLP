@@ -31,6 +31,24 @@
 # Meeting Notes
 
 ## Nov 20th 2024
+- Mini hackathon for setting up Uspantekan demo
+	- Going back to [code from Spe 4](https://github.com/ua-datalab/QNLP/blob/abbe80fd0d5a40f8920505c68780a9f57f76d8cc/v7_merging_best_of_both_v6_andv4) (last date of demo)
+ 	- Accessing previous parameters and settings, so that we can upgrade the code correctly.
+  		- Hardcoding of circuit dimensions for noun and verbs- good for saving GPU useage, very bad for flexibility.
+    			- Most recent updates can't run older code and process Uspantekan data: we will need to overhaul this. This is because the dimensions are hardcoded, and we changed the Ansatz and other pre-requisites.
+- Spanish, with Spider parameters
+	- model is training, loss going down, just very slow. Val performance around 45-51%.
+ 	- No early stopping: needs val and dev yet, since we are only running train data. But once val dataset can be run with fasttext embeddings, we will be able to add early stopping.
+  	-    
+- ToDo: replace `split()` with regex, for added flexibility.
+- Trying to load uspantek
+- Updates:
+	- end-to-end model with Bobcat parser for English ready- all that we need is a thorough code review, and complete switch to PyTorch
+ 	- We are able to run it with just train data. 
+ 	- Spanish and Uspantekan: input data not cleaned right, more OOV words than English (predictable). Lots of '\\' symbols in the words
+  		- Over 30 OOV words.
+- Todo
+	- open up remove cups writer if bobcat parser is used. test for english first.
 
 Trying to load uspantek
 - todo
@@ -38,15 +56,37 @@ Trying to load uspantek
 - run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
 	- note, early stopping should be done on the val data- otherwise training loss is always going to keep changing/decreasing/overfitting. what is our dev in model 3?
 
+ - update: didnt og anywhere. Pushed in a separate branch
+
+ - after 7pm coding:
+
+  - model1 Sanity check
+    - why stop at 30 epochs.
+    - if val data is provided, can we implement early_stopping inside the code itself
+    - why not even provide a hardcoded val_v2 data, just for early_stopping checking. Maybe the last check can be on testing 
+  - model 3- Sanity check
+    - Make sure the OOV code is completely working.
+    - Check how early stopping ka dev is done
+    - 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%,
+    - find if early stopping is stopping too early
+    - also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
+  - Tune model 3 to the maximum so that you get 100% on model1’s dev data. THings to tune can be
+    - USE IN BUILT KERAS [TUNER](https://keras.io/guides/keras_tuner/getting_started/)
+    - Adam optimizer values
+    - other optimizers SGD
+    - OTHER LOSS FUNCTIONS binary_crossentropy
+    - Why only two layers
+    - Encoder decoder?
+    - 
+Code clean up: keep a copy of the code with inline comments, and create a version without any comments.
+
 ## nov 19th 2024
 1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp- update this might be requires_grad
 2. find how to add early stopping to the model 1s training
 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%, - find if early stopping is stopping too early
 4. when we dont show the val_cicruit- we get 83% when we showed the val_circuit - with one new symbol 98%- now try asking chatgpt to find more sentences with more oov for val and see how our model does. in both scenarios above. with and without showing val during initialization of model.
 5. keep a copy of the code with inline comments, and create a version without any comments.
-
-
-     
+    
 ## Nov 18th 2024
 - Runthrough of current code
 	- For English, current performance with Fembeddings and Bobcat parser is 82%
