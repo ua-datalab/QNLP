@@ -52,6 +52,24 @@ Trying to load uspantek
 - run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
 	- note, early stopping should be done on the val data- otherwise training loss is always going to keep changing/decreasing/overfitting. what is our dev in model 3?
 
+ update: didnt og anywhere. Pushed in a separate branch
+
+ after 7pm coding:
+
+- Sanity check
+	- Make sure the OOV code is completely working.
+	- Check how early stopping ka dev is done
+	- 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%,
+    	- find if early stopping is stopping too early
+	- also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
+- Tune model 3 to the maximum so that you get 100% on model1’s dev data. THings to tune can be
+	- Adam optimizer values
+ 	- other optimizers 
+	- Why only two layers
+	- Encoder decoder?
+Code clean up: keep a copy of the code with inline comments, and create a version without any comments.
+
+
 ## nov 19th 2024
 1. todo: ask enrique why assigning embedding values to the first model is making the model stuck/not reducing loss- this is model1 qnlp- update this might be requires_grad
 2. find how to add early stopping to the model 1s training
