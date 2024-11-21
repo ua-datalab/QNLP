@@ -3,16 +3,12 @@
 * Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
 	* QNLP dataset: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
 	* QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
-* Overleaf links:
-	* [NAACL Draft](https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4)
- 	* [Older paper](https://www.overleaf.com/project/6671e31902ea604ff3211946)
+* Link to white paper: [https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4](https://www.google.com/url?q=https://www.overleaf.com/4483532232tcfnfdrrcbdc%2312a1b4&sa=D&source=editors&ust=1717607867015283&usg=AOvVaw0VwgWn_tu2jNMuTmaj2PDL)
 * All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
 	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link](https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link)
  	- Spanish data: [https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link](https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link) 
 * Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)     
-* [Miro Whiteboard]
-	* history of QNLP (https://miro.com/app/board/uXjVKVPCIK4=/?share_link_id=77584526552)
-	* our [workspace](https://miro.com/welcomeonboard/ajBQR05rQ0VZL1BEVDJHQTdxOXdmVHJqYzRWZ09QS1BGWEQ2OWgwbHU0dk5wRTVJRnZWWk5LU3p6bW5xZkxRMDdpTytpWndrTHMrNTFjUWpFM1NiYUhCQjRNQVY0U2MzcU9wcXY5ZWtlbXRhUTR5dnpVT3FsMkt6ZFF2Mi94cEEhZQ==?share_link_id=42173029695)
+* [Miro Whiteboard](https://miro.com/app/board/uXjVKVPCIK4=/?share_link_id=77584526552) 
 * Papers:
 	* the most fundamental paper which introduces QNLP is 2010 DISCOCAT [paper](https://drive.google.com/file/d/1T7H5WH1q0mKng-zwqOYrlqEkBpOIcUDR/view?usp=sharing)
  	* To undrestand that, you need to understand 1998 Lambeks paper on math===language: [here](https://drive.google.com/file/d/1WmHNND7geQTfO3sRK-NDoOBHtKZL7pAa/view?usp=sharing)
@@ -25,17 +21,6 @@
 	- Lambeq for Spanish, run with Spider parser: [https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp=sharing](https://www.google.com/url?q=https://drive.google.com/file/d/1wTo8rAObpuLu65DyFo1D0gE5kKjUtzBf/view?usp%3Dsharing&sa=D&source=editors&ust=1717607867017990&usg=AOvVaw1oMypNSQtjg_K-olMfxRnv)
  	- Khatri et al, for Spanish: [https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb](https://github.com/ua-datalab/QNLP/blob/megh_dev/OOV_MRPC_paraphrase_task.ipynb)
   	- Khatri et al, for Uspantekan: [https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb)
-  	- bobs paper for the FOOD-IT classification is kept (here)[https://jair.org/index.php/jair/article/view/14329]
-
-# New ideas
-1. NN model even if the words are same in dev and train, you still wont get 100% accuracy. However, QNLP food-it classification does it (note that OOV problem is not addressed)
-2. Uspantek- intermediary translation system- since its a completely new language/low resource languages
-3. Right now all machine translation is done as start with English- and map it to a new language. But what if QNLP can be the native model, which can learn from a new language itself, and for that matter, low resource languages.
-4. Ask GPT interesting qns in a new language like malayalam,- and try to break it. Because most likely it was trained on english first and then an embedding aligner. 
-5. same thing- that enrique said- see if we can fine tune LLM on uspantek, and check if QNLP can be an adaptor. One does not have to revolutionize the field by creating a new native model, but if it can enhance the existing LLM ability to do well on a non-english language-  can be a good introduction paper for QNLP
-6. @nov18th2024: what if we can have a full pipeline which updates embedding based on  QNLP weights. So it will belike., for every word in training, we do the standard feed forward of lambeq, go create a weight for the angles for that word. Now give those weights to model 3(the OOV model) Note that we are using model3 in reverse (i.e it was created to take embedding as input and give weight as output. but now we are giving it weight as input and embedding as output). So once you have the new embedding for that word, go update it in the original embedding of this word. Thus after training is done, we will have the learned model living in two lands, quanutm (as the qbit weights) and classical (as the updated embedding)- granted this is a new cool golden solution/hammer. Now go find nails/problems that it can hit/solve.
-7. also theoretical diatribe/post partum explanation (explanation of how the child died during delivery AFTER the death. LMAO humans): the result in 6 above is probably due to the fact that we just projected the QNLP weights to the Embedding land. i.e we took a quantum weight and knowingly or unknowingly the model3/oov model FUNCTORED it into classical land. Or in other words, the transition between Quantum and classical land can be achieved (on the software side) by FUNCTORS. wait, isnt that what QNLP proves, that lambek when raised to CATEGORY land and sent through a cool FUNCTOR/ansatz can transform/project it to another land. I dont know, but vaguely/abstract level I think we might have knowingly or unknowingly unconvered something big. Will leave it to the theoretical physicists and mathematicians to prove this.
-8. Apparently GPT2 is available to be trained from scratch. We can use that to train on 100 data points experiment
 
 # Working Group Best Practices
 - Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
@@ -44,7 +29,6 @@
 
 
 # Meeting Notes
-
 
 ## Nov 20th 2024
 - Mini hackathon for setting up Uspantekan demo
@@ -331,6 +315,7 @@ tensor([-0.4763, -1.8438], requires_grad=True)
     - ToDo English embeddings: find them online, and if not, figure out how to incorporate english vector files into our code.
     - Chronology: word2vec, BERT, Fasttext, Byte-Pair (used by GPT). We would ultimately need the n-gram embeddings. Fasttext is used to build words, by training on natural language, n-grams, and thus creating relations between words. Richer because it has seen more data
     	- Why do we need gpt embeddings- they have learnt word meanings after a level of training on the sub-word embeddings.  
+
 
 ## Nov 4
 - Model breakdown:
