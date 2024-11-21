@@ -75,35 +75,35 @@ Trying to load uspantek
   		- but then i noticed our loss values were not decreasing (and the model weights not being updated) in the first .fit()/training of the QNLP model
    		- I went digging and realized, that it is the generate_initial_param thing Khatri does which is screwing up things. I still am not sure what that function does. We are already initializing model1 with random values. anyway, the moment i commented that out,model 1 loss started dropping and hit like 99% accuracy. Even better, model 4( the prediction version of model 1 combined with values of OOV)- gave 82% accuracy. Now IMHO that is huge. i.e a model not seeing val data, training only on 70 sentences, vs 30 in val. 
     	- todo confirm that the flow is right and this is not a fluke
-    	- looks good to me. If my hunch is right ***this result Is a paper in itself***
-	- QN) so the ideal flow of events during prediction should be, we go thro ugh each word in val, check if it exists in train vocab, if yes get its already trained weights from model1, i,e the first qnlp model. IF NOT then go get the corresponding embeddings from fasttext, give it to model3, which will output a new weight vector for you, which then you attach to the prediction model, i.e model4, saying this is the missing piece. Todo: confirm if this is how khatri is doing it
+    	- update: looks good to me. If my hunch is right ***this result Is a paper in itself*** update@nov20th2024. Dissecting with megh acting as devil's advocate ongoing
+	- QN) so the ideal flow of events during prediction should be, we go thro ugh each word in val, check if it exists in train vocab, if yes get its already trained weights from model1, i,e the first qnlp model. IF NOT then go get the corresponding embeddings from fasttext, give it to model3, which will output a new weight vector for you, which then you attach to the prediction model, i.e model4, saying this is the missing piece. Todo: confirm if this is how khatri is doing it  ***--done***
 		- Ans: No. He is taking every word in val, giving its embedding to model3 i.e the OOV model, which then gives its weights, and which he is using. I mean, ideally the weights that the OOV model predicts for the val word must be same or very close what the model1 had learned. ...but either way,
   		- update@nov 20th: found that he is using dict.get() . i.e his logic is same as what we mentioned above. i.e he gets the word's weights from modlel1 ka trained weights if it exists. IF NOT THEN ONLY does he go to embedding space and model 3. Brilliant 
 	- this is a nice todo:
 		- run experiment with our flow chart idea and see if that changes anything.
 		- also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
- 	- also note, i had deleted the mithun_dev branch upstream while my laptop still thinks it exists. create a new branch asap locally and push to remote. else all the changes and commits will be lost - do the nasty way of cp -r and new folder for now 
+ 	- also note, i had deleted the mithun_dev branch upstream while my laptop still thinks it exists. create a new branch asap locally and push to remote. else all the changes and commits will be lost - do the nasty way of cp -r and new folder for now  ***--done***
 
 ## Nov 17th
 - todo from yesterday; start experiments, especially with bobcat and classification.
 	- for no pair:
- 		- add unit tests to CI on github
+ 		- add unit tests to CI on github ***--done***
    			- update: done till fasttext model loading issue.
       			- cache fasttext model so that you dont have to download it every time
          		- update. can't cache fasttext during continous integrations since its a fresh ubuntu virtual machine every time.  
    		
  		- move wandb to no pair file. **---done**
-   			- add parameters  in wandb
-			- separate out dev and train epochs variable names
-   			- turn on wandb and ensure you can see them on web browser
- 		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair
+   			- add parameters  in wandb ***--done***
+			- separate out dev and train epochs variable names ***--done***
+   			- turn on wandb and ensure you can see them on web browser ***--done***
+ 		-  check if there are any other features i added in yes pair file in the last one week, if yes move to no-pair ***--done***
    		- use english fasttext embeddings **---done**
-     		- create a variable dataset to use- and add it to arch and then into wandbparams.
+     		- create a variable dataset to use- and add it to arch and then into wandbparams. ***--done***
        		-  add unit tests **---done**
          	-  - move dev epochs count to wandb param **---done**
           	- add type of data also to wandb arch **---done**
           	- - map out possible combinations in spreadsheet --done. rather building it (here)[https://docs.google.com/spreadsheets/d/1w6u7xbR3Q37fh8uhgIJw230yWQetXdrZlvK42msIy80/edit?usp=sharing]
-          	- change expected value in test file based on new config. eg. english vs spanish embeddings
+          	- change expected value in test file based on new config. eg. english vs spanish embeddings ***--done***
           	- add early stopping to training data 	
        		- move to cyverse         	
           	- increase the food it dataset to max size- currently seems to be only 18 in training. should be close to 100
