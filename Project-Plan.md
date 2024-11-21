@@ -44,10 +44,25 @@
 
 
 # Meeting Notes
-## Nov 20th 2024
 
-Trying to load uspantek
-- todo
+## Nov 20th 2024
+- Mini hackathon for setting up Uspantekan demo
+	- Going back to [code from Spe 4](https://github.com/ua-datalab/QNLP/blob/abbe80fd0d5a40f8920505c68780a9f57f76d8cc/v7_merging_best_of_both_v6_andv4) (last date of demo)
+ 	- Accessing previous parameters and settings, so that we can upgrade the code correctly.
+  		- Hardcoding of circuit dimensions for noun and verbs- good for saving GPU useage, very bad for flexibility.
+    			- Most recent updates can't run older code and process Uspantekan data: we will need to overhaul this. This is because the dimensions are hardcoded, and we changed the Ansatz and other pre-requisites.
+- Spanish, with Spider parameters
+	- model is training, loss going down, just very slow. Val performance around 45-51%.
+ 	- No early stopping: needs val and dev yet, since we are only running train data. But once val dataset can be run with fasttext embeddings, we will be able to add early stopping.
+  	-    
+- ToDo: replace `split()` with regex, for added flexibility.
+- Trying to load uspantek
+- Updates:
+	- end-to-end model with Bobcat parser for English ready- all that we need is a thorough code review, and complete switch to PyTorch
+ 	- We are able to run it with just train data. 
+ 	- Spanish and Uspantekan: input data not cleaned right, more OOV words than English (predictable). Lots of '\\' symbols in the words
+  		- Over 30 OOV words.
+- Todo
 	- open up remove cups writer if bobcat parser is used. test for english first.
 
 ## nov 19th 2024
