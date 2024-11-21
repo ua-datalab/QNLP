@@ -41,8 +41,6 @@ from pytket.extensions.qiskit import AerBackend
 from lambeq import BinaryCrossEntropyLoss
 
 TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
-
-
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
@@ -51,6 +49,7 @@ embedding_model_to_use = "english" #[english, spanish]
 
 if(parser_to_use==BobcatParser):
     parser_to_use_obj=BobcatParser(verbose='text')
+
 
 if(embedding_model_to_use=="spanish"):
     # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
@@ -71,8 +70,8 @@ BASE_DIMENSION_FOR_SENT =2
 BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS_TRAIN = 30
-EPOCHS_DEV = 100
+EPOCHS_TRAIN_MODEL1 = 30
+EPOCHS_MODEL3_OOV_MODEL = 500
 LEARNING_RATE = 3e-2
 SEED = 0
 DATA_BASE_FOLDER= "data"
@@ -120,11 +119,11 @@ wandb.init(
     "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
     "MAXPARAMS".lower() :MAXPARAMS,
     "BATCH_SIZE".lower():BATCH_SIZE,
-    "EPOCHS".lower() :EPOCHS_TRAIN,
+    "EPOCHS".lower() :EPOCHS_TRAIN_MODEL1,
     "LEARNING_RATE".lower() : LEARNING_RATE,
     "SEED".lower() : SEED ,
     "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
-    "EPOCHS_DEV".lower():EPOCHS_DEV,
+    "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
     "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATA_TO_USE,
     "embedding_model_to_use".lower():embedding_model_to_use
     })
@@ -621,7 +620,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     ])
 
     #standard keras stuff, initialize and tell what loss function and which optimizer will you be using
-    OOV_NN_model.compile(loss='mean_absolute_error', optimizer=keras.optimizers.Adam(0.001))
+    OOV_NN_model.compile(loss='mean_absolute_error', optimizer=keras.optimizers.Adam(0.01),metrics=[keras.metrics.Accuracy(),keras.metrics.CategoricalAccuracy(),keras.metrics.BinaryAccuracy()])
 
     callback = tf.keras.callbacks.EarlyStopping(
         monitor='val_loss',
@@ -641,14 +640,15 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
     #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_DEV,callbacks=[callback])
-    print(hist.history.keys())
-    print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
-    plt.plot(hist.history['loss'], label='loss')
-    plt.plot(hist.history['val_loss'], label='val_loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Error')
-    plt.legend()
+    # hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_DEV,callbacks=[callback])
+    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y),  validation_split=0.3,shuffle=True, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL)
+    # print(hist.history.keys())
+    # print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
+    # plt.plot(hist.history['loss'], label='loss')
+    # plt.plot(hist.history['val_loss'], label='val_loss')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Error')
+    # plt.legend()
     # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
     return OOV_NN_model,dict2
@@ -980,9 +980,9 @@ print(f'RUNNING WITH {nlayers} layers')
         trainer = QuantumTrainer(
         model=qnlp_model,
         loss_function=BinaryCrossEntropyLoss(),
-        epochs=EPOCHS_TRAIN,
+        epochs=EPOCHS_TRAIN_MODEL1,
         optimizer=SPSAOptimizer,
-        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN},
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN_MODEL1},
         evaluate_functions=eval_metrics,
         evaluate_on_train=True,
         verbose='text',
@@ -995,7 +995,7 @@ print(f'RUNNING WITH {nlayers} layers')
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,            
-            epochs=EPOCHS_TRAIN,
+            epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
@@ -1193,7 +1193,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
-            epochs=EPOCHS_TRAIN,
+            epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
