@@ -52,6 +52,7 @@ ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansat
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
+MAX_PARAM_LENGTH=0
 
 
 if(parser_to_use==BobcatParser):
@@ -405,10 +406,10 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             combined = np.hstack([dict2[wrd],pad])                          
             NN_train_Y.append(combined)                                
     
-    build_model(keras_tuner.HyperParameters(),max_word_param_length)  
+    build_model(keras_tuner.HyperParameters())  
     
     tuner = keras_tuner.RandomSearch(
-        hypermodel=build_model(max_word_param_length),
+        hypermodel=build_model,
         objective="val_accuracy",
         max_trials=3,
         executions_per_trial=2,
@@ -425,11 +426,11 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     return best_model,dict2
 
 
-def call_existing_code(lr,max_word_param_length):
-    assert max_word_param_length > 0
+def call_existing_code(lr):
+    assert MAX_PARAM_LENGTH > 0
     OOV_NN_model = keras.Sequential([
-      layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
-      layers.Dense(max_word_param_length, activation='tanh'),
+      layers.Dense(int((MAX_PARAM_LENGTH + MAXPARAMS) / 2), activation='tanh'),
+      layers.Dense(MAX_PARAM_LENGTH, activation='tanh'),
     ])
     OOV_NN_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr),
@@ -439,31 +440,16 @@ def call_existing_code(lr,max_word_param_length):
     return OOV_NN_model
 
 
-def build_model(hp,max_word_param_length):
+def build_model(hp):
     # units = hp.Int("units", min_value=32, max_value=512, step=32)
     # activation = hp.Choice("activation", ["relu", "tanh"])
     # dropout = hp.Boolean("dropout")
     
     lr = hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log")
     # call existing model-building code with the hyperparameter values.
-    model = call_existing_code(lr=lr,max_word_param_length=max_word_param_length)
+    model = call_existing_code(lr=lr)
     return model
 
-"""
-    So this is where we do the final testing (even if its over dev)
-    Here they are sending 
-    a) pred_model:the newly created prediction model - which is same as the original QNLP model fundamentally.
-    b) val_circuits , val_labels- what it says
-    c) trained_params: trained_wts from the model 1- qnlp model (my guess is he is going to assign these weights to the 
-    newly created model. Though why he is doing it in a circumambulated way while he could have directly 
-    used qnlp_model i.e model 1 is beyond me)- update@oct30th2024. This is all zeroes. find and fix why
-    d) val_vocab_embeddings: Take every word in test/val set, give it to fasttext, and get their embeddings
-    e) max_word_param_length: refer function get_max_word_param_length
-    f) oov_strategy= picking one hardcoded one from [zero,embed, model,random etc]- basically this is where you 
-    decide what baseline model do you want to use for your model 3- rather, do you want to use any model at all
-    or do you want to use things like baselines methods like random number generator, fill with zeroes etc.
-
-"""
 def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):   
     pred_parameter_map = {}
 
@@ -638,6 +624,8 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
     train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
         train_circuits, val_circuits, embedding_model, qnlp_model)
 
+    global MAX_PARAM_LENGTH
+    MAX_PARAM_LENGTH = max_w_param_length
     trainer.fit(train_dataset,eval_interval=1, log_interval=1)
 
     """if there are no OOV words, we dont need the model 2 through model 4. 
