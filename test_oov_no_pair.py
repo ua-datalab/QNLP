@@ -1,7 +1,7 @@
 # content of test_sysexit.py
 import pytest
-import OOV_classification_no_pair_sents
-from OOV_classification_no_pair_sents import run_experiment, parser_to_use, ansatz_to_use, model_to_use, trainer_to_use, TYPE_OF_DATA_TO_USE, embedding_model_to_use
+import classify
+from classify import run_experiment, parser_to_use, ansatz_to_use, model_to_use, trainer_to_use, embedding_model_to_use
 import os
 import math
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel

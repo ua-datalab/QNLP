@@ -39,18 +39,24 @@ import wget
 import wandb
 from pytket.extensions.qiskit import AerBackend
 from lambeq import BinaryCrossEntropyLoss
+import numpy as np
+import keras_tuner
+import keras
+from keras import layers
+
 
 TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
-
-
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 
+MAX_WORD_PARAM_LEN=0
+
 if(parser_to_use==BobcatParser):
     parser_to_use_obj=BobcatParser(verbose='text')
+
 
 if(embedding_model_to_use=="spanish"):
     # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
@@ -71,8 +77,8 @@ BASE_DIMENSION_FOR_SENT =2
 BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS_TRAIN = 30
-EPOCHS_DEV = 100
+EPOCHS_TRAIN_MODEL1 = 30
+EPOCHS_MODEL3_OOV_MODEL = 2
 LEARNING_RATE = 3e-2
 SEED = 0
 DATA_BASE_FOLDER= "data"
@@ -120,11 +126,11 @@ wandb.init(
     "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
     "MAXPARAMS".lower() :MAXPARAMS,
     "BATCH_SIZE".lower():BATCH_SIZE,
-    "EPOCHS".lower() :EPOCHS_TRAIN,
+    "EPOCHS".lower() :EPOCHS_TRAIN_MODEL1,
     "LEARNING_RATE".lower() : LEARNING_RATE,
     "SEED".lower() : SEED ,
     "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
-    "EPOCHS_DEV".lower():EPOCHS_DEV,
+    "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
     "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATA_TO_USE,
     "embedding_model_to_use".lower():embedding_model_to_use
     })
@@ -610,48 +616,92 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             
                     
                            
-        
+    
+    build_model(keras_tuner.HyperParameters(),max_word_param_length)  
+    
+    tuner = keras_tuner.RandomSearch(
+        hypermodel=build_model(max_word_param_length),
+        objective="val_accuracy",
+        max_trials=3,
+        executions_per_trial=2,
+        overwrite=True,
+        directory="tuning_model",
+        project_name="oov_model3",
+    )
+    # hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_DEV,callbacks=[callback])
+    tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=1, epochs=EPOCHS_MODEL3_OOV_MODEL)
+
+    models = tuner.get_best_models(num_models=2)
+    best_model = models[0]
+    best_model.summary()
+  
     # NN_train_Y = np.array([dict2[wrd]  else dict2[wrd].extend([0,0]) for wrd in wrds_in_order])
     
     """#this is model 3. i.e create a simple Keras NN model, which will learn the above mapping.
-      todo: use a better model a) FFNN using pytorch b) something a little bit more complicated than a simple FFNN"""
+    #   todo: use a better model a) FFNN using pytorch b) something a little bit more complicated than a simple FFNN"""
+    # OOV_NN_model = keras.Sequential([
+    #   layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
+    #   layers.Dense(max_word_param_length, activation='tanh'),
+    # ])
+
+    # #standard keras stuff, initialize and tell what loss function and which optimizer will you be using
+    # OOV_NN_model.compile(loss='mean_absolute_error', optimizer=keras.optimizers.Adam(0.01),metrics=[keras.metrics.Accuracy(),keras.metrics.CategoricalAccuracy(),keras.metrics.BinaryAccuracy()])
+
+    # callback = tf.keras.callbacks.EarlyStopping(
+    #     monitor='val_loss',
+    #     min_delta=0.01,
+    #     patience=10,
+    #     verbose=1,
+    #     mode='auto',
+    #     baseline=None,
+    #     restore_best_weights=True,
+    #     start_from_epoch=0
+    # )
+    # # Embedding dim!
+    # """#todo find why maxparams are hardcoded as 300 (is it the dimension of the fasttext embedding?)
+    # #ans: yes. Like in any standard FFNN
+    # # the first layer needs to have the dimension of NN_train_X, which in turn has the dimension of the  
+    # Fasttext embedding"""
+    # OOV_NN_model.build(input_shape=(None, MAXPARAMS))
+
+    #train that model 3
+    # hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_DEV,callbacks=[callback])
+    # hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y),  validation_split=0.3,shuffle=True, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL)
+    # print(hist.history.keys())
+    # print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
+    # plt.plot(hist.history['loss'], label='loss')
+    # plt.plot(hist.history['val_loss'], label='val_loss')
+    # plt.xlabel('Epoch')
+    # plt.ylabel('Error')
+    # plt.legend()
+    # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
+
+    return best_model,dict2
+
+
+def call_existing_code(lr,max_word_param_length):
+    assert max_word_param_length > 0
     OOV_NN_model = keras.Sequential([
       layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
       layers.Dense(max_word_param_length, activation='tanh'),
     ])
-
-    #standard keras stuff, initialize and tell what loss function and which optimizer will you be using
-    OOV_NN_model.compile(loss='mean_absolute_error', optimizer=keras.optimizers.Adam(0.001))
-
-    callback = tf.keras.callbacks.EarlyStopping(
-        monitor='val_loss',
-        min_delta=0.01,
-        patience=10,
-        verbose=1,
-        mode='auto',
-        baseline=None,
-        restore_best_weights=True,
-        start_from_epoch=0
+    OOV_NN_model.compile(
+        optimizer=keras.optimizers.Adam(learning_rate=lr),
+        loss="categorical_crossentropy",
+        metrics=["accuracy"],
     )
-    # Embedding dim!
-    """#todo find why maxparams are hardcoded as 300 (is it the dimension of the fasttext embedding?)
-    #ans: yes. Like in any standard FFNN
-    # the first layer needs to have the dimension of NN_train_X, which in turn has the dimension of the  
-    Fasttext embedding"""
-    OOV_NN_model.build(input_shape=(None, MAXPARAMS))
+    return OOV_NN_model
 
-    #train that model 3
-    hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_DEV,callbacks=[callback])
-    print(hist.history.keys())
-    print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
-    plt.plot(hist.history['loss'], label='loss')
-    plt.plot(hist.history['val_loss'], label='val_loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Error')
-    plt.legend()
-    # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
-    return OOV_NN_model,dict2
+def build_model(hp,max_word_param_length):
+    # units = hp.Int("units", min_value=32, max_value=512, step=32)
+    # activation = hp.Choice("activation", ["relu", "tanh"])
+    # dropout = hp.Boolean("dropout")
+    
+    lr = hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log")
+    # call existing model-building code with the hyperparameter values.
+    model = call_existing_code(lr=lr,max_word_param_length=max_word_param_length)
+    return model
 
 def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):
     """
@@ -903,7 +953,7 @@ assert len(train_diagrams)== len(train_labels)
 assert len(val_diagrams)== len(val_labels)
 assert len(test_diagrams)== len(test_labels)
 
-def run_experiment(nlayers=1, seed=SEED):
+def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
     """mithuns comment @26thsep2024typically spider ansatz only goes with spider reader. 
     like i mentioned earlier, spider was used to just get the code off the ground
@@ -980,9 +1030,9 @@ print(f'RUNNING WITH {nlayers} layers')
         trainer = QuantumTrainer(
         model=qnlp_model,
         loss_function=BinaryCrossEntropyLoss(),
-        epochs=EPOCHS_TRAIN,
+        epochs=EPOCHS_TRAIN_MODEL1,
         optimizer=SPSAOptimizer,
-        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN},
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN_MODEL1},
         evaluate_functions=eval_metrics,
         evaluate_on_train=True,
         verbose='text',
@@ -995,7 +1045,7 @@ print(f'RUNNING WITH {nlayers} layers')
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,            
-            epochs=EPOCHS_TRAIN,
+            epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
@@ -1010,6 +1060,8 @@ print(f'RUNNING WITH {nlayers} layers')
 
     train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
         train_circuits, val_circuits, embedding_model, qnlp_model)
+
+    MAX_WORD_PARAM_LEN = max_w_param_length
 
     """#run ONLY the QNLP model.i.e let it train on the train_dataset. 
     # and test on val_dataset. todo: find out how to add early stopping.
@@ -1193,7 +1245,7 @@ tensor([-0.0098,  0.7008], requires_grad=True)
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
             learning_rate=LEARNING_RATE,
-            epochs=EPOCHS_TRAIN,
+            epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
@@ -1328,7 +1380,7 @@ for tf_seed in tf_seeds:
     #  so commenting this out until we move it to cyverse/hpc
     #todo: find the relevance/signfincance of models from 2010 discocat paper"""
     for nl in [3]:
-        this_seed_results.append([run_experiment(nl, tf_seed)])
+        this_seed_results.append([run_experiment(nl, tf_seed, MAX_WORD_PARAM_LEN)])
     compr_results[tf_seed] = this_seed_results
 
 print(f"\nvalue of all evaluation metrics across all seeds is :")
