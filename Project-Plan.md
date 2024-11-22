@@ -50,7 +50,10 @@
 - Todo
 	- open up remove cups writer if bobcat parser is used. test for english first.
 	- spider ansatz raise a pull request with LAMBEQ guys- for format of symbol spider does aldea_0__s while everything else does aldea_s_0
- - 
+ - todo: find out how to add early stopping. in model 1
+ - inside run_expt:
+ 	-  why is he setting random seed, that tooin tensor flow especially since am using a pytorch model.tf.random.set_seed(tf_seed)
+  	- both lists tf_seeds  and nl should have more than 1 values- do only on HPC or cyverse though
 Trying to load uspantek
 - todo
 -  clean up accents/utf-8 on both spanish and uspantek?
