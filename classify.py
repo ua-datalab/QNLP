@@ -79,7 +79,7 @@ BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
 EPOCHS_TRAIN_MODEL1 = 30
-EPOCHS_MODEL3_OOV_MODEL = 2
+EPOCHS_MODEL3_OOV_MODEL = 100
 LEARNING_RATE = 3e-2
 SEED = 0
 DATA_BASE_FOLDER= "data"
@@ -418,11 +418,13 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         project_name="oov_model3",
     )
     
-    tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=1, epochs=EPOCHS_MODEL3_OOV_MODEL)
+    tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL)
     models = tuner.get_best_models(num_models=2)
     best_model = models[0]
     best_model.summary()
-          
+    
+    tuner.search_space_summary()
+
     return best_model,dict2
 
 
@@ -434,7 +436,7 @@ def call_existing_code(lr):
     ])
     OOV_NN_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr),
-        loss="categorical_crossentropy",
+        loss="mean_absolute_error",
         metrics=["accuracy"],
     )
     return OOV_NN_model
@@ -442,10 +444,10 @@ def call_existing_code(lr):
 
 def build_model(hp):
     # units = hp.Int("units", min_value=32, max_value=512, step=32)
-    # activation = hp.Choice("activation", ["relu", "tanh"])
+    activation = hp.Choice("activation", ["relu", "tanh"])
     # dropout = hp.Boolean("dropout")
     
-    lr = hp.Float("lr", min_value=1e-4, max_value=1e-2, sampling="log")
+    lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, sampling="linear")
     # call existing model-building code with the hyperparameter values.
     model = call_existing_code(lr=lr)
     return model
@@ -627,7 +629,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
     trainer.fit(train_dataset,eval_interval=1, log_interval=1)
-
+    print("***********Training of first model completed**********")
     """if there are no OOV words, we dont need the model 2 through model 4. 
     just use model 1 to evaluate and exit"""
     if oov_word_count==0:
