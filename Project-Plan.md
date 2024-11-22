@@ -49,10 +49,18 @@
   		- Over 30 OOV words.
 - Todo
 	- open up remove cups writer if bobcat parser is used. test for english first.
-
+	- spider ansatz raise a pull request with LAMBEQ guys- for format of symbol spider does aldea_0__s while everything else does aldea_s_0
+ - 
 Trying to load uspantek
 - todo
--  open up remove cups writer if bobcat parser is used. test for english first.
+-  clean up accents/utf-8 on both spanish and uspantek?
+-  in the function generate_initial-*
+	-  there is one if(ansatz_to_use==SpiderAnsatz): but no else
+	- for initial weight vector , instead of blindly taking the first 2 or 4 cells from the fasttext embedding, initialize with something more meaning ful. say sum of all cells?
+ 	 - what is the connection between initial param vectors and labels? in QNLP labels directly are logits/confidence in predictions?
+- while initializing ansatz:2) Noun should have a higher dimension than sentence? how? 
+- it will be really cool enhancement if we can have a combined training of model1 and model 4, with the embeddings being updated on the fly.- and not training model4 offline after model 1
+- open up remove cups writer if bobcat parser is used. test for english first.
 - run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
 	- note, early stopping should be done on the val data- otherwise training loss is always going to keep changing/decreasing/overfitting. what is our dev in model 3?
 
