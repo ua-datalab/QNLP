@@ -586,7 +586,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
                 }
         qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
     else:
-        qnlp_model = model_to_use.from_diagrams(train_circuits+val_circuits )
+        qnlp_model = model_to_use.from_diagrams(train_circuits )
 
     train_dataset = Dataset(
                 train_circuits,
@@ -634,7 +634,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
-    trainer.fit(train_dataset,val_dataset=val_dataset, eval_interval=1, log_interval=1)
+    trainer.fit(train_dataset, eval_interval=1, log_interval=1)
     print("***********Training of first model completed**********")
     """if there are no OOV words, we dont need the model 2 through model 4. 
     just use model 1 to evaluate and exit"""
