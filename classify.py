@@ -439,7 +439,7 @@ def call_existing_code(lr,activation_oov, loss_oov,optimizers_oov,units):
 
 
     OOV_NN_model.compile(
-        optimizer=optimizers_oov,
+        optimizer=keras.optimizers.Adam(learning_rate=lr),
         loss=loss_oov,
         metrics=["accuracy"],
     )
