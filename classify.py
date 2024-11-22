@@ -78,7 +78,7 @@ BASE_DIMENSION_FOR_SENT =2
 BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS_TRAIN_MODEL1 = 30
+EPOCHS_TRAIN_MODEL1 = 100
 EPOCHS_MODEL3_OOV_MODEL = 100
 LEARNING_RATE = 3e-2
 SEED = 0
@@ -418,22 +418,25 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         project_name="oov_model3",
     )
     
-    tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL)
+    tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=1, epochs=EPOCHS_MODEL3_OOV_MODEL)
+    print(tuner.search_space_summary())
     models = tuner.get_best_models(num_models=2)
+    
+
     best_model = models[0]
     best_model.summary()
     
-    tuner.search_space_summary()
+    
 
     return best_model,dict2
 
 
-def call_existing_code(lr):
+def call_existing_code(lr,activation_oov):
     assert MAX_PARAM_LENGTH > 0
-    OOV_NN_model = keras.Sequential([
-      layers.Dense(int((MAX_PARAM_LENGTH + MAXPARAMS) / 2), activation='tanh'),
-      layers.Dense(MAX_PARAM_LENGTH, activation='tanh'),
+    OOV_NN_model = keras.Sequential([ layers.Dense(int((MAX_PARAM_LENGTH + MAXPARAMS) / 2), activation=activation_oov),
+      layers.Dense( MAX_PARAM_LENGTH, activation= activation_oov),
     ])
+
     OOV_NN_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr),
         loss="mean_absolute_error",
@@ -444,12 +447,13 @@ def call_existing_code(lr):
 
 def build_model(hp):
     # units = hp.Int("units", min_value=32, max_value=512, step=32)
-    activation = hp.Choice("activation", ["relu", "tanh"])
+    activation_oov =hp.Choice("activation", ["relu", "tanh","sigmoid","selu","softplus", "softmax","elu","exponential","leaky_relu","relu6","silu","hard_silu","gelu","hard_sigmoid","linear","mish","log_softmax"])
+    loss_fn_oov =hp.Choice("loss", ["categorical_crossentropy", "binary_crossentropy","binary_focal_crossentropy","kl_divergence","softplus", "sparse_categorical_crossentropy","poisson","mean_squared_error","hinge"])
     # dropout = hp.Boolean("dropout")
     
     lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, sampling="linear")
     # call existing model-building code with the hyperparameter values.
-    model = call_existing_code(lr=lr)
+    model = call_existing_code(lr=lr, activation_oov=activation_oov)
     return model
 
 def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):   
@@ -580,7 +584,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
                 }
         qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
     else:
-        qnlp_model = model_to_use.from_diagrams(train_circuits )
+        qnlp_model = model_to_use.from_diagrams(train_circuits+val_circuits )
 
     train_dataset = Dataset(
                 train_circuits,
@@ -628,7 +632,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
-    trainer.fit(train_dataset,eval_interval=1, log_interval=1)
+    trainer.fit(train_dataset,val_dataset=val_dataset, eval_interval=1, log_interval=1)
     print("***********Training of first model completed**********")
     """if there are no OOV words, we dont need the model 2 through model 4. 
     just use model 1 to evaluate and exit"""
