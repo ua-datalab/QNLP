@@ -78,7 +78,7 @@ BASE_DIMENSION_FOR_SENT =2
 BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS_TRAIN_MODEL1 = 23 #found from early stopping
+EPOCHS_TRAIN_MODEL1 = 30 #found 23 from early stopping
 EPOCHS_MODEL3_OOV_MODEL = 100
 LEARNING_RATE = 3e-2
 SEED = 0
@@ -411,8 +411,8 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     tuner = keras_tuner.RandomSearch(
         hypermodel=build_model,
         objective="val_accuracy",
-        max_trials=5,
-        executions_per_trial=5,
+        max_trials=3,
+        executions_per_trial=2,
         overwrite=True,
         directory="tuning_model",
         project_name="oov_model3",
@@ -431,31 +431,31 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     return best_model,dict2
 
 
-def call_existing_code(lr,activation_oov, loss_oov,optimizers_oov,units):
+def call_existing_code(lr):
     assert MAX_PARAM_LENGTH > 0
-    OOV_NN_model = keras.Sequential([ layers.Dense(int((MAX_PARAM_LENGTH + MAXPARAMS) / 2), activation=activation_oov),
-      layers.Dense( MAX_PARAM_LENGTH, activation= activation_oov),
+    OOV_NN_model = keras.Sequential([ layers.Dense(int((MAX_PARAM_LENGTH + MAXPARAMS) / 2), activation='tanh'),
+      layers.Dense( MAX_PARAM_LENGTH, activation= 'tanh'),
     ])
 
 
     OOV_NN_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr),
-        loss=loss_oov,
+        loss='mean_absolute_error',
         metrics=["accuracy"],
     )
     return OOV_NN_model
 
 
 def build_model(hp):
-    units_oov = hp.Int("units", min_value=32, max_value=512, step=16)
+    # units_oov = hp.Int("units", min_value=32, max_value=512, step=16)
     activation_oov =hp.Choice("activation", ["relu", "tanh","sigmoid","selu","softplus", "softmax","elu","exponential","leaky_relu","relu6","silu","hard_silu","gelu","hard_sigmoid","linear","mish","log_softmax"])
-    loss_fn_oov =hp.Choice("loss", ["categorical_crossentropy", "binary_crossentropy","binary_focal_crossentropy","kl_divergence", "sparse_categorical_crossentropy","poisson","mean_squared_error","hinge","mean_absolute_error"])
-    optimizers_oov =hp.Choice("optimizer", ["adam", "SGD","rmsprop","adamw","adadelta", "adagrad","adamax","adafactor","ftrl","lion","lamb"])
+    # loss_fn_oov =hp.Choice("loss", ["categorical_crossentropy", "binary_crossentropy","binary_focal_crossentropy","kl_divergence", "sparse_categorical_crossentropy","poisson","mean_squared_error","hinge","mean_absolute_error"])
+    # optimizers_oov =hp.Choice("optimizer", ["adam", "SGD","rmsprop","adamw","adadelta", "adagrad","adamax","adafactor","ftrl","lion","lamb"])
     # dropout = hp.Boolean("dropout")
     
     lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, sampling="linear")
     # call existing model-building code with the hyperparameter values.
-    model = call_existing_code(lr=lr, activation_oov=activation_oov,loss_oov=loss_fn_oov,optimizers_oov=optimizers_oov, units=units_oov)
+    model = call_existing_code(lr=lr)
     return model
 
 def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):   
