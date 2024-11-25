@@ -289,7 +289,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                         assert len(train_vocab_embeddings[cleaned_wrd_with_type]) > i
                         val= train_vocab_embeddings[cleaned_wrd_with_type][int(i)]
                         list_of_params_for_this_word.append(val)
-                    tup= torch.tensor (list_of_params_for_this_word, requires_grad=True) #initializing with first two values of the embedding
+                    tup = torch.tensor (list_of_params_for_this_word, requires_grad=False) #initializing with first two values of the embedding
                     initial_param_vector.append(tup)
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
@@ -297,11 +297,11 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
              
     
-    # assert len(qnlp_model.weights) == len(initial_param_vector)
-    #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    # for x,y in zip(qnlp_model.weights, initial_param_vector):
-    #     assert len(x) == len(y)
-    # qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    assert len(qnlp_model.weights) == len(initial_param_vector)
+    # also assert dimension of every single symbol/weight matches that of initial_para_vector
+    for x,y in zip(qnlp_model.weights, initial_param_vector):
+        assert len(x) == len(y)
+    qnlp_model.weights = nn.ParameterList(initial_param_vector)
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
@@ -411,7 +411,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     tuner = keras_tuner.RandomSearch(
         hypermodel=build_model,
         objective="val_accuracy",
-        max_trials=3,
+        max_trials=10,
         executions_per_trial=2,
         overwrite=True,
         directory="tuning_model",
@@ -426,7 +426,8 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     best_model = models[0]
     best_model.summary()
     
-    print(tuner.search_space_summary())
+    print(tuner.results_summary())
+    
 
     return best_model,dict2
 
@@ -448,12 +449,12 @@ def call_existing_code(lr):
 
 def build_model(hp):
     # units_oov = hp.Int("units", min_value=32, max_value=512, step=16)
-    activation_oov =hp.Choice("activation", ["relu", "tanh","sigmoid","selu","softplus", "softmax","elu","exponential","leaky_relu","relu6","silu","hard_silu","gelu","hard_sigmoid","linear","mish","log_softmax"])
+    # activation_oov =hp.Choice("activation", ["tanh", "relu","sigmoid","selu","softplus", "softmax","elu","exponential","leaky_relu","relu6","silu","hard_silu","gelu","hard_sigmoid","linear","mish","log_softmax"])
     # loss_fn_oov =hp.Choice("loss", ["categorical_crossentropy", "binary_crossentropy","binary_focal_crossentropy","kl_divergence", "sparse_categorical_crossentropy","poisson","mean_squared_error","hinge","mean_absolute_error"])
     # optimizers_oov =hp.Choice("optimizer", ["adam", "SGD","rmsprop","adamw","adadelta", "adagrad","adamax","adafactor","ftrl","lion","lamb"])
     # dropout = hp.Boolean("dropout")
     
-    lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, sampling="linear")
+    lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, step=10, sampling="log")
     # call existing model-building code with the hyperparameter values.
     model = call_existing_code(lr=lr)
     return model
@@ -634,7 +635,10 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
+    print(qnlp_model.weights[0])
     trainer.fit(train_dataset, eval_interval=1, log_interval=1)
+    print(qnlp_model.weights[0])
+
     print("***********Training of first model completed**********")
     """if there are no OOV words, we dont need the model 2 through model 4. 
     just use model 1 to evaluate and exit"""
