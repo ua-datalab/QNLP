@@ -51,7 +51,6 @@
 - Spanish, with Spider parameters
 	- model is training, loss going down, just very slow. Val performance around 45-51%.
  	- No early stopping: needs val and dev yet, since we are only running train data. But once val dataset can be run with fasttext embeddings, we will be able to add early stopping.
-  	-    
 - ToDo: replace `split()` with regex, for added flexibility.
 - Trying to load uspantek
 - Updates:
@@ -78,7 +77,6 @@ Trying to load uspantek
 - open up remove cups writer if bobcat parser is used. test for english first.
 - run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
 	- note, early stopping should be done on the val data- otherwise training loss is always going to keep changing/decreasing/overfitting. what is our dev in model 3?
-
  - update: didnt og anywhere. Pushed in a separate branch
  - after 7pm coding:
   - model1 Sanity check
