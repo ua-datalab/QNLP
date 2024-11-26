@@ -30,6 +30,18 @@
 
 # Meeting Notes
 
+## Nov 27th 2024
+- Updated code walkthrough
+	- All code in `classify.py`, without Mithun's notes, just tags. Copy of `v7` code.
+ 	- Old code in archive. In archive, `no_pair...` is for classification task, `yes_pair...` is Khatri's code replication, which we can't use because of depriciate d packages.
+  - New branch: `tuning model3 again`: new branch, modularized for specific upgrades.
+  	- Tuner for model 3 in the code (see below).
+   	- Performing a grid search, with optimizers, loss functions, batch size, etc. to find the best fit.
+    	- Replaced RandomSearch with gridSearch
+    	- Functions for permutations and combinations with hyperparameters. Stuck at 83% accuracy
+- Sanity check to make sure code works correctly completed.
+- Upcoming steps: move away from toy data, and find a real-case dataset.
+
 ## Nov 20th 2024
 - Mini hackathon for setting up Uspantekan demo
 	- Going back to [code from Spe 4](https://github.com/ua-datalab/QNLP/blob/abbe80fd0d5a40f8920505c68780a9f57f76d8cc/v7_merging_best_of_both_v6_andv4) (last date of demo)
@@ -68,9 +80,7 @@ Trying to load uspantek
 	- note, early stopping should be done on the val data- otherwise training loss is always going to keep changing/decreasing/overfitting. what is our dev in model 3?
 
  - update: didnt og anywhere. Pushed in a separate branch
-
  - after 7pm coding:
-
   - model1 Sanity check
     - why stop at 30 epochs.
     - if val data is provided, can we implement early_stopping inside the code itself
@@ -87,11 +97,11 @@ Trying to load uspantek
      	- all range of learning rates
     	- all types of optimizers like Adam,SGD
      	-  OTHER LOSS FUNCTIONS like binary_crossentropy
-    - no of layers
-    
+    - no of layers    
     - Why only two layers
     - Encoder decoder?
     - Try pytorchtuner for first model.fit()
+
 Code clean up: keep a copy of the code with inline comments, and create a version without any comments.
 
 ## nov 19th 2024
