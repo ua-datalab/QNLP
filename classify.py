@@ -55,7 +55,7 @@ model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 MAX_PARAM_LENGTH=0
-
+DO_TUNING_MODEL3=False
 
 if(parser_to_use==BobcatParser):
     parser_to_use_obj=BobcatParser(verbose='text')
@@ -412,28 +412,63 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             combined = np.hstack([dict2[wrd],pad])                          
             NN_train_Y.append(combined)                                
     
-    build_model(keras_tuner.HyperParameters())  
+    if (DO_TUNING_MODEL3):
+        build_model(keras_tuner.HyperParameters())  
     
-    tuner = keras_tuner.GridSearch(
-        hypermodel=build_model,
-        objective="val_accuracy",
-        max_trials=10,
-        executions_per_trial=2,
-        overwrite=True,
-        directory="tuning_model",
-        project_name="oov_model3",
-    )
-    
-    tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL)
-    print(tuner.search_space_summary())
-    models = tuner.get_best_models(num_models=2)
-    
+        tuner = keras_tuner.GridSearch(
+            hypermodel=build_model,
+            objective="val_accuracy", #todo: replace this with F1 score
+            max_trials=10,
+            executions_per_trial=2,
+            overwrite=True,
+            directory="tuning_model",
+            project_name="oov_model3",
+        )
+        
+        tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL)
+        print(tuner.search_space_summary())
+        models = tuner.get_best_models(num_models=2)
+        
 
-    best_model = models[0]
-    best_model.summary()
+        best_model = models[0]
+        best_model.summary()
+        
+        print(tuner.results_summary())
+    else:
+        OOV_NN_model = keras.Sequential([
+        layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
+        layers.Dense(max_word_param_length, activation='tanh'),
+        ])
+
+        #standard keras stuff, initialize and tell what loss function and which optimizer will you be using
+        OOV_NN_model.compile(loss='mean_absolute_error', optimizer=keras.optimizers.Adam(0.001))
+
+        callback = tf.keras.callbacks.EarlyStopping(
+            monitor='val_loss',
+            min_delta=0.01,
+            patience=10,
+            verbose=1,
+            mode='auto',
+            baseline=None,
+            restore_best_weights=True,
+            start_from_epoch=0
+        )
     
-    print(tuner.results_summary())
-    
+        OOV_NN_model.build(input_shape=(None, MAXPARAMS))
+
+   
+        hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_MODEL3_OOV_MODEL,callbacks=[callback])
+        print(hist.history.keys())
+        print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
+        plt.plot(hist.history['loss'], label='loss')
+        plt.plot(hist.history['val_loss'], label='val_loss')
+        plt.xlabel('Epoch')
+        plt.ylabel('Error')
+        plt.legend()
+        plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
+
+        best_model= OOV_NN_model
+
 
     return best_model,dict2
 
