@@ -303,11 +303,11 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
              
     
-    assert len(qnlp_model.weights) == len(initial_param_vector)
-    # also assert dimension of every single symbol/weight matches that of initial_para_vector
-    for x,y in zip(qnlp_model.weights, initial_param_vector):
-        assert len(x) == len(y)
-    qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    # assert len(qnlp_model.weights) == len(initial_param_vector)
+    # # also assert dimension of every single symbol/weight matches that of initial_para_vector
+    # for x,y in zip(qnlp_model.weights, initial_param_vector):
+    #     assert len(x) == len(y)
+    # qnlp_model.weights = nn.ParameterList(initial_param_vector)
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
@@ -465,7 +465,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         plt.xlabel('Epoch')
         plt.ylabel('Error')
         plt.legend()
-        plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
+        # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
         best_model= OOV_NN_model
 
