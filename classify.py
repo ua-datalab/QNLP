@@ -23,6 +23,8 @@ from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
 import torch
+import torchmetrics
+from torchmetrics import F1Score
 from torch import nn
 import spacy
 from lambeq import SpacyTokeniser
@@ -137,13 +139,17 @@ wandb.init(
 
 sig = torch.sigmoid
 
+def f1(y_hat, y):
+    f1 = F1Score(task="binary", num_classes=2)
+    return f1(y_hat, y)
+    
 def accuracy(y_hat, y):
         assert type(y_hat)== type(y)
         # half due to double-counting
         #todo/confirm what does he mean by double counting
         return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  
 
-eval_metrics = {"acc": accuracy}
+eval_metrics = {"acc": accuracy, "F1":f1 }
 spacy_tokeniser = SpacyTokeniser()
 
 if TYPE_OF_DATA_TO_USE in ["uspantek","spanish"]:
@@ -442,7 +448,7 @@ def call_existing_code(lr):
     OOV_NN_model.compile(
         optimizer=keras.optimizers.Adam(learning_rate=lr),
         loss='mean_absolute_error',
-        metrics=["accuracy"],
+        metrics=["accuracy","f1_score"],
     )
     return OOV_NN_model
 
