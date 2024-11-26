@@ -408,7 +408,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     
     build_model(keras_tuner.HyperParameters())  
     
-    tuner = keras_tuner.RandomSearch(
+    tuner = keras_tuner.GridSearch(
         hypermodel=build_model,
         objective="val_accuracy",
         max_trials=10,
