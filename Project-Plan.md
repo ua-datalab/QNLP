@@ -41,6 +41,8 @@
     	- Functions for permutations and combinations with hyperparameters. Stuck at 83% accuracy
 - Sanity check to make sure code works correctly completed.
 - Upcoming steps: move away from toy data, and find a real-case dataset.
+- ToDo for today: set up F1 scores for all of the code. Found implementation for pytorch
+	- bug: F1 function ran through tuner, which slows things down due to grid search 
 
 ## Nov 20th 2024
 - Mini hackathon for setting up Uspantekan demo
@@ -61,45 +63,44 @@
 - Todo
 	- open up remove cups writer if bobcat parser is used. test for english first.
 	- spider ansatz raise a pull request with LAMBEQ guys- for format of symbol spider does aldea_0__s while everything else does aldea_s_0
- - todo: find out how to add early stopping. in model 1
+ - Todo: find out how to add early stopping. in model 1
  - inside run_expt:
  	-  why is he setting random seed, that tooin tensor flow especially since am using a pytorch model.tf.random.set_seed(tf_seed)
   	- both lists tf_seeds  and nl should have more than 1 values- do only on HPC or cyverse though
 Trying to load uspantek
-- todo
--  clean up accents/utf-8 on both spanish and uspantek?
--  in the function generate_initial-*
-	-  there is one if(ansatz_to_use==SpiderAnsatz): but no else
-	- for initial weight vector , instead of blindly taking the first 2 or 4 cells from the fasttext embedding, initialize with something more meaning ful. say sum of all cells?
- 	 - what is the connection between initial param vectors and labels? in QNLP labels directly are logits/confidence in predictions?
-- while initializing ansatz:2) Noun should have a higher dimension than sentence? how? 
-- it will be really cool enhancement if we can have a combined training of model1 and model 4, with the embeddings being updated on the fly.- and not training model4 offline after model 1
-- open up remove cups writer if bobcat parser is used. test for english first.
-- run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
+- Todo
+	-  clean up accents/utf-8 on both spanish and uspantek?
+	-  in the function generate_initial-*
+		-  there is one if(ansatz_to_use==SpiderAnsatz): but no else
+		- for initial weight vector , instead of blindly taking the first 2 or 4 cells from the fasttext embedding, initialize with something more meaning ful. say sum of all cells?
+ 	 	- what is the connection between initial param vectors and labels? in QNLP labels directly are logits/confidence in predictions?
+	- while initializing ansatz:2) Noun should have a higher dimension than sentence? how? 
+		- it will be really cool enhancement if we can have a combined training of model1 and model 4, with the embeddings being updated on the fly.- and not training model4 offline after model 1
+	- open up remove cups writer if bobcat parser is used. test for english first.
+	- run model 3 to 100% accuracy- i.e dont do early stopping unless accuracy has crossed 100
 	- note, early stopping should be done on the val data- otherwise training loss is always going to keep changing/decreasing/overfitting. what is our dev in model 3?
  - update: didnt og anywhere. Pushed in a separate branch
  - after 7pm coding:
-  - model1 Sanity check
-    - why stop at 30 epochs.
-    - if val data is provided, can we implement early_stopping inside the code itself
-    - why not even provide a hardcoded val_v2 data, just for early_stopping checking. Maybe the last check can be on testing 
-  - model 3- Sanity check
-    - Make sure the OOV code is completely working.
-    - Check how early stopping ka dev is done
-    - 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%,
-    - find if early stopping is stopping too early
-    - also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
-  - Tune model 3 to the maximum so that you get 100% on model1’s dev data. THings to tune can be
-    - USE IN BUILT KERAS [TUNER](https://keras.io/guides/keras_tuner/getting_started/)
-    	- all types of activations
-     	- all range of learning rates
-    	- all types of optimizers like Adam,SGD
-     	-  OTHER LOSS FUNCTIONS like binary_crossentropy
-    - no of layers    
-    - Why only two layers
-    - Encoder decoder?
-    - Try pytorchtuner for first model.fit()
-
+	- model1 Sanity check
+    	- why stop at 30 epochs.
+    	- if val data is provided, can we implement early_stopping inside the code itself
+    	- why not even provide a hardcoded val_v2 data, just for early_stopping checking. Maybe the last check can be on testing 
+  	- model 3- Sanity check
+   	- Make sure the OOV code is completely working.
+    	- Check how early stopping ka dev is done
+    	- 3. when we show the val circuit to model 1, we get 98% for model 4- why not 100%,
+    		- find if early stopping is stopping too early
+    		- also take a word which exists both in train and val and see how much is the weights difference, i.e when using model1 ka real training vs model 3 ka prediction. paste the results below here
+  	- Tune model 3 to the maximum so that you get 100% on model1’s dev data. THings to tune can be
+	- USE IN BUILT KERAS [TUNER](https://keras.io/guides/keras_tuner/getting_started/)
+ 		- all types of activations
+	     	- all range of learning rates
+	    	- all types of optimizers like Adam,SGD
+	     	-  OTHER LOSS FUNCTIONS like binary_crossentropy
+    	- no of layers    
+    	- Why only two layers
+    	- Encoder decoder?
+    	- Try pytorchtuner for first model.fit()
 Code clean up: keep a copy of the code with inline comments, and create a version without any comments.
 
 ## nov 19th 2024
