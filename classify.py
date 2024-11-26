@@ -13,7 +13,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 1. QNLP model, called model1
 2. Fast text embedding model , called model 2
 3. NN model that learns mapping between fast text embedding and QNLP trained model's weights
-4. Prediction model - which is use dto predict on test set.
+4. Prediction model - which is same as model 1 but with weights learned from model 3use dto predict on test set.
 
 """
 
@@ -78,7 +78,7 @@ BASE_DIMENSION_FOR_SENT =2
 BASE_DIMENSION_FOR_PREP_PHRASE= 2
 MAXPARAMS = 300
 BATCH_SIZE = 30
-EPOCHS_TRAIN_MODEL1 = 23 #found from early stopping
+EPOCHS_TRAIN_MODEL1 = 30 #found 23 from early stopping
 EPOCHS_MODEL3_OOV_MODEL = 100
 LEARNING_RATE = 3e-2
 SEED = 0
@@ -289,7 +289,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                         assert len(train_vocab_embeddings[cleaned_wrd_with_type]) > i
                         val= train_vocab_embeddings[cleaned_wrd_with_type][int(i)]
                         list_of_params_for_this_word.append(val)
-                    tup= torch.tensor (list_of_params_for_this_word, requires_grad=True) #initializing with first two values of the embedding
+                    tup = torch.tensor (list_of_params_for_this_word, requires_grad=False) #initializing with first two values of the embedding
                     initial_param_vector.append(tup)
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
@@ -297,11 +297,11 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
              
     
-    # assert len(qnlp_model.weights) == len(initial_param_vector)
-    #also assert dimension of every single symbol/weight matches that of initial_para_vector
-    # for x,y in zip(qnlp_model.weights, initial_param_vector):
-    #     assert len(x) == len(y)
-    # qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    assert len(qnlp_model.weights) == len(initial_param_vector)
+    # also assert dimension of every single symbol/weight matches that of initial_para_vector
+    for x,y in zip(qnlp_model.weights, initial_param_vector):
+        assert len(x) == len(y)
+    qnlp_model.weights = nn.ParameterList(initial_param_vector)
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
@@ -408,11 +408,11 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     
     build_model(keras_tuner.HyperParameters())  
     
-    tuner = keras_tuner.RandomSearch(
+    tuner = keras_tuner.GridSearch(
         hypermodel=build_model,
         objective="val_accuracy",
-        max_trials=5,
-        executions_per_trial=5,
+        max_trials=10,
+        executions_per_trial=2,
         overwrite=True,
         directory="tuning_model",
         project_name="oov_model3",
@@ -426,36 +426,37 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     best_model = models[0]
     best_model.summary()
     
-    print(tuner.search_space_summary())
+    print(tuner.results_summary())
+    
 
     return best_model,dict2
 
 
-def call_existing_code(lr,activation_oov, loss_oov,optimizers_oov,units):
+def call_existing_code(lr):
     assert MAX_PARAM_LENGTH > 0
-    OOV_NN_model = keras.Sequential([ layers.Dense(int((MAX_PARAM_LENGTH + MAXPARAMS) / 2), activation=activation_oov),
-      layers.Dense( MAX_PARAM_LENGTH, activation= activation_oov),
+    OOV_NN_model = keras.Sequential([ layers.Dense(int((MAX_PARAM_LENGTH + MAXPARAMS) / 2), activation='tanh'),
+      layers.Dense( MAX_PARAM_LENGTH, activation= 'tanh'),
     ])
 
 
     OOV_NN_model.compile(
-        optimizer=optimizers_oov,
-        loss=loss_oov,
+        optimizer=keras.optimizers.Adam(learning_rate=lr),
+        loss='mean_absolute_error',
         metrics=["accuracy"],
     )
     return OOV_NN_model
 
 
 def build_model(hp):
-    units_oov = hp.Int("units", min_value=32, max_value=512, step=16)
-    activation_oov =hp.Choice("activation", ["relu", "tanh","sigmoid","selu","softplus", "softmax","elu","exponential","leaky_relu","relu6","silu","hard_silu","gelu","hard_sigmoid","linear","mish","log_softmax"])
-    loss_fn_oov =hp.Choice("loss", ["categorical_crossentropy", "binary_crossentropy","binary_focal_crossentropy","kl_divergence", "sparse_categorical_crossentropy","poisson","mean_squared_error","hinge","mean_absolute_error"])
-    optimizers_oov =hp.Choice("optimizer", ["adam", "SGD","rmsprop","adamw","adadelta", "adagrad","adamax","adafactor","ftrl","lion","lamb"])
+    # units_oov = hp.Int("units", min_value=32, max_value=512, step=16)
+    # activation_oov =hp.Choice("activation", ["tanh", "relu","sigmoid","selu","softplus", "softmax","elu","exponential","leaky_relu","relu6","silu","hard_silu","gelu","hard_sigmoid","linear","mish","log_softmax"])
+    # loss_fn_oov =hp.Choice("loss", ["categorical_crossentropy", "binary_crossentropy","binary_focal_crossentropy","kl_divergence", "sparse_categorical_crossentropy","poisson","mean_squared_error","hinge","mean_absolute_error"])
+    # optimizers_oov =hp.Choice("optimizer", ["adam", "SGD","rmsprop","adamw","adadelta", "adagrad","adamax","adafactor","ftrl","lion","lamb"])
     # dropout = hp.Boolean("dropout")
+    lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, step=10, sampling="log")
     
-    lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, sampling="linear")
     # call existing model-building code with the hyperparameter values.
-    model = call_existing_code(lr=lr, activation_oov=activation_oov,loss_oov=loss_fn_oov,optimizers_oov=optimizers_oov, units=units_oov)
+    model = call_existing_code(lr=lr)
     return model
 
 def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):   
@@ -634,7 +635,10 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
+    print(qnlp_model.weights[0])
     trainer.fit(train_dataset, eval_interval=1, log_interval=1)
+    print(qnlp_model.weights[0])
+
     print("***********Training of first model completed**********")
     """if there are no OOV words, we dont need the model 2 through model 4. 
     just use model 1 to evaluate and exit"""
