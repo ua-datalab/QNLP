@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-"""v7
-#name: v7_*
+"""
+#name: classify.py
 # Code which takes  small data (100 sent) in a given language (e.g.uspantekan or spanish)
 # has about two classes (e.g.education and dancing), runs it through a 
 # QNLP model, which is supported by a fasttext model,
