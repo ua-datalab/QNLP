@@ -13,7 +13,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 1. QNLP model, called model1
 2. Fast text embedding model , called model 2
 3. NN model that learns mapping between fast text embedding and QNLP trained model's weights
-4. Prediction model - which is use dto predict on test set.
+4. Prediction model - which is same as model 1 but with weights learned from model 3use dto predict on test set.
 
 """
 
@@ -453,8 +453,8 @@ def build_model(hp):
     # loss_fn_oov =hp.Choice("loss", ["categorical_crossentropy", "binary_crossentropy","binary_focal_crossentropy","kl_divergence", "sparse_categorical_crossentropy","poisson","mean_squared_error","hinge","mean_absolute_error"])
     # optimizers_oov =hp.Choice("optimizer", ["adam", "SGD","rmsprop","adamw","adadelta", "adagrad","adamax","adafactor","ftrl","lion","lamb"])
     # dropout = hp.Boolean("dropout")
-    
     lr = hp.Float("lr", min_value=1e-6, max_value=1e-1, step=10, sampling="log")
+    
     # call existing model-building code with the hyperparameter values.
     model = call_existing_code(lr=lr)
     return model
