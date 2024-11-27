@@ -17,8 +17,10 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
+import tensorflow as tf
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
+from datasets import load_dataset
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
@@ -48,14 +50,16 @@ import keras
 from keras import layers
 
 
-TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
+TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
-embedding_model_to_use = "english" #[english, spanish]
+embedding_model_to_use = "spanish" #[english, spanish]
 MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
+
+
 
 if(parser_to_use==BobcatParser):
     parser_to_use_obj=BobcatParser(verbose='text')
@@ -63,12 +67,12 @@ if(parser_to_use==BobcatParser):
 
 if(embedding_model_to_use=="spanish"):
     # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
-    embedding_model = ft.load_model('./embeddings-l-model.bin')
+    embedding_model = ft.load_model('models/embeddings-l-model.bin')
 if(embedding_model_to_use=="english"):
     import os.path
     if not (os.path.isfile('cc.en.300.bin')):
         filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
-    embedding_model = ft.load_model('cc.en.300.bin')
+    embedding_model = ft.load_model('models/cc.en.300.bin')
 
 
 arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
@@ -93,25 +97,25 @@ TESTING = False
 
 
 
-if(TYPE_OF_DATA_TO_USE== "uspantek"):
+if(TYPE_OF_DATASET_TO_USE== "uspantek"):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
     TEST="uspantek_test.txt"
     
 
-if(TYPE_OF_DATA_TO_USE== "spanish"):
+if(TYPE_OF_DATASET_TO_USE== "spanish"):
     TRAIN="spanish_train.txt"
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
     
 
-if(TYPE_OF_DATA_TO_USE== "msr_paraphrase_corpus"):
+if(TYPE_OF_DATASET_TO_USE== "msr_paraphrase_corpus"):
     TRAIN="msr_paraphrase_train.txt"
     DEV="msr_paraphrase_test.txt"
     TEST="msr_paraphrase_test.txt"
     type_of_data = "pair"
 
-if(TYPE_OF_DATA_TO_USE== "food_it"):
+if(TYPE_OF_DATASET_TO_USE== "food_it"):
     TRAIN="mc_train_data.txt"
     DEV="mc_dev_data.txt"
     TEST="mc_test_data.txt"
@@ -132,7 +136,7 @@ wandb.init(
     "SEED".lower() : SEED ,
     "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
     "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
-    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATA_TO_USE,
+    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATASET_TO_USE,
     "embedding_model_to_use".lower():embedding_model_to_use
     })
 
@@ -158,7 +162,7 @@ def accuracy(y_hat, y):
 eval_metrics = {"acc": accuracy, "F1":f1 }
 spacy_tokeniser = SpacyTokeniser()
 
-if TYPE_OF_DATA_TO_USE in ["uspantek","spanish"]:
+if TYPE_OF_DATASET_TO_USE in ["uspantek","spanish"]:
     spanish_tokeniser=spacy.load("es_core_news_sm")
     spacy_tokeniser.tokeniser = spanish_tokeniser
 else:
@@ -556,6 +560,18 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     return loss_val, acc_val, f1score_val
 
+def read_glue_data(split,sub="sst2"):                 
+        labels, sentences = [], []
+        ds = load_dataset("nyu-mll/glue", sub)
+        for line in ds[split]:                                                    
+                t = float(line['label']) 
+                labels.append([t, 1-t])           
+                sentences.append(line['sentence'])
+        return labels, sentences
+
+
+
+
 def read_data(filename):         
             labels, sentences = [], []
             with open(filename) as f:
@@ -564,14 +580,6 @@ def read_data(filename):
                     labels.append([t, 1-t])            
                     sentences.append(line[1:].strip())
             return labels, sentences
-
-#back to the main thread after all functions are defined.
-
-#read the base data, i.e plain text english.
-train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
-val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
-test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
-
 
 
 
@@ -593,20 +601,6 @@ def convert_to_diagrams(list_sents,labels):
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
-
-#convert the plain text input to ZX diagrams
-train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
-
-train_X = []
-val_X = []
-
-print(f"count of train, test, val elements respectively are: ")
-print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
-assert len(train_diagrams)== len(train_labels)
-assert len(val_diagrams)== len(val_labels)
-assert len(test_diagrams)== len(test_labels)
 
 def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
     if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
@@ -761,11 +755,38 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
 
 
-"""####final push-which calls run_experiment function above
-todo: why is he setting random seed, that tooin tensor flow
-- especially since am using a pytorch model.
+"""end of all function defs+ main thread
+final push-which calls run_experiment function above
+todo: why is he setting random seed, that tooin tensor flow- especially since am using a pytorch model.
 """
-import tensorflow as tf
+
+#read the base data
+if(TYPE_OF_DATASET_TO_USE=="sst2"):
+    train_labels, train_data = read_glue_data(split="train",sub="sst2")
+    val_labels, val_data = read_glue_data(split="validation",sub="sst2")
+    test_labels, test_data = read_glue_data(split="test",sub="sst2")
+
+else:
+    train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
+    val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
+    test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
+
+
+#convert the plain text input to ZX diagrams
+train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+
+train_X = []
+val_X = []
+
+print(f"count of train, test, val elements respectively are: ")
+print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
+assert len(train_diagrams)== len(train_labels)
+assert len(val_diagrams)== len(val_labels)
+assert len(test_diagrams)== len(test_labels)
+
+
 compr_results = {}
 
 #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
