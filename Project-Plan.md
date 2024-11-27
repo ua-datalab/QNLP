@@ -29,16 +29,9 @@
 
 
 # Meeting Notes
-## Nov 27th 2024
-todo: load english datasets
-- start with sst2- sentiment in glue
-	- read dataset into our code --done. is in a branch called: read_sst
- 	- run our base code end to end
-  	- if runs without any error, merge to main
-  	- else if its Hadware limitation, move to cyverse
-  - tuning
-  	- search for the word todo in classify.py
-   	- 
+## Nov 28th 2024
+- Dataset research: GLUE may not be a good fit for current setup. Need to find a classification task
+- VS Code debuggers  
 
 ## Nov 27th 2024
 - Updated code walkthrough
@@ -56,7 +49,14 @@ todo: load english datasets
  	- Implementing F1 scores for model
 		- Scores fell dramatically when `if tuning` feature added. Issue in how the code is set up with continuous integration.
 	- Fix: removed randomly assigned weights implemented for demo yesterdday 
-
+- todo: load english datasets
+- start with sst2- sentiment in glue
+	- read dataset into our code --done. is in a branch called: read_sst
+ 	- run our base code end to end
+  	- if runs without any error, merge to main
+  	- else if its Hadware limitation, move to cyverse
+  - tuning
+  	- search for the word todo in classify.py
 ## Nov 26th 2024
 - Demo and discussion with enrique:
 	- Need real-world datasets, not toy datasets.
