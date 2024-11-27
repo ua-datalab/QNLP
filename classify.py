@@ -17,6 +17,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
+import tensorflow as tf
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
 from datasets import load_dataset
@@ -579,17 +580,6 @@ def read_data(filename):
                     labels.append([t, 1-t])            
                     sentences.append(line[1:].strip())
             return labels, sentences
-#read the base data
-if(TYPE_OF_DATASET_TO_USE=="sst2"):
-    train_labels, train_data = read_glue_data(split="train",sub="sst2")
-    val_labels, val_data = read_glue_data(split="validation",sub="sst2")
-    test_labels, test_data = read_glue_data(split="test",sub="sst2")
-
-else:
-    train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
-    val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
-    test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
-
 
 
 
@@ -611,20 +601,6 @@ def convert_to_diagrams(list_sents,labels):
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
-
-#convert the plain text input to ZX diagrams
-train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
-
-train_X = []
-val_X = []
-
-print(f"count of train, test, val elements respectively are: ")
-print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
-assert len(train_diagrams)== len(train_labels)
-assert len(val_diagrams)== len(val_labels)
-assert len(test_diagrams)== len(test_labels)
 
 def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
     if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
@@ -779,11 +755,38 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
 
 
-"""####final push-which calls run_experiment function above
-todo: why is he setting random seed, that tooin tensor flow
-- especially since am using a pytorch model.
+"""end of all function defs+ main thread
+final push-which calls run_experiment function above
+todo: why is he setting random seed, that tooin tensor flow- especially since am using a pytorch model.
 """
-import tensorflow as tf
+
+#read the base data
+if(TYPE_OF_DATASET_TO_USE=="sst2"):
+    train_labels, train_data = read_glue_data(split="train",sub="sst2")
+    val_labels, val_data = read_glue_data(split="validation",sub="sst2")
+    test_labels, test_data = read_glue_data(split="test",sub="sst2")
+
+else:
+    train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
+    val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
+    test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
+
+
+#convert the plain text input to ZX diagrams
+train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+
+train_X = []
+val_X = []
+
+print(f"count of train, test, val elements respectively are: ")
+print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
+assert len(train_diagrams)== len(train_labels)
+assert len(val_diagrams)== len(val_labels)
+assert len(test_diagrams)== len(test_labels)
+
+
 compr_results = {}
 
 #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
