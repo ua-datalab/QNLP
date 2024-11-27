@@ -42,7 +42,15 @@
 - Sanity check to make sure code works correctly completed.
 - Upcoming steps: move away from toy data, and find a real-case dataset.
 - ToDo for today: set up F1 scores for all of the code. Found implementation for pytorch
-	- bug: F1 function ran through tuner, which slows things down due to grid search 
+	- bug: F1 function ran through tuner, which slows things down due to grid search
+ 	- Implementing F1 scores for model
+		- Scores fell dramatically when `if tuning` feature added. Issue in how the code is set up with continuous integration.
+	- Fix: removed randomly assigned weights implemented for demo yesterdday 
+
+## Nov 26th 2024
+- Demo and discussion with enrique:
+	- Need real-world datasets, not toy datasets.
+ 	- It's ok to expose model to add data, so long as model doesn't learn from it.
 
 ## Nov 20th 2024
 - Mini hackathon for setting up Uspantekan demo
