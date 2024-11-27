@@ -4,6 +4,7 @@ pip install numpy
 pip install spacy     
 pip install tensorflow
 pip install lambeq
+pip install pytket
 pip install fasttext
 pip install keras-tuner --upgrade
 pip install pytest
@@ -11,4 +12,7 @@ pip install datasets
 python3 -m spacy download es_core_news_sm
 python3 -m spacy download en_core_web_sm
 conda install -y anaconda::wget
-wget -c "https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1" -O ./embeddings-l-model.bin
+#run this only once if you dont have the models downloaded 
+#wget -c "https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1" -O ./embeddings-l-model.bin
+#wget -c "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz"
+#gunzip cc.en.300.bin.gz 

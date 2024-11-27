@@ -48,17 +48,24 @@ import numpy as np
 import keras_tuner
 import keras
 from keras import layers
+import os.path
 
 
-TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
+TYPE_OF_DATASET_TO_USE = "spanish" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
 trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
-embedding_model_to_use = "spanish" #[english, spanish]
+
 MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
 
+if(TYPE_OF_DATASET_TO_USE in ["uspantek","spanish"]):
+    embedding_model_to_use = "spanish" 
+    embedding_model_filename='./embeddings-l-model.bin' 
+else:
+    embedding_model_to_use = "english" 
+    embedding_model_filename='cc.en.300.bin' 
 
 
 if(parser_to_use==BobcatParser):
@@ -66,13 +73,12 @@ if(parser_to_use==BobcatParser):
 
 
 if(embedding_model_to_use=="spanish"):
-    # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
-    embedding_model = ft.load_model('models/embeddings-l-model.bin')
+    assert os.path.isfile(embedding_model_filename)
+         
 if(embedding_model_to_use=="english"):
-    import os.path
-    if not (os.path.isfile('cc.en.300.bin')):
-        filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
-    embedding_model = ft.load_model('models/cc.en.300.bin')
+    assert os.path.isfile(embedding_model_filename)
+
+embedding_model = ft.load_model(embedding_model_filename)
 
 
 arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
@@ -773,9 +779,15 @@ else:
 
 
 #convert the plain text input to ZX diagrams
-train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+
+if (embedding_model_to_use=="spanish"):
+    train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
+    val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
+    test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
+else:
+    train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+    val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+    test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
 
 train_X = []
 val_X = []
