@@ -51,7 +51,7 @@ from keras import layers
 import os.path
 
 
-TYPE_OF_DATASET_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
+TYPE_OF_DATASET_TO_USE = "spanish" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
@@ -618,7 +618,9 @@ def run_experiment(nlayers=1, seed=SEED):
                     AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
     else:
         ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )    
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT),
+                    AtomicType.PREPOSITIONAL_PHRASE: Dim(BASE_DIMENSION_FOR_PREP_PHRASE)
+                    }  )    
     
    
         #use the anstaz to create circuits from diagrams
@@ -784,9 +786,9 @@ else:
 #convert the plain text input to ZX diagrams
 
 if (embedding_model_to_use=="spanish"):
-    train_diagrams, train_labels_v2 = convert_to_diagrams(train_data,train_labels)
-    val_diagrams, val_labels_v2 = convert_to_diagrams(val_data,val_labels)
-    test_diagrams, test_labels_v2 = convert_to_diagrams(test_data,test_labels)
+    train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels)
+    val_diagrams, val_labels= convert_to_diagrams(val_data,val_labels)
+    test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels)
 else:
     train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
     val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
