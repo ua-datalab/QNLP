@@ -611,7 +611,7 @@ def convert_to_diagrams(list_sents,labels):
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
-def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
+def run_experiment(nlayers=1, seed=SEED):
     if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
                     AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
