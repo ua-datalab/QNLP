@@ -29,6 +29,12 @@
 
 
 # Meeting Notes
+## Nov 27th 2024
+todo: load english datasets
+- start with sst2- sentiment in glue
+	- read dataset into our code --done. is in a branch called: read_sst
+ 	- run our base code end to end
+  - 
 
 ## Nov 27th 2024
 - Updated code walkthrough
