@@ -51,7 +51,7 @@ from keras import layers
 import os.path
 
 
-TYPE_OF_DATASET_TO_USE = "spanish" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
+TYPE_OF_DATASET_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
@@ -600,7 +600,10 @@ def convert_to_diagrams(list_sents,labels):
                 print(f"no of tokens in this sentence is {len(tokenized)}")
                 sent_count_longer_than_32+=1
                 continue
-        spiders_diagram = parser_to_use_obj.sentence2diagram(sentence=sent)
+        try:
+            spiders_diagram = parser_to_use_obj.sentence2diagram(sentence=sent)
+        except: 
+            continue
         list_target.append(spiders_diagram)
         labels_target.append(label)
     
