@@ -31,6 +31,12 @@
 # Meeting Notes
 
 ## Nov 27th 2024
+todo: load english datasets
+- start with sst2- sentiment in glue
+	- read dataset into our code
+ 	- run our base code end to end
+  - 
+## Nov 26th 2024
 - Updated code walkthrough
 	- All code in `classify.py`, without Mithun's notes, just tags. Copy of `v7` code.
  	- Old code in archive. In archive, `no_pair...` is for classification task, `yes_pair...` is Khatri's code replication, which we can't use because of depriciate d packages.
