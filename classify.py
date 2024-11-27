@@ -140,9 +140,15 @@ wandb.init(
 sig = torch.sigmoid
 
 def f1(y_hat, y):
-    f1 = F1Score(task="binary", num_classes=2)
+    f1 = F1Score(task="binary", num_classes=2, threshold=0.5)
     return f1(y_hat, y)
-    
+
+# def precision(y_hat, y):
+#     from metrics import MulticlassPrecision
+#     prec = MulticlassPrecision(num_classes=2)
+#     prec.update(y_hat,y)
+#     return prec.compute
+
 def accuracy(y_hat, y):
         assert type(y_hat)== type(y)
         # half due to double-counting
@@ -544,10 +550,11 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     #use the model now to create predictions on the test set.
     preds = pred_model.get_diagram_output(val_circuits)
     loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    l= loss_pyTorch(preds, torch.tensor(val_labels))
-    a=accuracy(preds, torch.tensor(val_labels))
+    loss_val= loss_pyTorch(preds, torch.tensor(val_labels))
+    acc_val=accuracy(preds, torch.tensor(val_labels))
+    f1score_val= f1(preds,torch.tensor(val_labels),)
 
-    return l, a
+    return loss_val, acc_val, f1score_val
 
 def read_data(filename):         
             labels, sentences = [], []
@@ -732,7 +739,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
             verbose='text',
             seed=SEED)
 
-    smart_loss, smart_acc = evaluate_val_set(prediction_model,
+    smart_loss, smart_acc, smart_f1 = evaluate_val_set(prediction_model,
                                                 val_circuits,
                                                 val_labels,
                                                 trained_wts,
@@ -740,7 +747,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
                                                 max_w_param_length,
                                                 OOV_strategy='model',
                                                 OOV_model=NN_model)
-    print(f"value of smart_loss={smart_loss} and value of smart_acc ={smart_acc}")
+    print(f"value of smart_loss={smart_loss} , value of smart_acc ={smart_acc} value of smart_f1 ={smart_f1}")
     print('Evaluating EMBED model')
 
     
@@ -771,7 +778,3 @@ for tf_seed in tf_seeds:
         this_seed_results.append([run_experiment(nl, tf_seed)])
     compr_results[tf_seed] = this_seed_results
 
-print(f"\nvalue of all evaluation metrics across all seeds is :")
-
-for k,v in compr_results.items():
-    print(f"\n{k}: {v}\n")
