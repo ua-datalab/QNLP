@@ -5,7 +5,9 @@ pip install spacy
 pip install tensorflow
 pip install lambeq
 pip install fasttext
+pip install keras-tuner --upgrade
 pip install pytest
+pip install datasets
 python3 -m spacy download es_core_news_sm
 python3 -m spacy download en_core_web_sm
 conda install -y anaconda::wget
