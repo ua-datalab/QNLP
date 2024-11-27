@@ -140,9 +140,15 @@ wandb.init(
 sig = torch.sigmoid
 
 def f1(y_hat, y):
-    f1 = F1Score(task="binary", num_classes=2)
+    f1 = F1Score(task="binary", num_classes=2, threshold=0.5)
     return f1(y_hat, y)
-    
+
+# def precision(y_hat, y):
+#     from metrics import MulticlassPrecision
+#     prec = MulticlassPrecision(num_classes=2)
+#     prec.update(y_hat,y)
+#     return prec.compute
+
 def accuracy(y_hat, y):
         assert type(y_hat)== type(y)
         # half due to double-counting
@@ -303,11 +309,11 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
              
     
-    assert len(qnlp_model.weights) == len(initial_param_vector)
-    # also assert dimension of every single symbol/weight matches that of initial_para_vector
-    for x,y in zip(qnlp_model.weights, initial_param_vector):
-        assert len(x) == len(y)
-    qnlp_model.weights = nn.ParameterList(initial_param_vector)
+    # assert len(qnlp_model.weights) == len(initial_param_vector)
+    # # also assert dimension of every single symbol/weight matches that of initial_para_vector
+    # for x,y in zip(qnlp_model.weights, initial_param_vector):
+    #     assert len(x) == len(y)
+    # qnlp_model.weights = nn.ParameterList(initial_param_vector)
 
     return train_vocab_embeddings, val_vocab_embeddings, max_word_param_length, n_oov_symbs
 
@@ -465,7 +471,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         plt.xlabel('Epoch')
         plt.ylabel('Error')
         plt.legend()
-        plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
+        # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
         best_model= OOV_NN_model
 
@@ -544,10 +550,11 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     #use the model now to create predictions on the test set.
     preds = pred_model.get_diagram_output(val_circuits)
     loss_pyTorch =torch.nn.BCEWithLogitsLoss()
-    l= loss_pyTorch(preds, torch.tensor(val_labels))
-    a=accuracy(preds, torch.tensor(val_labels))
+    loss_val= loss_pyTorch(preds, torch.tensor(val_labels))
+    acc_val=accuracy(preds, torch.tensor(val_labels))
+    f1score_val= f1(preds,torch.tensor(val_labels),)
 
-    return l, a
+    return loss_val, acc_val, f1score_val
 
 def read_data(filename):         
             labels, sentences = [], []
@@ -732,7 +739,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
             verbose='text',
             seed=SEED)
 
-    smart_loss, smart_acc = evaluate_val_set(prediction_model,
+    smart_loss, smart_acc, smart_f1 = evaluate_val_set(prediction_model,
                                                 val_circuits,
                                                 val_labels,
                                                 trained_wts,
@@ -740,7 +747,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
                                                 max_w_param_length,
                                                 OOV_strategy='model',
                                                 OOV_model=NN_model)
-    print(f"value of smart_loss={smart_loss} and value of smart_acc ={smart_acc}")
+    print(f"value of smart_loss={smart_loss} , value of smart_acc ={smart_acc} value of smart_f1 ={smart_f1}")
     print('Evaluating EMBED model')
 
     
@@ -771,7 +778,3 @@ for tf_seed in tf_seeds:
         this_seed_results.append([run_experiment(nl, tf_seed)])
     compr_results[tf_seed] = this_seed_results
 
-print(f"\nvalue of all evaluation metrics across all seeds is :")
-
-for k,v in compr_results.items():
-    print(f"\n{k}: {v}\n")
