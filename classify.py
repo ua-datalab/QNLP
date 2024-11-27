@@ -19,6 +19,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
+from datasets import load_dataset
 from tensorflow import keras
 from tensorflow.keras import layers
 import matplotlib.pyplot as plt
@@ -48,7 +49,7 @@ import keras
 from keras import layers
 
 
-TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
+TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
@@ -56,6 +57,8 @@ trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
+
+
 
 if(parser_to_use==BobcatParser):
     parser_to_use_obj=BobcatParser(verbose='text')
@@ -93,25 +96,25 @@ TESTING = False
 
 
 
-if(TYPE_OF_DATA_TO_USE== "uspantek"):
+if(TYPE_OF_DATASET_TO_USE== "uspantek"):
     TRAIN="uspantek_train.txt"
     DEV="uspantek_dev.txt"
     TEST="uspantek_test.txt"
     
 
-if(TYPE_OF_DATA_TO_USE== "spanish"):
+if(TYPE_OF_DATASET_TO_USE== "spanish"):
     TRAIN="spanish_train.txt"
     DEV="spanish_dev.txt"
     TEST="spanish_test.txt"
     
 
-if(TYPE_OF_DATA_TO_USE== "msr_paraphrase_corpus"):
+if(TYPE_OF_DATASET_TO_USE== "msr_paraphrase_corpus"):
     TRAIN="msr_paraphrase_train.txt"
     DEV="msr_paraphrase_test.txt"
     TEST="msr_paraphrase_test.txt"
     type_of_data = "pair"
 
-if(TYPE_OF_DATA_TO_USE== "food_it"):
+if(TYPE_OF_DATASET_TO_USE== "food_it"):
     TRAIN="mc_train_data.txt"
     DEV="mc_dev_data.txt"
     TEST="mc_test_data.txt"
@@ -132,7 +135,7 @@ wandb.init(
     "SEED".lower() : SEED ,
     "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
     "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
-    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATA_TO_USE,
+    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATASET_TO_USE,
     "embedding_model_to_use".lower():embedding_model_to_use
     })
 
@@ -158,7 +161,7 @@ def accuracy(y_hat, y):
 eval_metrics = {"acc": accuracy, "F1":f1 }
 spacy_tokeniser = SpacyTokeniser()
 
-if TYPE_OF_DATA_TO_USE in ["uspantek","spanish"]:
+if TYPE_OF_DATASET_TO_USE in ["uspantek","spanish"]:
     spanish_tokeniser=spacy.load("es_core_news_sm")
     spacy_tokeniser.tokeniser = spanish_tokeniser
 else:
@@ -556,6 +559,18 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     return loss_val, acc_val, f1score_val
 
+def read_glue_data(split,sub="sst2"):                 
+        labels, sentences = [], []
+        ds = load_dataset("nyu-mll/glue", sub)
+        for line in ds[split]:                                                    
+                t = float(line['label']) 
+                labels.append([t, 1-t])           
+                sentences.append(line['sentence'])
+        return labels, sentences
+
+
+
+
 def read_data(filename):         
             labels, sentences = [], []
             with open(filename) as f:
@@ -564,13 +579,16 @@ def read_data(filename):
                     labels.append([t, 1-t])            
                     sentences.append(line[1:].strip())
             return labels, sentences
+#read the base data
+if(TYPE_OF_DATASET_TO_USE=="sst2"):
+    train_labels, train_data = read_glue_data(split="train",sub="sst2")
+    val_labels, val_data = read_glue_data(split="validation",sub="sst2")
+    test_labels, test_data = read_glue_data(split="test",sub="sst2")
 
-#back to the main thread after all functions are defined.
-
-#read the base data, i.e plain text english.
-train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
-val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
-test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
+else:
+    train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
+    val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
+    test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
 
 
