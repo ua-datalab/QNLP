@@ -62,7 +62,7 @@ DO_TUNING_MODEL3=False
 
 
 if(parser_to_use==BobcatParser):
-    parser_to_use_obj=BobcatParser(verbose='text')
+    parser_to_use_obj=BobcatParser(verbose='text', root_cats=["N","S","NP"])
 
 
 if(embedding_model_to_use=="spanish"):
@@ -587,18 +587,23 @@ def convert_to_diagrams(list_sents,labels):
     list_target = []
     labels_target = []
     sent_count_longer_than_32=0
-    for sent, label in tqdm(zip(list_sents, labels),desc="reading sent"):                        
+    skipped_sentences_counter_due_to_cant_parse=0
+    for sent, label in tqdm(zip(list_sents, labels),desc="reading sent",total=len(list_sents)):                        
         tokenized = spacy_tokeniser.tokenise_sentence(sent)                
         if( ansatz_to_use==SpiderAnsatz ):
-            if len(tokenized)> 32:
-                print(f"no of tokens in this sentence is {len(tokenized)}")
+            if len(tokenized)> 32:                
                 sent_count_longer_than_32+=1
                 continue
-        spiders_diagram = parser_to_use_obj.sentence2diagram(sentence=sent)
+        try:
+            spiders_diagram = parser_to_use_obj.sentence2diagram(sentence=sent)
+        except:             
+            skipped_sentences_counter_due_to_cant_parse+=1
+            continue
         list_target.append(spiders_diagram)
         labels_target.append(label)
     
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
+    print(f"out of a total of ={len(list_sents)}sentences {skipped_sentences_counter_due_to_cant_parse} were skipped because they were unparsable")
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
@@ -772,10 +777,18 @@ else:
     test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
 
-#convert the plain text input to ZX diagrams
-train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+"""#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
+in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
+"""
+if (TYPE_OF_DATASET_TO_USE in ["spanish","uspantek","sst2"]):
+    train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels)
+    val_diagrams, val_labels= convert_to_diagrams(val_data,val_labels)
+    test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels)
+else:
+    #convert the plain text input to ZX diagrams
+    train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+    val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+    test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
 
 train_X = []
 val_X = []
