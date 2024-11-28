@@ -32,10 +32,17 @@
 
 ## Nov 27th 2024
 todo: load english datasets
-- start with sst2- sentiment in glue
+- start with sst2- sentiment in glue- branch called read_sst
 	- read dataset into our code
  	- run our base code end to end
-  - 
+  		- hit bobcat parser not able to read some sentences, solution: put try catch around them
+    	 	- next issue: laptop is maxing out. its showing 3 hours for parsing spider diagrams. most likely will hit ram max also. solution: move to cyverse
+       	- - update: laptop managed to run training on 65K documents. but now hitting ansatz related some key error. Taking a pause for thanks giving break. This is becoming a very unhealthy addiction of - maybe next run will give me the big ground breaking/life saving result. Like megh says Very bad idea to put all eggs in same basket/unhealthy getting emotionally entangled with technology and inventions.
+  - spanish: branch called spanish_experiments
+  	- run end to end
+   		- hit bobcat parser not able to read some sentences, solution: put try catch around them
+     		- next issue Ty(p) not found. This means, there are prepositions, So both ansatz and bobcat parser need to be initialized with them
+       		- still getting some domain codomain issue: pausing for now.  havent merged branch to main. Merge only if code runs end to end and you are completley confident nothing will break
 ## Nov 26th 2024
 - Updated code walkthrough
 	- All code in `classify.py`, without Mithun's notes, just tags. Copy of `v7` code.
