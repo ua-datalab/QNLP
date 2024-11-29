@@ -594,14 +594,15 @@ def read_data(filename):
 
 
 
-def convert_to_diagrams(list_sents,labels):
+def convert_to_diagrams(list_sents,labels, split="train"):
     list_target = []
     labels_target = []
     sent_count_longer_than_32=0
     skipped_sentences_counter_due_to_cant_parse=0
-    for sent, label in tqdm(zip(list_sents, labels),desc="convert to diagrams",total=len(list_sents)):                        
+    desc_long = f"converting {split} data to diagrams"
+    for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
         tokenized = spacy_tokeniser.tokenise_sentence(sent)                
-        if( ansatz_to_use==SpiderAnsatz ):
+        if( ansatz_to_use==SpiderAnsatz ): #when we use numpy, max size of array is 32
             if len(tokenized)> 32:                
                 sent_count_longer_than_32+=1
                 continue
@@ -625,7 +626,8 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
                     AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
     else:
         ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT)}  )    
+                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT),
+                     AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE}  )    
     
    
         #use the anstaz to create circuits from diagrams
@@ -792,9 +794,9 @@ else:
 in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
 """
 if (TYPE_OF_DATASET_TO_USE in ["spanish","uspantek","sst2"]):
-    train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels)
-    val_diagrams, val_labels= convert_to_diagrams(val_data,val_labels)
-    test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels)
+    train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels, split="train")
+    val_diagrams, val_labels= convert_to_diagrams(val_data,val_labels,split="val")
+    test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels,split="test")
 else:
     #convert the plain text input to ZX diagrams
     train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
