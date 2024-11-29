@@ -271,7 +271,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
         """ max param length should include a factor from dimension
           for example if bakes is n.r@s, and n=2 and s=2, the parameter 
           length must be 4. """
-        max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN)
+        max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
 
     assert max_word_param_length!=0
     
@@ -619,22 +619,49 @@ def convert_to_diagrams(list_sents,labels, split="train"):
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
-def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
+def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
+    list_circuits =[]
+    list_labels = []
+    assert len(diagrams) == len(labels)
+    desc_long =f"converting diagrams of {split} data to circuits"
+    counter_skipped_data =0
+    for diagram,label in tqdm(zip(diagrams,labels), desc=desc_long, total=len(labels)):
+        try:
+            circuit= ansatz(diagram)
+        except:
+            counter_skipped_data+=1
+            continue
+        list_circuits.append(circuit)
+        list_labels.append(label)
+    print(f"out of {len(labels)} data points in {split} {counter_skipped_data} were skipped since they couldnt be converted to circuits")
+    return list_circuits, list_labels
+
+
+def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_diagrams, test_labels, seed, nlayers):
+    
     if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
-        ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
+        ansatz_obj = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
                     AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
                     AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
     else:
-        ansatz = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
+        ansatz_obj = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
                     AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT),
                      AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE}  )    
     
    
+        assert len(train_diagrams) == len(train_labels)
         #use the anstaz to create circuits from diagrams
-        train_circuits =  [ansatz(diagram)for diagram in train_diagrams]
-        val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
-        test_circuits = [ansatz(diagram) for diagram in test_diagrams]        
-   
+        train_circuits, train_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=train_diagrams, ansatz=ansatz_obj,labels=train_labels, split="train")        
+        assert len(train_circuits) == len(train_labels)
+
+
+        val_circuits, val_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=val_diagrams, ansatz=ansatz_obj,labels=val_labels, split="val")
+        assert len(val_circuits) == len(val_labels)
+
+        test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz_obj,labels=test_labels, split="test")
+        assert len(test_circuits) == len(test_labels)
+        
+
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
@@ -803,6 +830,7 @@ else:
     val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
     test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
 
+
 train_X = []
 val_X = []
 
@@ -814,14 +842,13 @@ assert len(test_diagrams)== len(test_labels)
 
 
 compr_results = {}
-
-#ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
-tf_seeds = [2]
+no_of_layers=[1] #ideally should be [1,2,3]. But using only one layer due to lack of ram in laptop. todo: open it up for more
+tf_seeds = [2] #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop todo: open it up for more
 
 for tf_seed in tf_seeds:
     tf.random.set_seed(tf_seed)
     this_seed_results = []    
-    for nl in [3]:
-        this_seed_results.append([run_experiment(nl, tf_seed)])
+    for nl in no_of_layers:    
+        this_seed_results.append([run_experiment(train_diagrams=train_diagrams, train_labels= train_labels, val_diagrams= val_diagrams, val_labels= val_labels, test_diagrams=test_diagrams, test_labels=test_labels,nlayers= nl, seed= tf_seed )])
     compr_results[tf_seed] = this_seed_results
 

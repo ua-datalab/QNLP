@@ -30,6 +30,31 @@
 
 # Meeting Notes
 
+## Nov 29th 2024
+- continuing with SST2 data
+	- getting ty(p) error. Update: fixed it by adding p to ansatz
+	- next: AttributeError: 'int' object has no attribute 'rotate: 
+	- - try replacing spider ansatz with tensor ansatz
+	- - update. no luck, same error. Not sure what the error means, what has 
+	functor got to do with english data. Todo: try plotting diagrams and circuits of first data point
+	- - update : diagram of first data point looks ok. todo: switch back to spider ansatz, to avoid too many moving parts ---done
+	
+	todo: put try catch around erroring out circuits update: that worked. however out of initial 80 train data points, now its only 49 circuits. todo: figure out what is going on.
+
+	todo: 
+	- - - open up the removal
+	of cups
+	- - try replacing spider ansatz with tensor ansatz
+	- - after runs end to end 
+	- - - run pytest for food_it (pass variables)
+	- - - add pytest for sst2
+	- - turn on tuning
+	- - - get values with and without exposing dev during initialization
+	- - - move to cyverse for big run
+	- - - start replacing with Quantum trainers, iqp ansatz etc
+
+
+
 ## Nov 27th 2024
 todo: load english datasets
 - start with sst2- sentiment in glue- branch called read_sst
