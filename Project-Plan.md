@@ -44,11 +44,11 @@
 	todo: 
 	- - - open up the removal
 	of cups
-	- - try replacing spider ansatz with tensor ansatz
+	- - - try replacing spider ansatz with tensor ansatz
 	- - after runs end to end 
 	- - - run pytest for food_it (pass variables)
 	- - - add pytest for sst2
-	- - turn on tuning
+	- - - turn on tuning
 	- - - get values with and without exposing dev during initialization
 	- - - move to cyverse for big run
 	- - - start replacing with Quantum trainers, iqp ansatz etc
