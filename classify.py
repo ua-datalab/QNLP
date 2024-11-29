@@ -59,6 +59,11 @@ embedding_model_to_use = "english" #[english, spanish]
 MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
 
+#purely for testing purposes. else takes forever to run on standard datsets like SST which have 65k+ data
+NO_OF_TRAIN_DATA_POINTS_TO_USE = 80 
+NO_OF_VAL_DATA_POINTS_TO_USE = 10
+NO_OF_TEST_DATA_POINTS_TO_USE = 10 
+
 
 
 if(parser_to_use==BobcatParser):
@@ -560,13 +565,19 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     return loss_val, acc_val, f1score_val
 
-def read_glue_data(split,sub="sst2"):                 
+def read_glue_data(split,sub="sst2", lines_to_read=0):
+        assert lines_to_read != 0
+        line_counter=0
         labels, sentences = [], []
+        desc_dynamic= f"reading {split} data"
         ds = load_dataset("nyu-mll/glue", sub)
-        for line in ds[split]:                                                    
+        for line in tqdm(ds[split], desc=desc_dynamic, total=len(ds[split])):                                                    
                 t = float(line['label']) 
                 labels.append([t, 1-t])           
                 sentences.append(line['sentence'])
+                line_counter+=1
+                if (line_counter> lines_to_read):
+                    break 
         return labels, sentences
 
 
@@ -588,7 +599,7 @@ def convert_to_diagrams(list_sents,labels):
     labels_target = []
     sent_count_longer_than_32=0
     skipped_sentences_counter_due_to_cant_parse=0
-    for sent, label in tqdm(zip(list_sents, labels),desc="reading sent",total=len(list_sents)):                        
+    for sent, label in tqdm(zip(list_sents, labels),desc="convert to diagrams",total=len(list_sents)):                        
         tokenized = spacy_tokeniser.tokenise_sentence(sent)                
         if( ansatz_to_use==SpiderAnsatz ):
             if len(tokenized)> 32:                
@@ -618,7 +629,7 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
     
    
         #use the anstaz to create circuits from diagrams
-        train_circuits =  [ansatz(diagram) for diagram in train_diagrams]
+        train_circuits =  [ansatz(diagram)for diagram in train_diagrams]
         val_circuits =  [ansatz(diagram) for diagram in val_diagrams]
         test_circuits = [ansatz(diagram) for diagram in test_diagrams]        
    
@@ -767,9 +778,9 @@ todo: why is he setting random seed, that tooin tensor flow- especially since am
 
 #read the base data
 if(TYPE_OF_DATASET_TO_USE=="sst2"):
-    train_labels, train_data = read_glue_data(split="train",sub="sst2")
-    val_labels, val_data = read_glue_data(split="validation",sub="sst2")
-    test_labels, test_data = read_glue_data(split="test",sub="sst2")
+    train_labels, train_data = read_glue_data(split="train",sub="sst2", lines_to_read= NO_OF_TRAIN_DATA_POINTS_TO_USE)
+    val_labels, val_data = read_glue_data(split="validation",sub="sst2", lines_to_read= NO_OF_VAL_DATA_POINTS_TO_USE)
+    test_labels, test_data = read_glue_data(split="test",sub="sst2", lines_to_read= NO_OF_TEST_DATA_POINTS_TO_USE)
 
 else:
     train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
