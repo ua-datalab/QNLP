@@ -661,6 +661,9 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
         test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz_obj,labels=test_labels, split="test")
         assert len(test_circuits) == len(test_labels)
         
+        assert len(train_circuits) > 0
+        assert len(val_circuits) > 0
+        assert len(test_circuits) > 0
 
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
