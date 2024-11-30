@@ -721,7 +721,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
         optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN_MODEL1},
         evaluate_functions=eval_metrics,
         evaluate_on_train=True,
-        verbose='text',
+        verbose='progress',
         log_dir='RelPron/logs',
         seed=SEED
         )
@@ -734,7 +734,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
             epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
-            verbose='text',
+            verbose='progress',
             seed=SEED)
     
 
@@ -798,7 +798,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
             epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
-            verbose='text',
+            verbose='progress',
             seed=SEED)
 
     smart_loss, smart_acc, smart_f1 = evaluate_val_set(prediction_model,
