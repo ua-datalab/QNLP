@@ -52,9 +52,9 @@ from keras import layers
 
 TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
-ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
-model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
-trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+ansatz_to_use = IQPAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
+model_to_use  = TketModel   #[numpy, pytorch,TketModel]
+trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
@@ -184,7 +184,7 @@ import os
       or number of 
     qbits(if using quantum ansatz)
     """
-def get_max_word_param_length(input_circuits):
+def get_max_word_param_length_spider_ansatz(input_circuits):
         lengths=[]
         for d in input_circuits:
             for symb in d.free_symbols:
@@ -193,6 +193,12 @@ def get_max_word_param_length(input_circuits):
                 lengths.append(int(y))
         return lengths
 
+def get_max_word_param_length_all_other_ansatz(input_circuits):
+        lengths=[]
+        for d in input_circuits:
+            for symb in d.free_symbols:                               
+                lengths.append(int(symb.name[-1]))
+        return lengths
 
             
 """
@@ -226,8 +232,11 @@ def create_vocab_from_circuits(circuits):
     if(ansatz_to_use==SpiderAnsatz):  
         for d in circuits:
             for symb in d.free_symbols:                  
-                cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
-                vocab.add(cleaned_wrd_with_type)
+                    cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
+                    vocab.add(cleaned_wrd_with_type)
+    else:
+        vocab = {symb.name.rsplit('_', 1)[0] for d in circuits for symb in d.free_symbols}        
+    
     return vocab
 
 """
@@ -246,32 +255,41 @@ as of nov21st2024 - is hurting the first model's fit- i.e loss not reducing.
 :return: returns a dictionary of each word and its corresponding embedding
 
 """
-def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model):   
+def generate_initial_parameterisation(train_circuits, val_circuits,embedding_model, qnlp_model):   
     
     train_vocab=create_vocab_from_circuits(train_circuits)
     val_vocab=create_vocab_from_circuits(val_circuits)
     print(len(val_vocab.union(train_vocab)), len(train_vocab), len(val_vocab))    
     print(f"OOV word count: i.e out of {len(val_vocab)} words in the testing vocab there are  {len(val_vocab - train_vocab)} words that are not found in training. So they are OOV")
     oov_words=val_vocab - train_vocab
-    print(f"list of OOV words are {oov_words}")     
+    # print(f"list of OOV words are {oov_words}")     
 
     #calculate all out of vocabulary word count. Note: aldea is a word while aldea_0__s is a symbol
     oov_symbols={symb.name for d in val_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols}
     n_oov_symbs = len(oov_symbols)
     print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in val_circuits for symb in d.free_symbols})}')
-    print(f"the symbols that are in symbol count but not in word count are:{oov_symbols-oov_words}")
+    print(f"OOV symbol count: i.e out of {len(val_vocab)} words in the val vocab there are  {n_oov_symbs} symbols that are not found in training. So they are OOV")
+    # print(f"the symbols that are in symbol count but not in word count are:{oov_symbols-oov_words}")
 
    
     max_word_param_length=0
     if(ansatz_to_use==SpiderAnsatz):
-        max_word_param_length_train = max(get_max_word_param_length(train_circuits))
-        max_word_param_length_test = max(get_max_word_param_length(val_circuits))
-        max_word_param_length = max(max_word_param_length_train, max_word_param_length_test) + 1
+        max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
+        max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
 
-        """ max param length should include a factor from dimension
-          for example if bakes is n.r@s, and n=2 and s=2, the parameter 
-          length must be 4. """
-        max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
+    else: 
+
+        max_word_param_length_train = max(get_max_word_param_length_all_other_ansatz(train_circuits))
+        max_word_param_length_val = max(get_max_word_param_length_all_other_ansatz(val_circuits))
+
+    max_word_param_length = max(max_word_param_length_train, max_word_param_length_val) + 1
+
+
+
+    """ max param length should include a factor from dimension
+        for example if bakes is n.r@s, and n=2 and s=2, the parameter 
+        length must be 4. """
+    max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
 
     assert max_word_param_length!=0
     
@@ -565,13 +583,13 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     return loss_val, acc_val, f1score_val
 
-def read_glue_data(split,sub="sst2", lines_to_read=0):
+def read_glue_data(dataset_downloaded,split,lines_to_read=0):
         assert lines_to_read != 0
         line_counter=0
         labels, sentences = [], []
         desc_dynamic= f"reading {split} data"
-        ds = load_dataset("nyu-mll/glue", sub)
-        for line in tqdm(ds[split], desc=desc_dynamic, total=len(ds[split])):                                                    
+        
+        for line in tqdm(dataset_downloaded[split], desc=desc_dynamic, total=len(dataset_downloaded[split])):                                                    
                 t = float(line['label']) 
                 labels.append([t, 1-t])           
                 sentences.append(line['sentence'])
@@ -649,21 +667,21 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
                      AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE}  )    
     
    
-        assert len(train_diagrams) == len(train_labels)
-        #use the anstaz to create circuits from diagrams
-        train_circuits, train_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=train_diagrams, ansatz=ansatz_obj,labels=train_labels, split="train")        
-        assert len(train_circuits) == len(train_labels)
+    assert len(train_diagrams) == len(train_labels)
+    #use the anstaz to create circuits from diagrams
+    train_circuits, train_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=train_diagrams, ansatz=ansatz_obj,labels=train_labels, split="train")        
+    assert len(train_circuits) == len(train_labels)
 
 
-        val_circuits, val_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=val_diagrams, ansatz=ansatz_obj,labels=val_labels, split="val")
-        assert len(val_circuits) == len(val_labels)
+    val_circuits, val_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=val_diagrams, ansatz=ansatz_obj,labels=val_labels, split="val")
+    assert len(val_circuits) == len(val_labels)
 
-        test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz_obj,labels=test_labels, split="test")
-        assert len(test_circuits) == len(test_labels)
-        
-        assert len(train_circuits) > 0
-        assert len(val_circuits) > 0
-        assert len(test_circuits) > 0
+    test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz_obj,labels=test_labels, split="test")
+    assert len(test_circuits) == len(test_labels)
+    
+    assert len(train_circuits) > 0
+    assert len(val_circuits) > 0
+    assert len(test_circuits) > 0
 
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
@@ -812,9 +830,10 @@ todo: why is he setting random seed, that tooin tensor flow- especially since am
 
 #read the base data
 if(TYPE_OF_DATASET_TO_USE=="sst2"):
-    train_labels, train_data = read_glue_data(split="train",sub="sst2", lines_to_read= NO_OF_TRAIN_DATA_POINTS_TO_USE)
-    val_labels, val_data = read_glue_data(split="validation",sub="sst2", lines_to_read= NO_OF_VAL_DATA_POINTS_TO_USE)
-    test_labels, test_data = read_glue_data(split="test",sub="sst2", lines_to_read= NO_OF_TEST_DATA_POINTS_TO_USE)
+    ds = load_dataset("nyu-mll/glue", TYPE_OF_DATASET_TO_USE)
+    train_labels, train_data = read_glue_data(ds,split="train", lines_to_read= NO_OF_TRAIN_DATA_POINTS_TO_USE)
+    val_labels, val_data = read_glue_data(ds,split="validation", lines_to_read= NO_OF_VAL_DATA_POINTS_TO_USE)
+    test_labels, test_data = read_glue_data(ds, split="test", lines_to_read= NO_OF_TEST_DATA_POINTS_TO_USE)
 
 else:
     train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
