@@ -39,9 +39,8 @@
 	functor got to do with english data. Todo: try plotting diagrams and circuits of first data point
 	- - update : diagram of first data point looks ok. todo: switch back to spider ansatz, to avoid too many moving parts ---done
 	todo: put try catch around erroring out circuits update: that worked. however out of initial 80 train data points, now its only 49 circuits. todo: figure out what is going on.
-	- - next error in .fit()  both inputs should have same dtype
-
-	todo: 
+	- - next error in .fit()  both inputs should have same dtype. todo: switch to everything quantum. if we are fighting might as well fight in quantum world
+	- - update: using IQPAnsatz, TKetmodel, Quantum trainer. now getting: ERROR: Insufficient memory to run circuit circuit-166 using the statevector simulator. Required memory: 4398046511104M, max memory: 16384M todo: a) try removing cups. else b) call onto penny lane or actual quantum computer?
 	- - - open up the removal
 	of cups
 	- - - try replacing spider ansatz with tensor ansatz

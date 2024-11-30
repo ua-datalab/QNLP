@@ -60,7 +60,7 @@ MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
 
 #purely for testing purposes. else takes forever to run on standard datsets like SST which have 65k+ data
-NO_OF_TRAIN_DATA_POINTS_TO_USE = 80 
+NO_OF_TRAIN_DATA_POINTS_TO_USE = 20 
 NO_OF_VAL_DATA_POINTS_TO_USE = 10
 NO_OF_TEST_DATA_POINTS_TO_USE = 10 
 
@@ -265,10 +265,12 @@ def generate_initial_parameterisation(train_circuits, val_circuits,embedding_mod
     # print(f"list of OOV words are {oov_words}")     
 
     #calculate all out of vocabulary word count. Note: aldea is a word while aldea_0__s is a symbol
-    oov_symbols={symb.name for d in val_circuits for symb in d.free_symbols} - {symb.name for d in train_circuits for symb in d.free_symbols}
+    set_val={symb.name for d in val_circuits for symb in d.free_symbols}
+    set_train = {symb.name for d in train_circuits for symb in d.free_symbols}
+    oov_symbols= set_val - set_train
     n_oov_symbs = len(oov_symbols)
     print(f'OOV symbol count: {n_oov_symbs} / {len({symb.name for d in val_circuits for symb in d.free_symbols})}')
-    print(f"OOV symbol count: i.e out of {len(val_vocab)} words in the val vocab there are  {n_oov_symbs} symbols that are not found in training. So they are OOV")
+    print(f"OOV symbol count: i.e out of {len(set_train)} words in the val vocab there are  {n_oov_symbs} symbols that are not found in training. So they are OOV")
     # print(f"the symbols that are in symbol count but not in word count are:{oov_symbols-oov_words}")
 
    
@@ -863,6 +865,19 @@ print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
 assert len(train_diagrams)== len(train_labels)
 assert len(val_diagrams)== len(val_labels)
 assert len(test_diagrams)== len(test_labels)
+
+if(parser_to_use==BobcatParser):
+    remove_cups = RemoveCupsRewriter()
+    train_X = []
+    val_X = []
+    for d in tqdm(train_diagrams):
+        train_X.append(remove_cups(d).normal_form())
+
+    for d in tqdm(val_diagrams):    
+        val_X.append(remove_cups(d).normal_form())
+
+    train_diagrams  = train_X
+    val_diagrams    = val_X
 
 
 compr_results = {}
