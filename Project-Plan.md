@@ -29,6 +29,14 @@
 
 
 # Meeting Notes
+
+## Nov 29th 2024
+Mithuns log
+- branch. Stabilize_pytest_driver
+- to create
+- - driver function into which you pass 4 variables
+  - add a 5th variable, exposure val during build+ create new pytest case
+
 ## Nov 28th 2024
 - Dataset research: GLUE may not be a good fit for current setup. Need to find a classification task
 - VS Code debuggers  
