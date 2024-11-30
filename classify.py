@@ -17,6 +17,14 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
+import argparse
+from lambeq.text2diagram.ccg_parser import CCGParser
+from lambeq.ansatz import BaseAnsatz
+from lambeq.training.model import Model
+from lambeq.training.trainer import  Trainer
+import os
+import os.path
+import tensorflow as tf
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
 from tensorflow import keras
@@ -48,125 +56,18 @@ import keras
 from keras import layers
 
 
-TYPE_OF_DATA_TO_USE = "food_it" #["uspantek","spanish","food_it","msr_paraphrase_corpus"]
-parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
-ansatz_to_use = SpiderAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
-model_to_use  = PytorchModel   #[numpy, pytorch,TketModel]
-trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
-embedding_model_to_use = "english" #[english, spanish]
-MAX_PARAM_LENGTH=0
-DO_TUNING_MODEL3=False
 
-if(parser_to_use==BobcatParser):
-    parser_to_use_obj=BobcatParser(verbose='text')
-
-
-if(embedding_model_to_use=="spanish"):
-    # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
-    embedding_model = ft.load_model('./embeddings-l-model.bin')
-if(embedding_model_to_use=="english"):
-    import os.path
-    if not (os.path.isfile('cc.en.300.bin')):
-        filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
-    embedding_model = ft.load_model('cc.en.300.bin')
-
-
-arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
-
-
-# maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
-BASE_DIMENSION_FOR_NOUN =2 
-BASE_DIMENSION_FOR_SENT =2 
-BASE_DIMENSION_FOR_PREP_PHRASE= 2
-MAXPARAMS = 300
-BATCH_SIZE = 30
-EPOCHS_TRAIN_MODEL1 = 30 #found 23 from early stopping
-EPOCHS_MODEL3_OOV_MODEL = 100
-LEARNING_RATE = 3e-2
-SEED = 0
-DATA_BASE_FOLDER= "data"
-
-
-#setting a flag for TESTING so that it is done only once.
-#  Everything else is done on train and dev
-TESTING = False
-
-
-
-if(TYPE_OF_DATA_TO_USE== "uspantek"):
-    TRAIN="uspantek_train.txt"
-    DEV="uspantek_dev.txt"
-    TEST="uspantek_test.txt"
-    
-
-if(TYPE_OF_DATA_TO_USE== "spanish"):
-    TRAIN="spanish_train.txt"
-    DEV="spanish_dev.txt"
-    TEST="spanish_test.txt"
-    
-
-if(TYPE_OF_DATA_TO_USE== "msr_paraphrase_corpus"):
-    TRAIN="msr_paraphrase_train.txt"
-    DEV="msr_paraphrase_test.txt"
-    TEST="msr_paraphrase_test.txt"
-    type_of_data = "pair"
-
-if(TYPE_OF_DATA_TO_USE== "food_it"):
-    TRAIN="mc_train_data.txt"
-    DEV="mc_dev_data.txt"
-    TEST="mc_test_data.txt"
-    
-
-
-wandb.init(    
-    project="qnlp_nov2024_expts",    
-    config={
-    "learning_rate": LEARNING_RATE,
-    "architecture": arch,
-    "BASE_DIMENSION_FOR_NOUN".lower(): BASE_DIMENSION_FOR_NOUN ,
-    "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
-    "MAXPARAMS".lower() :MAXPARAMS,
-    "BATCH_SIZE".lower():BATCH_SIZE,
-    "EPOCHS".lower() :EPOCHS_TRAIN_MODEL1,
-    "LEARNING_RATE".lower() : LEARNING_RATE,
-    "SEED".lower() : SEED ,
-    "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
-    "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
-    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATA_TO_USE,
-    "embedding_model_to_use".lower():embedding_model_to_use
-    })
-
-
-sig = torch.sigmoid
 
 def f1(y_hat, y):
     f1 = F1Score(task="binary", num_classes=2, threshold=0.5)
     return f1(y_hat, y)
 
-# def precision(y_hat, y):
-#     from metrics import MulticlassPrecision
-#     prec = MulticlassPrecision(num_classes=2)
-#     prec.update(y_hat,y)
-#     return prec.compute
 
 def accuracy(y_hat, y):
         assert type(y_hat)== type(y)
         # half due to double-counting
         #todo/confirm what does he mean by double counting
         return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  
-
-eval_metrics = {"acc": accuracy, "F1":f1 }
-spacy_tokeniser = SpacyTokeniser()
-
-if TYPE_OF_DATA_TO_USE in ["uspantek","spanish"]:
-    spanish_tokeniser=spacy.load("es_core_news_sm")
-    spacy_tokeniser.tokeniser = spanish_tokeniser
-else:
-    english_tokenizer = spacy.load("en_core_web_sm")
-    spacy_tokeniser.tokeniser =english_tokenizer
-
-
-import os
 
 
 """go through all the circuits in training data, 
@@ -565,12 +466,7 @@ def read_data(filename):
                     sentences.append(line[1:].strip())
             return labels, sentences
 
-#back to the main thread after all functions are defined.
 
-#read the base data, i.e plain text english.
-train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
-val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
-test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
 
 
@@ -594,21 +490,9 @@ def convert_to_diagrams(list_sents,labels):
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
-#convert the plain text input to ZX diagrams
-train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
 
-train_X = []
-val_X = []
 
-print(f"count of train, test, val elements respectively are: ")
-print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
-assert len(train_diagrams)== len(train_labels)
-assert len(val_diagrams)== len(val_labels)
-assert len(test_diagrams)== len(test_labels)
-
-def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
+def run_experiment(seed,MAX_WORD_PARAM_LEN,nlayers=1):
     if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
                     AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
@@ -761,20 +645,171 @@ def run_experiment(MAX_WORD_PARAM_LEN,nlayers=1, seed=SEED):
 
 
 
-"""####final push-which calls run_experiment function above
-todo: why is he setting random seed, that tooin tensor flow
-- especially since am using a pytorch model.
-"""
-import tensorflow as tf
-compr_results = {}
 
-#ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
-tf_seeds = [2]
 
-for tf_seed in tf_seeds:
-    tf.random.set_seed(tf_seed)
-    this_seed_results = []    
-    for nl in [3]:
-        this_seed_results.append([run_experiment(nl, tf_seed)])
-    compr_results[tf_seed] = this_seed_results
+    
+def perform_task(args):
+    if(args.dataset in ["uspantek", "spanish"]):
+        embedding_model_to_use = "spanish" 
+    else:
+        embedding_model_to_use = "english" 
 
+    if(args.parser_to_use==BobcatParser):
+        parser_to_use_obj=BobcatParser(verbose='text')
+
+    if(embedding_model_to_use=="spanish"):
+        # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
+        embedding_model = ft.load_model('./embeddings-l-model.bin')
+    if(embedding_model_to_use=="english"):
+        if not (os.path.isfile('cc.en.300.bin')):
+            filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
+        embedding_model = ft.load_model('cc.en.300.bin')
+
+
+    
+
+    # Todo move to json or yml file
+    BASE_DIMENSION_FOR_NOUN =2 
+    BASE_DIMENSION_FOR_SENT =2 
+    BASE_DIMENSION_FOR_PREP_PHRASE= 2
+    MAXPARAMS = 300
+    BATCH_SIZE = 30
+    EPOCHS_TRAIN_MODEL1 = 30 #found 23 from early stopping
+    EPOCHS_MODEL3_OOV_MODEL = 100
+    LEARNING_RATE = 3e-2
+    SEED = 0
+    DATA_BASE_FOLDER= "data"
+
+
+    #setting a flag for TESTING so that it is done only once.
+    #  Everything else is done on train and dev
+    TESTING = False
+
+
+
+    if(args.dataset== "uspantek"):
+        TRAIN="uspantek_train.txt"
+        DEV="uspantek_dev.txt"
+        TEST="uspantek_test.txt"
+        
+
+    if(args.dataset== "spanish"):
+        TRAIN="spanish_train.txt"
+        DEV="spanish_dev.txt"
+        TEST="spanish_test.txt"
+        
+
+    if(args.dataset== "msr_paraphrase_corpus"):
+        TRAIN="msr_paraphrase_train.txt"
+        DEV="msr_paraphrase_test.txt"
+        TEST="msr_paraphrase_test.txt"
+        type_of_data = "pair"
+
+    if(args.dataset== "food_it"):
+        TRAIN="mc_train_data.txt"
+        DEV="mc_dev_data.txt"
+        TEST="mc_test_data.txt"
+        
+
+    # a unique name to identify this run inside wandb data and graph
+    arch = f"{args.ansatz_to_use}+'_'+{args.dataset}+'_'+{args.parser_to_use_obj}+'_'+{args.trainer_to_use}+'_'+{args.model_to_use}+'_'+{embedding_model_to_use}"
+
+    wandb.init(    
+        project="qnlp_nov2024_expts",    
+        config={
+        "learning_rate": LEARNING_RATE,
+        "architecture": arch,
+        "BASE_DIMENSION_FOR_NOUN".lower(): BASE_DIMENSION_FOR_NOUN ,
+        "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
+        "MAXPARAMS".lower() :MAXPARAMS,
+        "BATCH_SIZE".lower():BATCH_SIZE,
+        "EPOCHS".lower() :EPOCHS_TRAIN_MODEL1,
+        "LEARNING_RATE".lower() : LEARNING_RATE,
+        "SEED".lower() : SEED ,
+        "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
+        "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
+        "TYPE_OF_DATA_TO_USE".lower():args.dataset,
+        "embedding_model_to_use".lower():embedding_model_to_use
+        })
+
+
+    sig = torch.sigmoid
+
+    eval_metrics = {"acc": accuracy, "F1":f1 }
+    spacy_tokeniser = SpacyTokeniser()
+
+    if args.dataset  in ["uspantek","spanish"]:
+        spanish_tokeniser=spacy.load("es_core_news_sm")
+        spacy_tokeniser.tokeniser = spanish_tokeniser
+    else:
+        english_tokenizer = spacy.load("en_core_web_sm")
+        spacy_tokeniser.tokeniser =english_tokenizer
+    
+    #read the base data, i.e plain text english.
+    train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
+    val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
+    test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
+
+
+
+    #convert the plain text input to ZX diagrams
+    train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+    val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+    test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+
+    train_X = []
+    val_X = []
+
+    print(f"count of train, test, val elements respectively are: ")
+    print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
+    assert len(train_diagrams)== len(train_labels)
+    assert len(val_diagrams)== len(val_labels)
+    assert len(test_diagrams)== len(test_labels)
+
+
+
+
+        
+    """todo: why is he setting random seed, that tooin tensor flow
+    - especially since am using a pytorch model."""
+
+    compr_results = {}
+
+
+
+    #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
+    tf_seeds = [2]
+
+    for tf_seed in tf_seeds:
+        tf.random.set_seed(tf_seed)
+        this_seed_results = []    
+        for nl in [3]:
+            this_seed_results.append([run_experiment(nl, tf_seed)])
+        compr_results[tf_seed] = this_seed_results
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Description of your script.")
+    parser.add_argument('--dataset', type=str, required=False, default="food_it" ,help="type of dataset-choose from uspantek,spanish,food_it,msr_paraphrase_corpus")
+    parser.add_argument('--parser_to_use', type=CCGParser, required=False, default=BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--ansatz_to_use', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
+    parser.add_argument('--model_to_use', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
+    parser.add_argument('--trainer_to_use', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
+    parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
+    parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
+    
+    return parser.parse_args()
+
+
+
+
+def main():
+    args = parse_arguments()
+    print(f"Argument 1: {args.dataset}, Argument 2: {args.parser_to_use}")
+    perform_task(args)
+
+if __name__=="__main__":
+        main()
+     
+        
+        
