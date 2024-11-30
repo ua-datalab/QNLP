@@ -468,18 +468,11 @@ def read_data(filename):
             return labels, sentences
 
 
-
-
-
-
-
-
-
-def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, nlayers, eval_metrics,seed,embedding_model):
+def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model):
     if args.ansatz in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz = args.ansatz ({AtomicType.NOUN: args.base_dimension_for_noun,
                     AtomicType.SENTENCE: args.base_dimension_for_sent,
-                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase} ,n_layers= nlayers,n_single_qubit_params =3)    
+                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase} ,n_layers= args.no_of_layers_in_ansatz,single_qubit_params =args.single_qubit_params)    
     else:
         ansatz = args.ansatz ({AtomicType.NOUN: Dim(args.base_dimension_for_noun),
                     AtomicType.SENTENCE: Dim(args.base_dimension_for_sent)}  )    
@@ -633,7 +626,6 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
 
     
 def perform_task(args):
-
     embedding_model= None
     if(args.dataset in ["uspantek", "spanish"]):
         # todo add wget ('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
@@ -745,19 +737,14 @@ def perform_task(args):
     """todo: why is he setting random seed, that tooin tensor flow
     - especially since am using a pytorch model."""
 
-    compr_results = {}
 
 
-
-    #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop
-    tf_seeds = [2]
-
-    for tf_seed in tf_seeds:
-        tf.random.set_seed(tf_seed)
-        this_seed_results = []    
-        for nl in [3]:            
-            this_seed_results.append([run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, nl, eval_metrics,tf_seed,embedding_model)])
-        compr_results[tf_seed] = this_seed_results
+    #ideally should be tested over more than 1 seed and layers 1 throught 3 minimally- and average take. 
+    # But  commenting out due to lack of ram in laptop 
+    tf_seed = args.seed
+    tf.random.set_seed(tf_seed)
+    return run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model)
+       
 
 
 def parse_arguments():
@@ -780,6 +767,10 @@ def parse_arguments():
     parser.add_argument('--seed', type=int, default=0, required=False, help="")
     parser.add_argument('--data_base_folder', type=str, default="data", required=False, help="")
     parser.add_argument('--learning_rate_model3', type=float, default=3e-2, required=False, help="")
+    parser.add_argument('--no_of_layers_in_ansatz', type=int, default=3, required=False, help="")
+    parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
+    
+
     
 
     
