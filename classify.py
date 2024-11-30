@@ -315,7 +315,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
             else:                            
-                print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV/not in fasttext emb")
+                print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV from train vocab")
              
     
     # assert len(qnlp_model.weights) == len(initial_param_vector)
@@ -726,6 +726,8 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
     print(qnlp_model.weights[0])
+    print(type(train_dataset.targets[0]))
+
     trainer.fit(train_dataset, eval_interval=1, log_interval=1)
     print(qnlp_model.weights[0])
 
