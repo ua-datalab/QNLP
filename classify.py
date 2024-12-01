@@ -610,20 +610,20 @@ def read_data(filename):
 
 
 
-def convert_to_diagrams(list_sents,labels, split="train"):
+def convert_to_diagrams(parser_obj,list_sents,labels,tokeniser, split="train"):
     list_target = []
     labels_target = []
     sent_count_longer_than_32=0
     skipped_sentences_counter_due_to_cant_parse=0
     desc_long = f"converting {split} data to diagrams"
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
-        tokenized = spacy_tokeniser.tokenise_sentence(sent)                
+        tokenized = tokeniser.tokenise_sentence(sent)                
         #when we use numpy, max size of array is 32- update. even in quantum computer
         if len(tokenized)> 32:                
                 sent_count_longer_than_32+=1
                 continue
         try:
-            spiders_diagram = parser_to_use_obj.sentence2diagram(sentence=sent)
+            spiders_diagram = parser_obj.sentence2diagram(sentence=sent)
         except:             
             skipped_sentences_counter_due_to_cant_parse+=1
             continue
@@ -657,7 +657,7 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
     if args.ansatz in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz = args.ansatz ({AtomicType.NOUN: args.base_dimension_for_noun,
                     AtomicType.SENTENCE: args.base_dimension_for_sent,
-                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase} ,n_layers= args.no_of_layers_in_ansatz,single_qubit_params =args.single_qubit_params)    
+                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase} ,n_layers= args.no_of_layers_in_ansatz,n_single_qubit_params=args.single_qubit_params)    
     else:
         ansatz = args.ansatz ({AtomicType.NOUN: Dim(args.base_dimension_for_noun),
                     AtomicType.SENTENCE: Dim(args.base_dimension_for_sent)}  )    
@@ -911,7 +911,7 @@ def perform_task(args):
 
     assert embedding_model!=None
     if(args.parser==BobcatParser):
-        parser_obj=BobcatParser(verbose='text')
+        parser_obj=BobcatParser(verbose='text',root_cats=['N','NP','S'])
 
     
 
@@ -980,17 +980,32 @@ def perform_task(args):
         english_tokenizer = spacy.load("en_core_web_sm")
         spacy_tokeniser.tokeniser =english_tokenizer
     
-    #read the base data, i.e plain text english.
-    train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN))
-    val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV))
-    test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST))
+    if(args.dataset=="sst2"):
+        ds = load_dataset("nyu-mll/glue", "sst2")
+        train_labels, train_data = read_glue_data(ds,split="train", lines_to_read= args.no_of_training_data_points_to_use)
+        val_labels, val_data = read_glue_data(ds,split="validation", lines_to_read= args.no_of_val_data_points_to_use)
+        test_labels, test_data = read_glue_data(ds, split="test", lines_to_read= args.no_of_test_data_points_to_use)
+
+    else:
+        #read the base data, i.e plain text english.
+        train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN))
+        val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV))
+        test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST))
 
 
 
-    #convert the plain text input to ZX diagrams
-    train_diagrams = parser_obj.sentences2diagrams(train_data)
-    val_diagrams = parser_obj.sentences2diagrams(val_data)
-    test_diagrams = parser_obj.sentences2diagrams(test_data)
+    """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
+    in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
+    """
+    if (args.dataset in ["spanish","uspantek","sst2"]):
+        train_diagrams, train_labels = convert_to_diagrams(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
+        val_diagrams, val_labels= convert_to_diagrams(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
+        test_diagrams, test_labels = convert_to_diagrams(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
+    else:
+        #convert the plain text input to ZX diagrams
+        train_diagrams = args.parser.sentences2diagrams(train_data)
+        val_diagrams = args.parser.sentences2diagrams(val_data)
+        test_diagrams = args.parser.sentences2diagrams(test_data)
 
     train_X = []
     val_X = []
@@ -1001,18 +1016,18 @@ def perform_task(args):
     assert len(val_diagrams)== len(val_labels)
     assert len(test_diagrams)== len(test_labels)
     
-    if(args.ansatz!=SpiderAnsatz): #for some reason spider ansatz doesnt like you removing cups
-      remove_cups = RemoveCupsRewriter()
-      train_X = []
-      val_X = []
-      for d in tqdm(train_diagrams):
-          train_X.append(remove_cups(d).normal_form())
+    # if not args.ansatz==SpiderAnsatz: #for some reason spider ansatz doesnt like you removing cups
+    #   remove_cups = RemoveCupsRewriter()
+    #   train_X = []
+    #   val_X = []
+    #   for d in tqdm(train_diagrams):
+    #       train_X.append(remove_cups(d).normal_form())
 
-      for d in tqdm(val_diagrams):    
-          val_X.append(remove_cups(d).normal_form())
+    #   for d in tqdm(val_diagrams):    
+    #       val_X.append(remove_cups(d).normal_form())
 
-      train_diagrams  = train_X
-      val_diagrams    = val_X
+    #   train_diagrams  = train_X
+    #   val_diagrams    = val_X
 
 
 
@@ -1035,10 +1050,10 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="food_it" ,help="type of dataset-choose from uspantek,spanish,food_it,msr_paraphrase_corpus")
+    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=CCGParser, required=False, default=BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
-    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
-    parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
+    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=IQPAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
+    parser.add_argument('--model', type=Model, required=False, default=PennyLaneModel , help="type of model to use: [numpy, pytorch,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
@@ -1057,10 +1072,7 @@ def parse_arguments():
     parser.add_argument('--no_of_training_data_points_to_use', type=int, default=20, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_val_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
-    
-
-    
-
+    parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
     
     return parser.parse_args()
 
