@@ -36,27 +36,47 @@ Status at the EOD
 	- sst
 	- - classical (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
 	  - - gives dtype mismatch on first fit (same for tensor ansatz too)
-	    - - solutions: does that change if you expose val data during model creation?
+	    - - solutions: **Should be an easy fix**
+       			- also  does that change if you expose val data during model creation?
 	- - quantum 
 	  - - + simulation ((IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)): ran into memory issues needs 460GB memory or something
 	    - + actual quantum computer (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
        			- no response for first fit for a few hours)
-	      + - - solutions: does that change if you expose val data during model creation?
-- Non English
-	- Spanish
- 		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
-   			- status: error in first fit: ValueError: not enough values to unpack (expected 2, got 1)
+	      + - - possible solution: does that change if you expose val data during model creation?
+           - MNLI ?
+           - MRPC ?
+           - Food IT toy data
+           -  Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status: 
+      		 	- possible solution: 
       		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-        		 - status:
+        		 - status: 
+      		 	- possible solution: 
            	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
 		 	- status:
     		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
 		 	- status:
-   	 - Uspantek
+- Non English
+	- ## Spanish
+ 		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status: **ValueError**: not enough values to unpack (expected 2, got 1)
+      		 	- possible solution: **Should be an easy fix**. check branch spanish
+      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status: doesnt even start
+      		 	- possible solution: **should be an easy fix** this is being worked on another branch. called spanish. do merge
+           	- Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)
+		 	- status:
+    			- - possible solution: **end of road**
+    		- Quantum 2 -actual quantum computer (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
+		 	- status:
+   	 - ## Uspantek
  		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
    			- status:
+   	  		- - - possible solution:
       		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
         		 - status:
+			- - status: UnboundLocalError: cannot access local variable 'parser_obj' where it is not associated with a value
+           		- - possible solution: Easy fix, this is a branch merge issue
            	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
 		 	- status:
     		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
