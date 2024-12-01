@@ -73,17 +73,18 @@ Status at the EOD
 		 	- status: Taking a long time, buut mostly will be not enough memory
     			- - possible solution: **Try to run for hours, if memory issue, end of road**
     		- Quantum 2 -actual quantum computer (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
-		 	- status:
+		 	- status: killed- taking a long time
+    			- - possible solution: **Try to run for hours, if memory issue, end of road**
    	 - ## Uspantek
- 		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
-   			- status:
-   	  		- - - possible solution:
-      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-        		 - status:
-			- - status: UnboundLocalError: cannot access local variable 'parser_obj' where it is not associated with a value
-           		- - possible solution: Easy fix, this is a branch merge issue
+ 		- Classical 1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status: UnboundLocalError: cannot access local variable 'parser_obj' where it is not associated with a value
+   	  		- - - possible solution: merge error easy fix
+      		- Classical2  (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 -  status: **ValueError**: not enough values to unpack (expected 2, got 1)
+      		 	- possible solution: **Should be an easy fix**. check branch spanish			
            	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
-		 	- status:
+		 	- status: Taking a long time, buut mostly will be not enough memory
+    			- - possible solution: **Try to run for hours, if memory issue, end of road**
     		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
 		 	- status:
 
