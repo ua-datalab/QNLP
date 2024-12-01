@@ -274,10 +274,9 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
 #     max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
 # =======
     if(args.ansatz==SpiderAnsatz):
-        max_word_param_length_train = max(get_max_word_param_length(train_circuits))
-        max_word_param_length_test = max(get_max_word_param_length(val_circuits))
+        max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
+        max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
 
-        
     else: 
         max_word_param_length_train = max(get_max_word_param_length_all_other_ansatz(train_circuits))
         max_word_param_length_val = max(get_max_word_param_length_all_other_ansatz(val_circuits))
@@ -285,7 +284,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     max_word_param_length = max(max_word_param_length_train, max_word_param_length_val) + 1
 
 
-        """ max param length should include a factor from dimension
+    """ max param length should include a factor from dimension
           for example if bakes is n.r@s, and n=2 and s=2, the parameter 
           length must be 4. """
     max_word_param_length = max_word_param_length * max (args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase)
@@ -667,14 +666,14 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
    
     assert len(train_diagrams) == len(train_labels)
     #use the anstaz to create circuits from diagrams
-    train_circuits, train_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=train_diagrams, ansatz=ansatz_obj,labels=train_labels, split="train")        
+    train_circuits, train_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=train_diagrams, ansatz=ansatz,labels=train_labels, split="train")        
     assert len(train_circuits) == len(train_labels)
 
 
-    val_circuits, val_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=val_diagrams, ansatz=ansatz_obj,labels=val_labels, split="val")
+    val_circuits, val_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=val_diagrams, ansatz=ansatz,labels=val_labels, split="val")
     assert len(val_circuits) == len(val_labels)
 
-    test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz_obj,labels=test_labels, split="test")
+    test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz,labels=test_labels, split="test")
     assert len(test_circuits) == len(test_labels)
     
     assert len(train_circuits) > 0
@@ -693,7 +692,7 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
                 }
         qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
 
-    elif(model_to_use==PennyLaneModel): #to run on an actual quantum computer
+    elif(args.model==PennyLaneModel): #to run on an actual quantum computer
         
         from qiskit_ibm_provider import IBMProvider
 
@@ -1002,7 +1001,7 @@ def perform_task(args):
     assert len(val_diagrams)== len(val_labels)
     assert len(test_diagrams)== len(test_labels)
     
-    if(parser_to_use==BobcatParser):
+    if(args.ansatz!=SpiderAnsatz): #for some reason spider ansatz doesnt like you removing cups
       remove_cups = RemoveCupsRewriter()
       train_X = []
       val_X = []
