@@ -31,15 +31,36 @@
 # Meeting Notes
 
 ## nov 30th2024
-- sst
-- - classical (spider and tensor ansatz)
-  - - gives dtype mismatch on first fit
-    - - solutions: does that change if you expose val data during model creation?
-- 
-- - quantum (IQPansatz)
-  - - + simulation: ran into memory issues needs 460GB memory or something
-    - + actual quantum computer: no response for first fit for a few hours)
-      + - - solutions: does that change if you expose val data during model creation?
+Status at the EOD
+- English
+	- sst
+	- - classical (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+	  - - gives dtype mismatch on first fit (same for tensor ansatz too)
+	    - - solutions: does that change if you expose val data during model creation?
+	- - quantum 
+	  - - + simulation ((IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)): ran into memory issues needs 460GB memory or something
+	    - + actual quantum computer (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
+       			- no response for first fit for a few hours)
+	      + - - solutions: does that change if you expose val data during model creation?
+- Non English
+	- Spanish
+ 		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status: error in first fit: ValueError: not enough values to unpack (expected 2, got 1)
+      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status:
+           	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
+		 	- status:
+    		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
+		 	- status:
+   	 - Uspantek
+ 		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status:
+      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status:
+           	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
+		 	- status:
+    		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
+		 	- status:
 
 ## Nov 29th 2024
 
