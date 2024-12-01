@@ -34,12 +34,17 @@
 Status at the EOD
 - English
 	- sst
-	- - classical (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+	- - classical1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
 	  - - gives dtype mismatch on first fit (same for tensor ansatz too)
 	    - - solutions: **Should be an easy fix**
        			- also  does that change if you expose val data during model creation?
+         - Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status: 
+      		 	- possible solution: 
 	- - quantum 
-	  - - + simulation ((IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)): ran into memory issues needs 460GB memory or something
+	  - - + simulation ((IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)):
+       		- status: ran into memory issues needs 460 Million GB memory or something
+         	- possible solutions/next step: **end of road**
 	    - + actual quantum computer (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
        			- no response for first fit for a few hours)
 	      + - - possible solution: does that change if you expose val data during model creation?
@@ -65,8 +70,8 @@ Status at the EOD
         		 - status: doesnt even start
       		 	- possible solution: **should be an easy fix** this is being worked on another branch. called spanish. do merge
            	- Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)
-		 	- status:
-    			- - possible solution: **end of road**
+		 	- status: Taking a long time, buut mostly will be not enough memory
+    			- - possible solution: **Try to run for hours, if memory issue, end of road**
     		- Quantum 2 -actual quantum computer (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
 		 	- status:
    	 - ## Uspantek
