@@ -17,6 +17,15 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
+
+import argparse
+from lambeq.text2diagram.ccg_parser import CCGParser
+from lambeq.ansatz import BaseAnsatz
+from lambeq.training.model import Model
+from lambeq.training.trainer import  Trainer
+import os
+import os.path
+
 import tensorflow as tf
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
@@ -50,133 +59,101 @@ import keras
 from keras import layers
 
 
-TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
-parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
-ansatz_to_use = IQPAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
-model_to_use  = PennyLaneModel   #[numpy, pytorch,TketModel, PennyLaneModel] #note; tket model has to go with quantum trainer while pennylanemodel has to go with pytorch
-trainer_to_use= PytorchTrainer #[PytorchTrai, QuantumTrainer]
-embedding_model_to_use = "english" #[english, spanish]
-MAX_PARAM_LENGTH=0
-DO_TUNING_MODEL3=False
-
-#purely for testing purposes. else takes forever to run on standard datsets like SST which have 65k+ data
-NO_OF_TRAIN_DATA_POINTS_TO_USE = 20 
-NO_OF_VAL_DATA_POINTS_TO_USE = 10
-NO_OF_TEST_DATA_POINTS_TO_USE = 10 
 
 
 
-if(parser_to_use==BobcatParser):
-    parser_to_use_obj=BobcatParser(verbose='text', root_cats=["N","S","NP"])
+# (BASE_DIMENSION_FOR_NOUN =2 
+# BASE_DIMENSION_FOR_SENT =2 
+# BASE_DIMENSION_FOR_PREP_PHRASE= 2
+# MAXPARAMS = 300
+# BATCH_SIZE = 30
+# EPOCHS_TRAIN_MODEL1 = 30 #found 23 from early stopping
+# EPOCHS_MODEL3_OOV_MODEL = 100
+# LEARNING_RATE = 3e-2
+# SEED = 0
+# DATA_BASE_FOLDER= "data"
 
 
-if(embedding_model_to_use=="spanish"):
-    # get_ipython().system('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
-    embedding_model = ft.load_model('./embeddings-l-model.bin')
-if(embedding_model_to_use=="english"):
-    import os.path
-    if not (os.path.isfile('cc.en.300.bin')):
-        filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
-    embedding_model = ft.load_model('cc.en.300.bin')
-
-
-arch = f"{ansatz_to_use}+{parser_to_use_obj}+{trainer_to_use}+{model_to_use}+{embedding_model_to_use}"
-
-
-# maxparams is the maximum qbits (or dimensions of the tensor, as your case be)
-BASE_DIMENSION_FOR_NOUN =2 
-BASE_DIMENSION_FOR_SENT =2 
-BASE_DIMENSION_FOR_PREP_PHRASE= 2
-MAXPARAMS = 300
-BATCH_SIZE = 30
-EPOCHS_TRAIN_MODEL1 = 30 #found 23 from early stopping
-EPOCHS_MODEL3_OOV_MODEL = 100
-LEARNING_RATE = 3e-2
-SEED = 0
-DATA_BASE_FOLDER= "data"
-
-
-#setting a flag for TESTING so that it is done only once.
-#  Everything else is done on train and dev
-TESTING = False
+# #setting a flag for TESTING so that it is done only once.
+# #  Everything else is done on train and dev
+# TESTING = False
 
 
 
-if(TYPE_OF_DATASET_TO_USE== "uspantek"):
-    TRAIN="uspantek_train.txt"
-    DEV="uspantek_dev.txt"
-    TEST="uspantek_test.txt"
+# if(TYPE_OF_DATASET_TO_USE== "uspantek"):
+#     TRAIN="uspantek_train.txt"
+#     DEV="uspantek_dev.txt"
+#     TEST="uspantek_test.txt"
     
 
-if(TYPE_OF_DATASET_TO_USE== "spanish"):
-    TRAIN="spanish_train.txt"
-    DEV="spanish_dev.txt"
-    TEST="spanish_test.txt"
+# if(TYPE_OF_DATASET_TO_USE== "spanish"):
+#     TRAIN="spanish_train.txt"
+#     DEV="spanish_dev.txt"
+#     TEST="spanish_test.txt"
     
 
-if(TYPE_OF_DATASET_TO_USE== "msr_paraphrase_corpus"):
-    TRAIN="msr_paraphrase_train.txt"
-    DEV="msr_paraphrase_test.txt"
-    TEST="msr_paraphrase_test.txt"
-    type_of_data = "pair"
+# if(TYPE_OF_DATASET_TO_USE== "msr_paraphrase_corpus"):
+#     TRAIN="msr_paraphrase_train.txt"
+#     DEV="msr_paraphrase_test.txt"
+#     TEST="msr_paraphrase_test.txt"
+#     type_of_data = "pair"
 
-if(TYPE_OF_DATASET_TO_USE== "food_it"):
-    TRAIN="mc_train_data.txt"
-    DEV="mc_dev_data.txt"
-    TEST="mc_test_data.txt"
+# if(TYPE_OF_DATASET_TO_USE== "food_it"):
+#     TRAIN="mc_train_data.txt"
+#     DEV="mc_dev_data.txt"
+#     TEST="mc_test_data.txt"
     
 
 
-wandb.init(    
-    project="qnlp_nov2024_expts",    
-    config={
-    "learning_rate": LEARNING_RATE,
-    "architecture": arch,
-    "BASE_DIMENSION_FOR_NOUN".lower(): BASE_DIMENSION_FOR_NOUN ,
-    "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
-    "MAXPARAMS".lower() :MAXPARAMS,
-    "BATCH_SIZE".lower():BATCH_SIZE,
-    "EPOCHS".lower() :EPOCHS_TRAIN_MODEL1,
-    "LEARNING_RATE".lower() : LEARNING_RATE,
-    "SEED".lower() : SEED ,
-    "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
-    "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
-    "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATASET_TO_USE,
-    "embedding_model_to_use".lower():embedding_model_to_use
-    })
+# wandb.init(    
+#     project="qnlp_nov2024_expts",    
+#     config={
+#     "learning_rate": LEARNING_RATE,
+#     "architecture": arch,
+#     "BASE_DIMENSION_FOR_NOUN".lower(): BASE_DIMENSION_FOR_NOUN ,
+#     "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
+#     "MAXPARAMS".lower() :MAXPARAMS,
+#     "BATCH_SIZE".lower():BATCH_SIZE,
+#     "EPOCHS".lower() :EPOCHS_TRAIN_MODEL1,
+#     "LEARNING_RATE".lower() : LEARNING_RATE,
+#     "SEED".lower() : SEED ,
+#     "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
+#     "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
+#     "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATASET_TO_USE,
+#     "embedding_model_to_use".lower():embedding_model_to_use
+#     })
+# =======
+# >>>>>>> branch_to_merge_main_and_sst
 
-
-sig = torch.sigmoid
 
 def f1(y_hat, y):
     f1 = F1Score(task="binary", num_classes=2, threshold=0.5)
     return f1(y_hat, y)
 
-# def precision(y_hat, y):
-#     from metrics import MulticlassPrecision
-#     prec = MulticlassPrecision(num_classes=2)
-#     prec.update(y_hat,y)
-#     return prec.compute
 
 def accuracy(y_hat, y):
+        sig = torch.sigmoid
         assert type(y_hat)== type(y)
         # half due to double-counting
         #todo/confirm what does he mean by double counting
         return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  
 
-eval_metrics = {"acc": accuracy, "F1":f1 }
-spacy_tokeniser = SpacyTokeniser()
+# <<<<<<< read_sst
+# eval_metrics = {"acc": accuracy, "F1":f1 }
+# spacy_tokeniser = SpacyTokeniser()
 
-if TYPE_OF_DATASET_TO_USE in ["uspantek","spanish"]:
-    spanish_tokeniser=spacy.load("es_core_news_sm")
-    spacy_tokeniser.tokeniser = spanish_tokeniser
-else:
-    english_tokenizer = spacy.load("en_core_web_sm")
-    spacy_tokeniser.tokeniser =english_tokenizer
+# if TYPE_OF_DATASET_TO_USE in ["uspantek","spanish"]:
+#     spanish_tokeniser=spacy.load("es_core_news_sm")
+#     spacy_tokeniser.tokeniser = spanish_tokeniser
+# else:
+#     english_tokenizer = spacy.load("en_core_web_sm")
+#     spacy_tokeniser.tokeniser =english_tokenizer
 
 
-import os
+# import os
 
+# =======
+# >>>>>>> branch_to_merge_main_and_sst
 
 """go through all the circuits in training data, 
     and pick the one which has highest type value
@@ -207,7 +184,7 @@ given a word from training and dev vocab, get the corresponding embedding using 
 :param vocab: vocabulary
 :return: returns a dictionary of each word and its corresponding embedding
 """ 
-def get_vocab_emb_dict(vocab):            
+def get_vocab_emb_dict(vocab,embedding_model):            
             embed_dict={}
             for wrd in vocab:                
                 cleaned_wrd_just_plain_text,cleaned_wrd_with_type=clean_wrd_for_spider_ansatz_coming_from_vocab(wrd)
@@ -227,9 +204,9 @@ symbol and create a dictionary full of it
 :param vocab: circuits- created from diagrams using an anstaz
 :return: returns a set of all unique words associated i.e vocab
 """ 
-def create_vocab_from_circuits(circuits):
+def create_vocab_from_circuits(circuits,args):
     vocab=set()
-    if(ansatz_to_use==SpiderAnsatz):  
+    if(args.ansatz==SpiderAnsatz):  
         for d in circuits:
             for symb in d.free_symbols:                  
                     cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
@@ -255,10 +232,12 @@ as of nov21st2024 - is hurting the first model's fit- i.e loss not reducing.
 :return: returns a dictionary of each word and its corresponding embedding
 
 """
-def generate_initial_parameterisation(train_circuits, val_circuits,embedding_model, qnlp_model):   
+
+def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model,args):   
+
     
-    train_vocab=create_vocab_from_circuits(train_circuits)
-    val_vocab=create_vocab_from_circuits(val_circuits)
+    train_vocab=create_vocab_from_circuits(train_circuits,args)
+    val_vocab=create_vocab_from_circuits(val_circuits,args)
     print(len(val_vocab.union(train_vocab)), len(train_vocab), len(val_vocab))    
     print(f"OOV word count: i.e out of {len(val_vocab)} words in the testing vocab there are  {len(val_vocab - train_vocab)} words that are not found in training. So they are OOV")
     oov_words=val_vocab - train_vocab
@@ -275,30 +254,49 @@ def generate_initial_parameterisation(train_circuits, val_circuits,embedding_mod
 
    
     max_word_param_length=0
-    if(ansatz_to_use==SpiderAnsatz):
-        max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
-        max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
+# <<<<<<< read_sst
+#     if(ansatz_to_use==SpiderAnsatz):
+#         max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
+#         max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
 
+#     else: 
+
+#         max_word_param_length_train = max(get_max_word_param_length_all_other_ansatz(train_circuits))
+#         max_word_param_length_val = max(get_max_word_param_length_all_other_ansatz(val_circuits))
+
+#     max_word_param_length = max(max_word_param_length_train, max_word_param_length_val) + 1
+
+
+
+#     """ max param length should include a factor from dimension
+#         for example if bakes is n.r@s, and n=2 and s=2, the parameter 
+#         length must be 4. """
+#     max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
+# =======
+    if(args.ansatz==SpiderAnsatz):
+        max_word_param_length_train = max(get_max_word_param_length(train_circuits))
+        max_word_param_length_test = max(get_max_word_param_length(val_circuits))
+
+        
     else: 
-
         max_word_param_length_train = max(get_max_word_param_length_all_other_ansatz(train_circuits))
         max_word_param_length_val = max(get_max_word_param_length_all_other_ansatz(val_circuits))
 
     max_word_param_length = max(max_word_param_length_train, max_word_param_length_val) + 1
 
 
+        """ max param length should include a factor from dimension
+          for example if bakes is n.r@s, and n=2 and s=2, the parameter 
+          length must be 4. """
+    max_word_param_length = max_word_param_length * max (args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase)
 
-    """ max param length should include a factor from dimension
-        for example if bakes is n.r@s, and n=2 and s=2, the parameter 
-        length must be 4. """
-    max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
 
     assert max_word_param_length!=0
     
-    if(ansatz_to_use==SpiderAnsatz):               
+    if(args.ansatz==SpiderAnsatz):               
         #for each word in train and test vocab get its embedding from fasttext
-        train_vocab_embeddings = get_vocab_emb_dict(train_vocab)
-        val_vocab_embeddings = get_vocab_emb_dict(val_vocab)            
+        train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model)
+        val_vocab_embeddings = get_vocab_emb_dict(val_vocab,embedding_model)            
     else:
         #for the words created by other ansatz other formatting is different
         train_vocab_embeddings = {wrd: embedding_model[wrd.split('__')[0]] for wrd in train_vocab}
@@ -316,14 +314,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits,embedding_mod
         Note that this is coming from deep qnlp_model.symbols where each qbit in a given
         word is stored separately. refer this symbols lambeq
         documentation:https://cqcl.github.io/lambeq-docs/tutorials/training-symbols.html"""
-        if(ansatz_to_use==SpiderAnsatz):  
+        if(args.ansatz==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
             
             
             if cleaned_wrd_with_type in train_vocab_embeddings:
-                if model_to_use == PytorchModel:                                                        
+                if args.model == PytorchModel:                                                        
                     # dimension of initial param vector is decided by the actual dimension assigned in qnlp.weights for that word
                     list_of_params_for_this_word=[]
                     for i in range(len(weight)):
@@ -369,9 +367,7 @@ Args:
     Returns:
         a map between each word and its latest final weights
     """
-def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):
-
-   
+def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_param_length):  
 
     trained_param_map = { symbol: param for symbol, param in zip(trained_qnlp_model.symbols, trained_qnlp_model.weights)}
     trained_parameterisation_map = {wrd: np.zeros(max_word_param_length) for wrd in train_embeddings}
@@ -392,7 +388,7 @@ def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_par
 
     return trained_parameterisation_map
 
-def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length):
+def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length,args):
     """
     in the previous func `generate_initial_parameterisation` we took model 1 i.e the QNLP model
     and initialized its weights with the embeddings of the words
@@ -414,7 +410,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     
     cleaned_wrd_with_type=""
     for symbol, trained_weights in dict1.items():
-        if(ansatz_to_use==SpiderAnsatz):  
+        if(args.ansatz==SpiderAnsatz):  
             #symbol and word are different. e.g. aldea_0. From this extract the word
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symbol.name)
             rest = symbol.name.split('_', 1)[1]
@@ -447,7 +443,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             combined = np.hstack([dict2[wrd],pad])                          
             NN_train_Y.append(combined)                                
     
-    if (DO_TUNING_MODEL3):
+    if (args.do_model3_tuning):
         build_model(keras_tuner.HyperParameters())  
     
         tuner = keras_tuner.GridSearch(
@@ -471,7 +467,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         print(tuner.results_summary())
     else:
         OOV_NN_model = keras.Sequential([
-        layers.Dense(int((max_word_param_length + MAXPARAMS) / 2), activation='tanh'),
+        layers.Dense(int((max_word_param_length + args.maxparams) / 2), activation='tanh'),
         layers.Dense(max_word_param_length, activation='tanh'),
         ])
 
@@ -489,10 +485,10 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             start_from_epoch=0
         )
     
-        OOV_NN_model.build(input_shape=(None, MAXPARAMS))
+        OOV_NN_model.build(input_shape=(None, args.maxparams))
 
    
-        hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL,callbacks=[callback])
+        hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=args.epochs_model3_oov_model,callbacks=[callback])
         print(hist.history.keys())
         print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
         plt.plot(hist.history['loss'], label='loss')
@@ -535,7 +531,7 @@ def build_model(hp):
     model = call_existing_code(lr=lr)
     return model
 
-def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, OOV_strategy='random', OOV_model=None):   
+def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, args,OOV_strategy='random', OOV_model=None):   
     pred_parameter_map = {}
 
     #Use the words from train wherever possible, else use DNN prediction
@@ -556,12 +552,12 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     assert len(pred_model.symbols) == len(pred_model.weights)
 
     for sym,weight in zip(pred_model.symbols,pred_model.weights):
-        if(ansatz_to_use==SpiderAnsatz):  
+        if(args.ansatz==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
             if cleaned_wrd_with_type in pred_parameter_map:
-                if model_to_use == PytorchModel:
+                if args.model == PytorchModel:
                     pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type])
 
                     
@@ -614,6 +610,7 @@ def read_data(filename):
 
 
 
+
 def convert_to_diagrams(list_sents,labels, split="train"):
     list_target = []
     labels_target = []
@@ -657,16 +654,15 @@ def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     return list_circuits, list_labels
 
 
-def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_diagrams, test_labels, seed, nlayers):
-    
-    if ansatz_to_use in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
-        ansatz_obj = ansatz_to_use({AtomicType.NOUN: BASE_DIMENSION_FOR_NOUN,
-                    AtomicType.SENTENCE: BASE_DIMENSION_FOR_SENT,
-                    AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE} ,n_layers= nlayers,n_single_qubit_params =3)    
+def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model):
+    if args.ansatz in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
+        ansatz = args.ansatz ({AtomicType.NOUN: args.base_dimension_for_noun,
+                    AtomicType.SENTENCE: args.base_dimension_for_sent,
+                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase} ,n_layers= args.no_of_layers_in_ansatz,single_qubit_params =args.single_qubit_params)    
     else:
-        ansatz_obj = ansatz_to_use({AtomicType.NOUN: Dim(BASE_DIMENSION_FOR_NOUN),
-                    AtomicType.SENTENCE: Dim(BASE_DIMENSION_FOR_SENT),
-                     AtomicType.PREPOSITIONAL_PHRASE: BASE_DIMENSION_FOR_PREP_PHRASE}  )    
+        ansatz = args.ansatz ({AtomicType.NOUN: Dim(args.base_dimension_for_noun),
+                    AtomicType.SENTENCE: Dim(args.base_dimension_for_sent)}  )    
+
     
    
     assert len(train_diagrams) == len(train_labels)
@@ -688,8 +684,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
-    #to run a on simulation of quantum circuits. runs locally on laptop
-    if(model_to_use==TketModel):
+    if(args.model==TketModel):
         backend = AerBackend()
         backend_config = {
                     'backend': backend,
@@ -720,12 +715,12 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
         qnlp_model.initialise_weights()
 
     else:
-        qnlp_model = model_to_use.from_diagrams(train_circuits )
+        qnlp_model = args.model.from_diagrams(train_circuits )
 
     train_dataset = Dataset(
                 train_circuits,
                 train_labels,
-                batch_size=BATCH_SIZE)
+                batch_size=args.batch_size)
 
     val_dataset = Dataset(val_circuits, val_labels, shuffle=False)
 
@@ -736,34 +731,35 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
     assert len(test_circuits)== len(test_labels)
 
 
-    if(trainer_to_use==QuantumTrainer):
+    if(args.trainer==QuantumTrainer):
         trainer = QuantumTrainer(
         model=qnlp_model,
         loss_function=BinaryCrossEntropyLoss(),
-        epochs=EPOCHS_TRAIN_MODEL1,
+        epochs=args.epochs_train_model1,
         optimizer=SPSAOptimizer,
-        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN_MODEL1},
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*args.epochs_train_model1}, #todo: move this abc values to argparse defaults
         evaluate_functions=eval_metrics,
         evaluate_on_train=True,
         verbose='text',
         log_dir='RelPron/logs',
-        seed=SEED
+        seed=seed
         )
     else:
-        trainer = trainer_to_use(
+        trainer = args.trainer(
             model=qnlp_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
-            learning_rate=LEARNING_RATE,            
-            epochs=EPOCHS_TRAIN_MODEL1,
+            learning_rate=args.learning_rate_model1,            
+            epochs=args.epochs_train_model1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
-            seed=SEED)
+            seed=seed)
+
     
 
     train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
-        train_circuits, val_circuits, embedding_model, qnlp_model)
+        train_circuits, val_circuits, embedding_model, qnlp_model,args=args)
 
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
@@ -811,19 +807,20 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
         sys.exit()
 
    
-    NN_model,trained_wts = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length)
-    prediction_model = model_to_use.from_diagrams(val_circuits)
+    NN_model,trained_wts = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length,args)
+    prediction_model = args.model.from_diagrams(val_circuits)
 
-    trainer = trainer_to_use(
+    trainer = args.trainer(
             model=prediction_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
-            learning_rate=LEARNING_RATE,
-            epochs=EPOCHS_TRAIN_MODEL1,
+            learning_rate=args.learning_rate_model3,
+            epochs=args.epochs_train_model1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
-            seed=SEED)
+            seed=seed)
+
 
     smart_loss, smart_acc, smart_f1 = evaluate_val_set(prediction_model,
                                                 val_circuits,
@@ -831,6 +828,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
                                                 trained_wts,
                                                 val_embeddings,
                                                 max_w_param_length,
+                                                args,
                                                 OOV_strategy='model',
                                                 OOV_model=NN_model)
     print(f"value of smart_loss={smart_loss} , value of smart_acc ={smart_acc} value of smart_f1 ={smart_f1}")
@@ -847,69 +845,235 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
 
 
 
-"""end of all function defs+ main thread
-final push-which calls run_experiment function above
-todo: why is he setting random seed, that tooin tensor flow- especially since am using a pytorch model.
-"""
+# <<<<<<< read_sst
+# """end of all function defs+ main thread
+# final push-which calls run_experiment function above
+# todo: why is he setting random seed, that tooin tensor flow- especially since am using a pytorch model.
+# """
 
-#read the base data
-if(TYPE_OF_DATASET_TO_USE=="sst2"):
-    ds = load_dataset("nyu-mll/glue", TYPE_OF_DATASET_TO_USE)
-    train_labels, train_data = read_glue_data(ds,split="train", lines_to_read= NO_OF_TRAIN_DATA_POINTS_TO_USE)
-    val_labels, val_data = read_glue_data(ds,split="validation", lines_to_read= NO_OF_VAL_DATA_POINTS_TO_USE)
-    test_labels, test_data = read_glue_data(ds, split="test", lines_to_read= NO_OF_TEST_DATA_POINTS_TO_USE)
+# #read the base data
+# if(TYPE_OF_DATASET_TO_USE=="sst2"):
+#     ds = load_dataset("nyu-mll/glue", TYPE_OF_DATASET_TO_USE)
+#     train_labels, train_data = read_glue_data(ds,split="train", lines_to_read= NO_OF_TRAIN_DATA_POINTS_TO_USE)
+#     val_labels, val_data = read_glue_data(ds,split="validation", lines_to_read= NO_OF_VAL_DATA_POINTS_TO_USE)
+#     test_labels, test_data = read_glue_data(ds, split="test", lines_to_read= NO_OF_TEST_DATA_POINTS_TO_USE)
 
-else:
-    train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
-    val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
-    test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
+# else:
+#     train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
+#     val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
+#     test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
 
 
-"""#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
-in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
-"""
-if (TYPE_OF_DATASET_TO_USE in ["spanish","uspantek","sst2"]):
-    train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels, split="train")
-    val_diagrams, val_labels= convert_to_diagrams(val_data,val_labels,split="val")
-    test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels,split="test")
-else:
+# """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
+# in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
+# """
+# if (TYPE_OF_DATASET_TO_USE in ["spanish","uspantek","sst2"]):
+#     train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels, split="train")
+#     val_diagrams, val_labels= convert_to_diagrams(val_data,val_labels,split="val")
+#     test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels,split="test")
+# else:
+#     #convert the plain text input to ZX diagrams
+#     train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
+#     val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
+#     test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+
+
+# train_X = []
+# val_X = []
+
+# print(f"count of train, test, val elements respectively are: ")
+# print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
+# assert len(train_diagrams)== len(train_labels)
+# assert len(val_diagrams)== len(val_labels)
+# assert len(test_diagrams)== len(test_labels)
+
+
+
+# compr_results = {}
+# no_of_layers=[1] #ideally should be [1,2,3]. But using only one layer due to lack of ram in laptop. todo: open it up for more
+# tf_seeds = [2] #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop todo: open it up for more
+# =======
+
+# >>>>>>> branch_to_merge_main_and_sst
+
+    
+def perform_task(args):
+    embedding_model= None
+    if(args.dataset in ["uspantek", "spanish"]):
+        # todo add wget ('wget -c https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1 -O ./embeddings-l-model.bin')
+        embedding_model = ft.load_model('./embeddings-l-model.bin')
+    else: 
+        if not (os.path.isfile('cc.en.300.bin')):
+            #todo: move this all to run_me_first.sh
+            filename = wget.download(" https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz")
+        embedding_model= ft.load_model('cc.en.300.bin')
+
+   
+
+    assert embedding_model!=None
+    if(args.parser==BobcatParser):
+        parser_obj=BobcatParser(verbose='text')
+
+    
+
+    
+
+    #setting a flag for TESTING so that it is done only once.
+    #  Everything else is done on train and dev
+    TESTING = False
+
+
+
+    if(args.dataset== "uspantek"):
+        TRAIN="uspantek_train.txt"
+        DEV="uspantek_dev.txt"
+        TEST="uspantek_test.txt"
+        
+
+    if(args.dataset== "spanish"):
+        TRAIN="spanish_train.txt"
+        DEV="spanish_dev.txt"
+        TEST="spanish_test.txt"
+        
+
+    if(args.dataset== "msr_paraphrase_corpus"):
+        TRAIN="msr_paraphrase_train.txt"
+        DEV="msr_paraphrase_test.txt"
+        TEST="msr_paraphrase_test.txt"
+        type_of_data = "pair"
+
+    if(args.dataset== "food_it"):
+        TRAIN="mc_train_data.txt"
+        DEV="mc_dev_data.txt"
+        TEST="mc_test_data.txt"
+        
+
+    # a unique name to identify this run inside wandb data and graph
+    arch = f"{args.ansatz}+'_'+{args.dataset}+'_'+{args.parser}+'_'+{args.trainer}+'_'+{args.model}+'_'+{embedding_model}"
+
+    wandb.init(    
+        project="qnlp_nov2024_expts",    
+        config={
+        "learning_rate_model1": args.learning_rate_model1,
+        "architecture": arch,
+        "BASE_DIMENSION_FOR_NOUN".lower(): args.base_dimension_for_noun ,
+        "BASE_DIMENSION_FOR_SENT".lower():args.base_dimension_for_sent,
+        "MAXPARAMS".lower() :args.maxparams,
+        "BATCH_SIZE".lower():args.batch_size,
+        "EPOCHS".lower() : args.epochs_train_model1,
+        "LEARNING_RATE_model3".lower() : args.learning_rate_model3,
+        "SEED".lower() : args.seed , #todo: either pick this seed in args, or the one before calling run_expt. Not both
+        "DATA_BASE_FOLDER".lower():args.data_base_folder,
+        "EPOCHS_DEV".lower():args.epochs_model3_oov_model,
+        "TYPE_OF_DATA_TO_USE".lower():args.dataset,
+        "embedding_model_to_use".lower():embedding_model
+        })
+
+
+    
+    eval_metrics = {"acc": accuracy, "F1":f1 }
+    spacy_tokeniser = SpacyTokeniser()
+
+    if args.dataset  in ["uspantek","spanish"]:
+        spanish_tokeniser=spacy.load("es_core_news_sm")
+        spacy_tokeniser.tokeniser = spanish_tokeniser
+    else:
+        english_tokenizer = spacy.load("en_core_web_sm")
+        spacy_tokeniser.tokeniser =english_tokenizer
+    
+    #read the base data, i.e plain text english.
+    train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN))
+    val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV))
+    test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST))
+
+
+
     #convert the plain text input to ZX diagrams
-    train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-    val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-    test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
+    train_diagrams = parser_obj.sentences2diagrams(train_data)
+    val_diagrams = parser_obj.sentences2diagrams(val_data)
+    test_diagrams = parser_obj.sentences2diagrams(test_data)
 
-
-train_X = []
-val_X = []
-
-print(f"count of train, test, val elements respectively are: ")
-print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
-assert len(train_diagrams)== len(train_labels)
-assert len(val_diagrams)== len(val_labels)
-assert len(test_diagrams)== len(test_labels)
-
-if(parser_to_use==BobcatParser):
-    remove_cups = RemoveCupsRewriter()
     train_X = []
     val_X = []
-    for d in tqdm(train_diagrams):
-        train_X.append(remove_cups(d).normal_form())
 
-    for d in tqdm(val_diagrams):    
-        val_X.append(remove_cups(d).normal_form())
+    print(f"count of train, test, val elements respectively are: ")
+    print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
+    assert len(train_diagrams)== len(train_labels)
+    assert len(val_diagrams)== len(val_labels)
+    assert len(test_diagrams)== len(test_labels)
+    
+    if(parser_to_use==BobcatParser):
+      remove_cups = RemoveCupsRewriter()
+      train_X = []
+      val_X = []
+      for d in tqdm(train_diagrams):
+          train_X.append(remove_cups(d).normal_form())
 
-    train_diagrams  = train_X
-    val_diagrams    = val_X
+      for d in tqdm(val_diagrams):    
+          val_X.append(remove_cups(d).normal_form())
+
+      train_diagrams  = train_X
+      val_diagrams    = val_X
 
 
-compr_results = {}
-no_of_layers=[1] #ideally should be [1,2,3]. But using only one layer due to lack of ram in laptop. todo: open it up for more
-tf_seeds = [2] #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop todo: open it up for more
 
-for tf_seed in tf_seeds:
+
+
+        
+    """todo: why is he setting random seed, that tooin tensor flow
+    - especially since am using a pytorch model."""
+
+
+
+    #ideally should be tested over more than 1 seed and layers 1 throught 3 minimally- and average take. 
+    # But  commenting out due to lack of ram in laptop 
+    tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-    this_seed_results = []    
-    for nl in no_of_layers:    
-        this_seed_results.append([run_experiment(train_diagrams=train_diagrams, train_labels= train_labels, val_diagrams= val_diagrams, val_labels= val_labels, test_diagrams=test_diagrams, test_labels=test_labels,nlayers= nl, seed= tf_seed )])
-    compr_results[tf_seed] = this_seed_results
 
+    return run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model)
+       
+
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Description of your script.")
+    parser.add_argument('--dataset', type=str, required=False, default="food_it" ,help="type of dataset-choose from uspantek,spanish,food_it,msr_paraphrase_corpus")
+    parser.add_argument('--parser', type=CCGParser, required=False, default=BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
+    parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
+    parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
+    parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
+    parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
+    parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_sent', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=2, required=False, help="")
+    parser.add_argument('--maxparams', type=int, default=300, required=False, help="")
+    parser.add_argument('--batch_size', type=int, default=30, required=False, help="")
+    parser.add_argument('--epochs_train_model1', type=int, default=30, required=False, help="")
+    parser.add_argument('--epochs_model3_oov_model', type=int, default=100, required=False, help="")
+    parser.add_argument('--learning_rate_model1', type=float, default=3e-2, required=False, help="")
+    parser.add_argument('--seed', type=int, default=0, required=False, help="")
+    parser.add_argument('--data_base_folder', type=str, default="data", required=False, help="")
+    parser.add_argument('--learning_rate_model3', type=float, default=3e-2, required=False, help="")
+    parser.add_argument('--no_of_layers_in_ansatz', type=int, default=3, required=False, help="")
+    parser.add_argument('--no_of_training_data_points_to_use', type=int, default=20, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_val_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    
+
+    
+
+    
+    return parser.parse_args()
+
+
+
+
+def main():
+    args = parse_arguments()
+    perform_task(args)
+
+if __name__=="__main__":
+        main()
+     
+        
+        
