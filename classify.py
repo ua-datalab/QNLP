@@ -54,7 +54,7 @@ TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = IQPAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
 model_to_use  = PennyLaneModel   #[numpy, pytorch,TketModel, PennyLaneModel]
-trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
+trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
@@ -713,11 +713,11 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
         backend_config = {'backend': 'qiskit.ibmq',
                         'device': 'ibm_brisbane',
                         'shots': 1000}
-        q_model = PennyLaneModel.from_diagrams(train_circuits,
+        qnlp_model = PennyLaneModel.from_diagrams(train_circuits,
                                        probabilities=True,
                                        normalize=True,
                                        backend_config=backend_config)
-        q_model.initialise_weights()
+        qnlp_model.initialise_weights()
 
     else:
         qnlp_model = model_to_use.from_diagrams(train_circuits )
@@ -729,9 +729,8 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
 
     val_dataset = Dataset(val_circuits, val_labels, shuffle=False)
 
-    print(len(train_labels), len(train_circuits))
-    
-    print(len(train_circuits), len(val_circuits), len(test_circuits))
+    print(f"length of train_labels is {len(train_labels)} and there are  {len(train_circuits)} circuits in training")
+    print(f"there are {len(train_circuits)} circuits currently in training, {len(val_circuits)} in val, and {len(test_circuits)} in testing")
     assert len(train_circuits)== len(train_labels)
     assert len(val_circuits)== len(val_labels)
     assert len(test_circuits)== len(test_labels)
