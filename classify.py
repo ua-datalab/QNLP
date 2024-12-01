@@ -482,7 +482,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             monitor='val_loss',
             min_delta=0.01,
             patience=10,
-            verbose=1,
+            verbose=2,
             mode='auto',
             baseline=None,
             restore_best_weights=True,
@@ -492,7 +492,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         OOV_NN_model.build(input_shape=(None, MAXPARAMS))
 
    
-        hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=EPOCHS_MODEL3_OOV_MODEL,callbacks=[callback])
+        hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL,callbacks=[callback])
         print(hist.history.keys())
         print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
         plt.plot(hist.history['loss'], label='loss')
@@ -622,8 +622,8 @@ def convert_to_diagrams(list_sents,labels, split="train"):
     desc_long = f"converting {split} data to diagrams"
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
         tokenized = spacy_tokeniser.tokenise_sentence(sent)                
-        if( ansatz_to_use==SpiderAnsatz ): #when we use numpy, max size of array is 32
-            if len(tokenized)> 32:                
+        #when we use numpy, max size of array is 32- update. even in quantum computer
+        if len(tokenized)> 32:                
                 sent_count_longer_than_32+=1
                 continue
         try:
@@ -745,7 +745,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
         optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*EPOCHS_TRAIN_MODEL1},
         evaluate_functions=eval_metrics,
         evaluate_on_train=True,
-        verbose='progress',
+        verbose='text',
         log_dir='RelPron/logs',
         seed=SEED
         )
@@ -758,7 +758,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
             epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
-            verbose='progress',
+            verbose='text',
             seed=SEED)
     
 
@@ -822,7 +822,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
             epochs=EPOCHS_TRAIN_MODEL1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
-            verbose='progress',
+            verbose='text',
             seed=SEED)
 
     smart_loss, smart_acc, smart_f1 = evaluate_val_set(prediction_model,
