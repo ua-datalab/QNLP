@@ -1016,18 +1016,18 @@ def perform_task(args):
     assert len(val_diagrams)== len(val_labels)
     assert len(test_diagrams)== len(test_labels)
     
-    # if not args.ansatz==SpiderAnsatz: #for some reason spider ansatz doesnt like you removing cups
-    #   remove_cups = RemoveCupsRewriter()
-    #   train_X = []
-    #   val_X = []
-    #   for d in tqdm(train_diagrams):
-    #       train_X.append(remove_cups(d).normal_form())
+    if not args.ansatz==SpiderAnsatz: #for some reason spider ansatz doesnt like you removing cups
+      remove_cups = RemoveCupsRewriter()
+      train_X = []
+      val_X = []
+      for d in tqdm(train_diagrams):
+          train_X.append(remove_cups(d).normal_form())
 
-    #   for d in tqdm(val_diagrams):    
-    #       val_X.append(remove_cups(d).normal_form())
+      for d in tqdm(val_diagrams):    
+          val_X.append(remove_cups(d).normal_form())
 
-    #   train_diagrams  = train_X
-    #   val_diagrams    = val_X
+      train_diagrams  = train_X
+      val_diagrams    = val_X
 
 
 

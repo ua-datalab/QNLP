@@ -9,6 +9,7 @@ pip install fasttext
 pip install pytest
 pip install huggingface-hub
 pip install datasets
+export TOKENIZERS_PARALLELISM=True
 python3 -m spacy download es_core_news_sm
 python3 -m spacy download en_core_web_sm
 conda install -y anaconda::wget
