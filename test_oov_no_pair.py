@@ -6,7 +6,10 @@ from lambeq import BobcatParser,spiders_reader
 from lambeq import QuantumTrainer, PytorchTrainer
 from classify import main, parse_arguments, perform_task
 import argparse
-
+from lambeq.text2diagram.ccg_parser import CCGParser
+from lambeq.ansatz import BaseAnsatz
+from lambeq.training.model import Model
+from lambeq.training.trainer import Trainer
 
 
 class TestClass:
