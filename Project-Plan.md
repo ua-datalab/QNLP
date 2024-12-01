@@ -86,7 +86,7 @@ Status at the EOD
 		 	- status: Taking a long time, buut mostly will be not enough memory
     			- - possible solution: **Try to run for hours, if memory issue, end of road**
     		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
-		 	- status:
+		 	- status: IBM cloud login issue
 
 ## Nov 29th 2024
 
