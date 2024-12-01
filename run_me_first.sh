@@ -3,9 +3,12 @@ pip install scipy
 pip install numpy   
 pip install spacy     
 pip install tensorflow
-pip install lambeq
+pip install lambeq[extras] #if you are using zsh on mac osx use this instead: pip install 'lambeq[extras]'
+pip install qiskit-ibm-runtime
 pip install fasttext
 pip install pytest
+pip install huggingface-hub
+pip install datasets
 python3 -m spacy download es_core_news_sm
 python3 -m spacy download en_core_web_sm
 conda install -y anaconda::wget

@@ -39,7 +39,7 @@ from lambeq import Dataset
 from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz, IQPAnsatz,Sim14Ansatz
 from lambeq import BobcatParser,spiders_reader
-from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader
+from lambeq import TketModel, NumpyModel, QuantumTrainer, SPSAOptimizer, Dataset, TreeReader,PennyLaneModel
 import wget
 import wandb
 from pytket.extensions.qiskit import AerBackend
@@ -53,7 +53,7 @@ from keras import layers
 TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = IQPAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
-model_to_use  = TketModel   #[numpy, pytorch,TketModel]
+model_to_use  = PennyLaneModel   #[numpy, pytorch,TketModel, PennyLaneModel]
 trainer_to_use= QuantumTrainer #[PytorchTrainer, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 MAX_PARAM_LENGTH=0
@@ -688,6 +688,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
 
+    #to run a on simulation of quantum circuits. runs locally on laptop
     if(model_to_use==TketModel):
         backend = AerBackend()
         backend_config = {
@@ -696,6 +697,28 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels, test_
                     'shots': 8192
                 }
         qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
+
+    elif(model_to_use==PennyLaneModel): #to run on an actual quantum computer
+        
+        from qiskit_ibm_provider import IBMProvider
+
+        # Save the account, use overwrite=True if necessary
+        IBMProvider.save_account(token='dab4b9f2ebfe284f0bd397651343563794ef7c2dfe99294a258a99c34c8be5dbd3a88e149b43ade9c9002fa8b071a615edcb58c8971e72e1348df58577b5d65a', overwrite=True)
+
+
+        # import pennylane as qml
+        # qml.default_config['qiskit.ibmq.ibmqx_token'] = ''
+        # qml.default_config.save(qml.default_config.path,overwrite=True)
+
+        backend_config = {'backend': 'qiskit.ibmq',
+                        'device': 'ibm_brisbane',
+                        'shots': 1000}
+        q_model = PennyLaneModel.from_diagrams(train_circuits,
+                                       probabilities=True,
+                                       normalize=True,
+                                       backend_config=backend_config)
+        q_model.initialise_weights()
+
     else:
         qnlp_model = model_to_use.from_diagrams(train_circuits )
 
