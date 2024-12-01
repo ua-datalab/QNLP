@@ -53,8 +53,8 @@ from keras import layers
 TYPE_OF_DATASET_TO_USE = "sst2" #["uspantek","spanish","food_it","msr_paraphrase_corpus","sst2"]
 parser_to_use = BobcatParser    #[tree_reader,bobCatParser, spiders_reader,depCCGParser]
 ansatz_to_use = IQPAnsatz    #[IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]
-model_to_use  = PennyLaneModel   #[numpy, pytorch,TketModel, PennyLaneModel]
-trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+model_to_use  = PennyLaneModel   #[numpy, pytorch,TketModel, PennyLaneModel] #note; tket model has to go with quantum trainer while pennylanemodel has to go with pytorch
+trainer_to_use= PytorchTrainer #[PytorchTrai, QuantumTrainer]
 embedding_model_to_use = "english" #[english, spanish]
 MAX_PARAM_LENGTH=0
 DO_TUNING_MODEL3=False
