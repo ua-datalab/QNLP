@@ -254,25 +254,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
 
    
     max_word_param_length=0
-# <<<<<<< read_sst
-#     if(ansatz_to_use==SpiderAnsatz):
-#         max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
-#         max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
 
-#     else: 
-
-#         max_word_param_length_train = max(get_max_word_param_length_all_other_ansatz(train_circuits))
-#         max_word_param_length_val = max(get_max_word_param_length_all_other_ansatz(val_circuits))
-
-#     max_word_param_length = max(max_word_param_length_train, max_word_param_length_val) + 1
-
-
-
-#     """ max param length should include a factor from dimension
-#         for example if bakes is n.r@s, and n=2 and s=2, the parameter 
-#         length must be 4. """
-#     max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
-# =======
     if(args.ansatz==SpiderAnsatz):
         max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
         max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
@@ -1057,9 +1039,9 @@ def parse_arguments():
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
-    parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")
-    parser.add_argument('--base_dimension_for_sent', type=int, default=2, required=False, help="")
-    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_noun', type=int, default=1, required=False, help="")
+    parser.add_argument('--base_dimension_for_sent', type=int, default=1, required=False, help="")
+    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=1, required=False, help="")
     parser.add_argument('--maxparams', type=int, default=300, required=False, help="")
     parser.add_argument('--batch_size', type=int, default=30, required=False, help="")
     parser.add_argument('--epochs_train_model1', type=int, default=30, required=False, help="")
