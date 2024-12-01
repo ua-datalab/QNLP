@@ -30,6 +30,17 @@
 
 # Meeting Notes
 
+## nov 30th2024
+- sst
+- - classical (spider and tensor ansatz)
+  - - gives dtype mismatch on first fit
+    - - solutions: does that change if you expose val data during model creation?
+- 
+- - quantum (IQPansatz)
+  - - + simulation: ran into memory issues needs 460GB memory or something
+    - + actual quantum computer: no response for first fit for a few hours)
+      + - - solutions: does that change if you expose val data during model creation?
+
 ## Nov 29th 2024
 
 - continuing with SST2 data
@@ -48,7 +59,7 @@
 	
 	- - - try replacing spider ansatz with tensor ansatz
 	- - after runs end to end 
-	- - - run pytest for food_it (pass variables)
+	- - - run pytest for food_it (pass variables) ---done
 	- - - add pytest for sst2
 	- - - turn on tuning
 	- - - get values with and without exposing dev during initialization
