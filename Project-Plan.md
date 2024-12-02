@@ -37,8 +37,10 @@ Status@Dec2nd202410am
 	- - **classical 1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
 	  	- classical 1.a:(with 20 data points)
     			- classical 1.a.1.- Without exposing val to the model 
-   		 	"status: 
+   		 	"status: Model 1: training accuracy (30 epochs): 92% val Accuracy: Not applicable
+      				-model 3 (oov model + model 4: 60% accuracy)
 			- classical 1.a.2: with exposing val to model
+    - 
 		- - classical 1.b:(with 100 data points train +1000 test)
     		- - classical 1.c:(with 10k data points train)
     
