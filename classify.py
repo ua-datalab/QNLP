@@ -83,7 +83,7 @@ def accuracy(y_hat, y):
     """
 def get_max_word_param_length_spider_ansatz(input_circuits):
         lengths=[]
-        for d in input_circuits:
+        for d in tqdm(input_circuits, total=len(input_circuits)):
             for symb in d.free_symbols:
                 x =  symb.name.split('_', 1)[1]
                 y = x.split('__')[0]
@@ -562,7 +562,8 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
                     AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase} ,n_layers= args.no_of_layers_in_ansatz,n_single_qubit_params=args.single_qubit_params)    
     else:
         ansatz = args.ansatz ({AtomicType.NOUN: Dim(args.base_dimension_for_noun),
-                    AtomicType.SENTENCE: Dim(args.base_dimension_for_sent)}  )    
+                    AtomicType.SENTENCE: Dim(args.base_dimension_for_sent),
+                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase}  )    
 
    
     assert len(train_diagrams) == len(train_labels)
@@ -893,10 +894,10 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--dataset', type=str, required=False, default="spanish" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=CCGParser, required=False, default=BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
-    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=IQPAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
-    parser.add_argument('--model', type=Model, required=False, default=PennyLaneModel , help="type of model to use: [numpy, pytorch,TketModel]")
+    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
+    parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
