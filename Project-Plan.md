@@ -45,9 +45,8 @@ Status@Dec2nd202410am
     - 
 		- - classical 1.b:(with 100 data points train +1000 test)
     		- - classical 1.c:(with 10k data points train)
-    
-        - - **classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
-        		 - status: 
+    	- - **classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status: same DTYpe mismatch error
       		 	- possible solution:
            		- todos
            			- run again and confirm
