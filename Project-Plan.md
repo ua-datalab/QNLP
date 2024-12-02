@@ -31,12 +31,12 @@
 # Meeting Notes
 
 ## nov 30th2024
-Status at the EOD
+Status@Dec2nd202410am
 - English
-	- sst
-	- - classical1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-	  - - gives dtype mismatch on first fit (same for tensor ansatz too)
-	    - - solutions: **Should be an easy fix**
+	- **sst**
+	- - **classical1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+	  - - "status: Error **gives dtype mismatch on first fit (same for tensor ansatz too)**
+	    - - solutions: Should be an easy fix
        			- also  does that change if you expose val data during model creation?
          - Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
         		 - status: 
@@ -64,21 +64,22 @@ Status at the EOD
 - Non English
 	- ## Spanish
  		- **Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)**
-   			- **status: error mismatch datatype**Should be an easy fix.check branch spanish 		- - update: Turns out not so easy fix
-      - 	- - also check if exposing val helps.--nope same error.
-          	- - - also will increeasing base dimension help
-          	- - also build bobcat parser locally- there are some words which its giving dimension of 10- even in small sentences? i mean the word itself is n_ something. which means just one noun. then why 10? update, the word is NameError("name 'y_9__n' is not defined"). in sentence 15, eh tanto problema
+   		- **status: error mismatch datatype**Should be an easy fix.check branch spanish 		- - update: Turns out not so easy fix
+       		- - also check if exposing val helps.--nope same error.
+          	- - - also will increeasing/reducing base dimension help- different erro,ValueError: not enough values to unpack (expected 2, got 1).-**once you find out what exactly is base dimension it will solve your dtype issue also**
+        	- - - note: am working on the new branch: merge_spanish_to_main
           	  - - use suprress_exceptions=True--nope same error
-          	    - dont use remove_cups--- nope same error
-      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-        		 - status: doesnt even start
+          	  - dont use remove_cups--- nope same error
+        		- - also build bobcat parser locally- there are some words which its giving dimension of 10- even in small sentences? i mean the word itself is n_ something. which means just one noun. then why 10? update, the word is NameError("name 'y_9__n' is not defined"). in sentence 15, eh tanto problema
+      		- **Classical2 Spider parser, spider ansatz, pytorch model, pytorchtrainer)**
+        		 - **status: doesnt even start**
       		 	- possible solution: **should be an easy fix** this is being worked on another branch. called spanish. do merge
-           	- Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)
+           	- **Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)**
 		 	- status: Taking a long time, buut mostly will be not enough memory
     			- - possible solution: **Try to run for hours, if memory issue, end of road**
-    		- Quantum 2 -actual quantum computer (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
+    		- **Quantum 2 -actual quantum computer** (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
 		 	- status: killed- taking a long time
-    			- - possible solution: **Try to run for hours, if memory issue, end of road**
+    			- - possible solution: **todo:Try to run for hours- maybe from cyverse?**
    	 - ## Uspantek
  		- Classical 1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
    			- status: UnboundLocalError: cannot access local variable 'parser_obj' where it is not associated with a value
