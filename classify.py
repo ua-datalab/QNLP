@@ -617,7 +617,7 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
         qnlp_model.initialise_weights()
 
     else:
-        qnlp_model = args.model.from_diagrams(train_circuits )
+        qnlp_model = args.model.from_diagrams(train_circuits + val_circuits)
 
     train_dataset = Dataset(
                 train_circuits,
@@ -668,7 +668,7 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
     print(qnlp_model.weights[0])
     print(type(train_dataset.targets[0]))
 
-    trainer.fit(train_dataset, eval_interval=1, log_interval=1)
+    trainer.fit(train_dataset, val_dataset,eval_interval=1, log_interval=1)
     print(qnlp_model.weights[0])
 
     print("***********Training of first model completed**********")
@@ -904,8 +904,8 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="spanish" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default=spiders_reader, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--parser', type=CCGParser, required=False, default=spiders_reader(), help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
