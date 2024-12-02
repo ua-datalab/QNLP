@@ -77,7 +77,8 @@ Status@Dec2nd202410am
            - update: **without exposing val during first fit. gives 95% training accuracy on first fit. bad news is OOV model3 accuracy is 54%**
            -  todo:
            - a) run with exposing val during first fit: after first fit, model1 training accuracy: 85.54 model1val accuracy = 77.27 model3 accuracy=45% (but that has early stopping from another dataset food_it/is tunable)
-           - b) run without exposing val during first fit
+           - ## todo
+           - bring in GPT embeddings and see if accuracy improves
            	- **Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)**
 		 	- status: Taking a long time, buut mostly will be not enough memory
     			- - possible solution: **Try to run for hours, if memory issue, end of road**
@@ -85,9 +86,11 @@ Status@Dec2nd202410am
 		 	- status: killed- taking a long time
     			- - possible solution: **todo:Try to run for hours- maybe from cyverse?**
    	 - ## Uspantek
- 		- Classical 1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-   			- status: UnboundLocalError: cannot access local variable 'parser_obj' where it is not associated with a value
-   	  		- - - possible solution: merge error easy fix
+ 		- Classical 1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer) + exposing val data
+   			- status: runs end to end. phew. model 1. train accuracy =90% validation accuracy: 59.09 (note: this is 30 epochs- which is hard coded. tuneable)
+   	  		- model 3  accuracy=50%
+   	    		- run without exposing val data  
+   	  		
       		- Classical2  (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
         		 -  status: **ValueError**: not enough values to unpack (expected 2, got 1)
       		 	- possible solution: **Should be an easy fix**. check branch spanish			
