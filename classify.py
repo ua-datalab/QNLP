@@ -520,11 +520,14 @@ def convert_to_diagrams_with_try_catch(parser_obj,list_sents,labels,tokeniser, s
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
         tokenized_sent = tokeniser.tokenise_sentence(sent)                
         #when we use numpy, max size of array is 32- update. even in quantum computer
-        if len(tokenized_sent)> 32:                
-                sent_count_longer_than_32+=1
-                continue
+        if len(tokenized_sent)> 29:                
+                 sent_count_longer_than_32+=1
+                 continue
         try:
-            sent_diagram = parser_obj.sentence2diagram(tokenized_sent, suppress_exceptions=True, tokenised=True)
+            if(parser_obj==spiders_reader):
+                 sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
+            else:
+                 sent_diagram = parser_obj.sentence2diagram(tokenized_sent, suppress_exceptions=True, tokenised=True)
         except Exception as ex:             
             print(ex)
             skipped_sentences_counter_due_to_cant_parse+=1
@@ -757,6 +760,9 @@ def perform_task(args):
 
    
 
+    parser_obj = args.parser
+
+    #spiders reader, we are directly using the reader, whilbobcat needs someone to create an obj of it
     assert embedding_model!=None
     if(args.parser==BobcatParser):
         parser_obj=BobcatParser(verbose='text',root_cats=['N','NP','S'])
@@ -899,7 +905,7 @@ def perform_task(args):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
     parser.add_argument('--dataset', type=str, required=False, default="spanish" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default=BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--parser', type=CCGParser, required=False, default=spiders_reader, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
