@@ -18,6 +18,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 """
 
 
+
 import argparse
 from lambeq.text2diagram.ccg_parser import CCGParser
 from lambeq.ansatz import BaseAnsatz
@@ -25,7 +26,6 @@ from lambeq.training.model import Model
 from lambeq.training.trainer import  Trainer
 import os
 import os.path
-
 import tensorflow as tf
 from lambeq import RemoveCupsRewriter
 from tqdm import tqdm
@@ -57,73 +57,9 @@ import numpy as np
 import keras_tuner
 import keras
 from keras import layers
+import os.path
 
 
-
-
-
-# (BASE_DIMENSION_FOR_NOUN =2 
-# BASE_DIMENSION_FOR_SENT =2 
-# BASE_DIMENSION_FOR_PREP_PHRASE= 2
-# MAXPARAMS = 300
-# BATCH_SIZE = 30
-# EPOCHS_TRAIN_MODEL1 = 30 #found 23 from early stopping
-# EPOCHS_MODEL3_OOV_MODEL = 100
-# LEARNING_RATE = 3e-2
-# SEED = 0
-# DATA_BASE_FOLDER= "data"
-
-
-# #setting a flag for TESTING so that it is done only once.
-# #  Everything else is done on train and dev
-# TESTING = False
-
-
-
-# if(TYPE_OF_DATASET_TO_USE== "uspantek"):
-#     TRAIN="uspantek_train.txt"
-#     DEV="uspantek_dev.txt"
-#     TEST="uspantek_test.txt"
-    
-
-# if(TYPE_OF_DATASET_TO_USE== "spanish"):
-#     TRAIN="spanish_train.txt"
-#     DEV="spanish_dev.txt"
-#     TEST="spanish_test.txt"
-    
-
-# if(TYPE_OF_DATASET_TO_USE== "msr_paraphrase_corpus"):
-#     TRAIN="msr_paraphrase_train.txt"
-#     DEV="msr_paraphrase_test.txt"
-#     TEST="msr_paraphrase_test.txt"
-#     type_of_data = "pair"
-
-# if(TYPE_OF_DATASET_TO_USE== "food_it"):
-#     TRAIN="mc_train_data.txt"
-#     DEV="mc_dev_data.txt"
-#     TEST="mc_test_data.txt"
-    
-
-
-# wandb.init(    
-#     project="qnlp_nov2024_expts",    
-#     config={
-#     "learning_rate": LEARNING_RATE,
-#     "architecture": arch,
-#     "BASE_DIMENSION_FOR_NOUN".lower(): BASE_DIMENSION_FOR_NOUN ,
-#     "BASE_DIMENSION_FOR_SENT".lower():BASE_DIMENSION_FOR_SENT ,
-#     "MAXPARAMS".lower() :MAXPARAMS,
-#     "BATCH_SIZE".lower():BATCH_SIZE,
-#     "EPOCHS".lower() :EPOCHS_TRAIN_MODEL1,
-#     "LEARNING_RATE".lower() : LEARNING_RATE,
-#     "SEED".lower() : SEED ,
-#     "DATA_BASE_FOLDER".lower():DATA_BASE_FOLDER,
-#     "EPOCHS_DEV".lower():EPOCHS_MODEL3_OOV_MODEL,
-#     "TYPE_OF_DATA_TO_USE".lower():TYPE_OF_DATASET_TO_USE,
-#     "embedding_model_to_use".lower():embedding_model_to_use
-#     })
-# =======
-# >>>>>>> branch_to_merge_main_and_sst
 
 
 def f1(y_hat, y):
@@ -138,22 +74,6 @@ def accuracy(y_hat, y):
         #todo/confirm what does he mean by double counting
         return torch.sum(torch.eq(torch.round(sig(y_hat)), y))/len(y)/2  
 
-# <<<<<<< read_sst
-# eval_metrics = {"acc": accuracy, "F1":f1 }
-# spacy_tokeniser = SpacyTokeniser()
-
-# if TYPE_OF_DATASET_TO_USE in ["uspantek","spanish"]:
-#     spanish_tokeniser=spacy.load("es_core_news_sm")
-#     spacy_tokeniser.tokeniser = spanish_tokeniser
-# else:
-#     english_tokenizer = spacy.load("en_core_web_sm")
-#     spacy_tokeniser.tokeniser =english_tokenizer
-
-
-# import os
-
-# =======
-# >>>>>>> branch_to_merge_main_and_sst
 
 """go through all the circuits in training data, 
     and pick the one which has highest type value
@@ -254,25 +174,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
 
    
     max_word_param_length=0
-# <<<<<<< read_sst
-#     if(ansatz_to_use==SpiderAnsatz):
-#         max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
-#         max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
 
-#     else: 
-
-#         max_word_param_length_train = max(get_max_word_param_length_all_other_ansatz(train_circuits))
-#         max_word_param_length_val = max(get_max_word_param_length_all_other_ansatz(val_circuits))
-
-#     max_word_param_length = max(max_word_param_length_train, max_word_param_length_val) + 1
-
-
-
-#     """ max param length should include a factor from dimension
-#         for example if bakes is n.r@s, and n=2 and s=2, the parameter 
-#         length must be 4. """
-#     max_word_param_length = max_word_param_length * max (BASE_DIMENSION_FOR_SENT,BASE_DIMENSION_FOR_NOUN, BASE_DIMENSION_FOR_PREP_PHRASE)
-# =======
     if(args.ansatz==SpiderAnsatz):
         max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
         max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
@@ -580,6 +482,7 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
 
     return loss_val, acc_val, f1score_val
 
+
 def read_glue_data(dataset_downloaded,split,lines_to_read=0):
         assert lines_to_read != 0
         line_counter=0
@@ -608,8 +511,6 @@ def read_data(filename):
             return labels, sentences
 
 
-
-
 def convert_to_diagrams(parser_obj,list_sents,labels,tokeniser, split="train"):
     list_target = []
     labels_target = []
@@ -634,6 +535,7 @@ def convert_to_diagrams(parser_obj,list_sents,labels,tokeniser, split="train"):
     print(f"out of a total of ={len(list_sents)}sentences {skipped_sentences_counter_due_to_cant_parse} were skipped because they were unparsable")
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
+
 
 def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     list_circuits =[]
@@ -662,7 +564,6 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
         ansatz = args.ansatz ({AtomicType.NOUN: Dim(args.base_dimension_for_noun),
                     AtomicType.SENTENCE: Dim(args.base_dimension_for_sent)}  )    
 
-    
    
     assert len(train_diagrams) == len(train_labels)
     #use the anstaz to create circuits from diagrams
@@ -698,12 +599,6 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
 
         # Save the account, use overwrite=True if necessary
         IBMProvider.save_account(token='dab4b9f2ebfe284f0bd397651343563794ef7c2dfe99294a258a99c34c8be5dbd3a88e149b43ade9c9002fa8b071a615edcb58c8971e72e1348df58577b5d65a', overwrite=True)
-
-
-        # import pennylane as qml
-        # qml.default_config['qiskit.ibmq.ibmqx_token'] = ''
-        # qml.default_config.save(qml.default_config.path,overwrite=True)
-
         backend_config = {'backend': 'qiskit.ibmq',
                         'device': 'ibm_brisbane',
                         'shots': 1000}
@@ -840,60 +735,8 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
             
            }
     
-    return smart_loss.item(), smart_acc.item()
+    return smart_loss.item(), 
 
-
-
-# <<<<<<< read_sst
-# """end of all function defs+ main thread
-# final push-which calls run_experiment function above
-# todo: why is he setting random seed, that tooin tensor flow- especially since am using a pytorch model.
-# """
-
-# #read the base data
-# if(TYPE_OF_DATASET_TO_USE=="sst2"):
-#     ds = load_dataset("nyu-mll/glue", TYPE_OF_DATASET_TO_USE)
-#     train_labels, train_data = read_glue_data(ds,split="train", lines_to_read= NO_OF_TRAIN_DATA_POINTS_TO_USE)
-#     val_labels, val_data = read_glue_data(ds,split="validation", lines_to_read= NO_OF_VAL_DATA_POINTS_TO_USE)
-#     test_labels, test_data = read_glue_data(ds, split="test", lines_to_read= NO_OF_TEST_DATA_POINTS_TO_USE)
-
-# else:
-#     train_labels, train_data = read_data(os.path.join(DATA_BASE_FOLDER,TRAIN))
-#     val_labels, val_data = read_data(os.path.join(DATA_BASE_FOLDER,DEV))
-#     test_labels, test_data = read_data(os.path.join(DATA_BASE_FOLDER,TEST))
-
-
-# """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
-# in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
-# """
-# if (TYPE_OF_DATASET_TO_USE in ["spanish","uspantek","sst2"]):
-#     train_diagrams, train_labels = convert_to_diagrams(train_data,train_labels, split="train")
-#     val_diagrams, val_labels= convert_to_diagrams(val_data,val_labels,split="val")
-#     test_diagrams, test_labels = convert_to_diagrams(test_data,test_labels,split="test")
-# else:
-#     #convert the plain text input to ZX diagrams
-#     train_diagrams = parser_to_use_obj.sentences2diagrams(train_data)
-#     val_diagrams = parser_to_use_obj.sentences2diagrams(val_data)
-#     test_diagrams = parser_to_use_obj.sentences2diagrams(test_data)
-
-
-# train_X = []
-# val_X = []
-
-# print(f"count of train, test, val elements respectively are: ")
-# print({len(train_diagrams)}, {len(test_diagrams)}, {len(val_diagrams)})
-# assert len(train_diagrams)== len(train_labels)
-# assert len(val_diagrams)== len(val_labels)
-# assert len(test_diagrams)== len(test_labels)
-
-
-
-# compr_results = {}
-# no_of_layers=[1] #ideally should be [1,2,3]. But using only one layer due to lack of ram in laptop. todo: open it up for more
-# tf_seeds = [2] #ideally should be more than 1 seed. But  commenting out due to lack of ram in laptop todo: open it up for more
-# =======
-
-# >>>>>>> branch_to_merge_main_and_sst
 
     
 def perform_task(args):
