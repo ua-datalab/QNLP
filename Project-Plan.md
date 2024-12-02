@@ -34,11 +34,15 @@
 Status@Dec2nd202410am
 - English
 	- **sst**
-	- - **classical1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-	  - - "status: Error **gives dtype mismatch on first fit (same for tensor ansatz too)**
-	    - - solutions: Should be an easy fix
-       			- also  does that change if you expose val data during model creation?
-         - **Classical2**  (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+	- - **classical 1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+	  	- classical 1.a:(with 20 data points)
+    			- classical 1.a.1.- Without exposing val to the model 
+   		 	"status: 
+			- classical 1.a.2: with exposing val to model
+		- - classical 1.b:(with 100 data points train +1000 test)
+    		- - classical 1.c:(with 10k data points train)
+    
+        - - **classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
         		 - status: 
       		 	- possible solution:
            		- todos
