@@ -40,6 +40,8 @@ Status@Dec2nd202410am
    		 	"status: Model 1: training accuracy (30 epochs): 92% val Accuracy: Not applicable
       				-model 3 (oov model + model 4: 60% accuracy)
 			- classical 1.a.2: with exposing val to model
+    			- "status: Model 1: training accuracy (30 epochs): 92% val Accuracy:65%
+      				-model 3 (oov model + model 4: 55% accuracy)
     - 
 		- - classical 1.b:(with 100 data points train +1000 test)
     		- - classical 1.c:(with 10k data points train)
