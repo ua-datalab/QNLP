@@ -4,7 +4,7 @@ from lambeq import PytorchModel, NumpyModel, TketModel, PennyLaneModel
 from lambeq import TensorAnsatz,SpiderAnsatz,Sim15Ansatz, IQPAnsatz,Sim14Ansatz
 from lambeq import BobcatParser,spiders_reader
 from lambeq import QuantumTrainer, PytorchTrainer
-from classify import main, parse_arguments, perform_task
+from classify import main, perform_task
 import argparse
 from lambeq.text2diagram.ccg_parser import CCGParser
 from lambeq.ansatz import BaseAnsatz
@@ -41,7 +41,8 @@ class TestClass:
 
 
     def test_perform_task_food_it(self):
-        args = parse_arguments()
+        args = self.parse_arguments()
+        assert args.dataset == "food_it"
         assert args.parser == BobcatParser
         assert args.model == PytorchModel
         assert args.ansatz == SpiderAnsatz

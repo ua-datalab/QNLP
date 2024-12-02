@@ -511,7 +511,7 @@ def read_data(filename):
             return labels, sentences
 
 
-def convert_to_diagrams(parser_obj,list_sents,labels,tokeniser, split="train"):
+def convert_to_diagrams_with_try_catch(parser_obj,list_sents,labels,tokeniser, split="train"):
     list_target = []
     labels_target = []
     sent_count_longer_than_32=0
@@ -736,7 +736,7 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
             
            }
     
-    return smart_loss.item(), 
+    return smart_loss.item(), smart_acc.item()
 
 
     
@@ -842,14 +842,14 @@ def perform_task(args):
     in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
     """
     if (args.dataset in ["spanish","uspantek","sst2"]):
-        train_diagrams, train_labels = convert_to_diagrams(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
-        val_diagrams, val_labels= convert_to_diagrams(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
-        test_diagrams, test_labels = convert_to_diagrams(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
+        train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
+        val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
+        test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
     else:
         #convert the plain text input to ZX diagrams
-        train_diagrams = args.parser.sentences2diagrams(train_data)
-        val_diagrams = args.parser.sentences2diagrams(val_data)
-        test_diagrams = args.parser.sentences2diagrams(test_data)
+        train_diagrams = parser_obj.sentences2diagrams(train_data)
+        val_diagrams = parser_obj.sentences2diagrams(val_data)
+        test_diagrams = parser_obj.sentences2diagrams(test_data)
 
     train_X = []
     val_X = []
@@ -894,7 +894,7 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="spanish" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--dataset', type=str, required=False, default="food_it" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=CCGParser, required=False, default=BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
