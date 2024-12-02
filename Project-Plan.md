@@ -29,11 +29,116 @@
 
 
 # Meeting Notes
+
+## nov 30th2024
+Status at the EOD
+- English
+	- sst
+	- - classical1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+	  - - gives dtype mismatch on first fit (same for tensor ansatz too)
+	    - - solutions: **Should be an easy fix**
+       			- also  does that change if you expose val data during model creation?
+         - Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status: 
+      		 	- possible solution: 
+	- - quantum 
+	  - - + simulation ((IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)):
+       		- status: ran into memory issues needs 460 Million GB memory or something
+         	- possible solutions/next step: **end of road**
+	    - + actual quantum computer (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
+       			- no response for first fit for a few hours)
+	      + - - possible solution: does that change if you expose val data during model creation?
+           - MNLI ?
+           - MRPC ?
+           - Food IT toy data
+           -  Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status: 
+      		 	- possible solution: 
+      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status: 
+      		 	- possible solution: 
+           	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
+		 	- status:
+    		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
+		 	- status:
+- Non English
+	- ## Spanish
+ 		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status: **ValueError**: not enough values to unpack (expected 2, got 1)
+      		 	- possible solution: **Should be an easy fix**. check branch spanish
+      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 - status: doesnt even start
+      		 	- possible solution: **should be an easy fix** this is being worked on another branch. called spanish. do merge
+           	- Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)
+		 	- status: Taking a long time, buut mostly will be not enough memory
+    			- - possible solution: **Try to run for hours, if memory issue, end of road**
+    		- Quantum 2 -actual quantum computer (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
+		 	- status: killed- taking a long time
+    			- - possible solution: **Try to run for hours, if memory issue, end of road**
+   	 - ## Uspantek
+ 		- Classical 1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+   			- status: UnboundLocalError: cannot access local variable 'parser_obj' where it is not associated with a value
+   	  		- - - possible solution: merge error easy fix
+      		- Classical2  (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+        		 -  status: **ValueError**: not enough values to unpack (expected 2, got 1)
+      		 	- possible solution: **Should be an easy fix**. check branch spanish			
+           	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
+		 	- status: Taking a long time, buut mostly will be not enough memory
+    			- - possible solution: **Try to run for hours, if memory issue, end of road**
+    		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
+		 	- status: IBM cloud login issue
+
+## Nov 29th 2024
+
+- continuing with SST2 data
+	- getting ty(p) error. Update: fixed it by adding p to ansatz
+	- next: AttributeError: 'int' object has no attribute 'rotate: 
+	- - try replacing spider ansatz with tensor ansatz
+	- - update. no luck, same error. Not sure what the error means, what has 
+	functor got to do with english data. Todo: try plotting diagrams and circuits of first data point
+	- - update : diagram of first data point looks ok. todo: switch back to spider ansatz, to avoid too many moving parts ---done
+	todo: put try catch around erroring out circuits update: that worked. however out of initial 80 train data points, now its only 49 circuits. todo: figure out what is going on.
+	- - next error in .fit()  both inputs should have same dtype. todo: switch to everything quantum. if we are fighting might as well fight in quantum world
+	- - update: using IQPAnsatz, TKetmodel, Quantum trainer. now getting: ERROR: Insufficient memory to run circuit circuit-166 using the statevector simulator. Required memory: 4398046511104M, max memory: 16384M todo: a) try removing cups. else b) call onto penny lane or actual quantum computer?
+	- - - open up the cup removal--done
+	update: cup removal was useful. for example in the diagram of the first sentence, before cup removal tehre were 14 units, after removal it became 7. But still hitting memory issues.needs 4.29 Million GB of RAM...that too just for 10 sentences. beautiful..with remove cups it might come to 2million GB. very helpful
+
+	
+	- - - try replacing spider ansatz with tensor ansatz
+	- - after runs end to end 
+	- - - run pytest for food_it (pass variables) ---done
+	- - - add pytest for sst2
+	- - - turn on tuning
+	- - - get values with and without exposing dev during initialization
+	- - - move to cyverse for big run
+	- - - start replacing with Quantum trainers, iqp ansatz etc
+
+
+
+Mithuns log
+- branch. Stabilize_pytest_driver
+- to create
+- - driver function into which you pass 4 variables
+  - add a 5th variable, exposure val during build+ create new pytest case
+
 ## Nov 28th 2024
 - Dataset research: GLUE may not be a good fit for current setup. Need to find a classification task
 - VS Code debuggers  
 
 ## Nov 27th 2024
+todo: load english datasets
+- start with sst2- sentiment in glue- branch called read_sst
+	- read dataset into our code
+ 	- run our base code end to end
+  		- hit bobcat parser not able to read some sentences, solution: put try catch around them
+    	 	- next issue: laptop is maxing out. its showing 3 hours for parsing spider diagrams. most likely will hit ram max also. solution: move to cyverse
+       	- - update: laptop managed to run training on 65K documents. but now hitting ansatz related some key error. Taking a pause for thanks giving break. This is becoming a very unhealthy addiction of - maybe next run will give me the big ground breaking/life saving result. Like megh says Very bad idea to put all eggs in same basket/unhealthy getting emotionally entangled with technology and inventions.
+  - spanish: branch called spanish_experiments
+  	- run end to end
+   		- hit bobcat parser not able to read some sentences, solution: put try catch around them
+     		- next issue Ty(p) not found. This means, there are prepositions, So both ansatz and bobcat parser need to be initialized with them
+       		- still getting some domain codomain issue: pausing for now.  havent merged branch to main. Merge only if code runs end to end and you are completley confident nothing will break
+## Nov 26th 2024
 - Updated code walkthrough
 	- All code in `classify.py`, without Mithun's notes, just tags. Copy of `v7` code.
  	- Old code in archive. In archive, `no_pair...` is for classification task, `yes_pair...` is Khatri's code replication, which we can't use because of depriciate d packages.
