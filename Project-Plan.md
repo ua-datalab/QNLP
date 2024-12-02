@@ -36,14 +36,20 @@ Status@Dec2nd202410am
 	- **sst**
 	- - **classical 1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
 	  	- classical 1.a:(with 20 data points)
-    			- classical 1.a.1.- Without exposing val to the model 
+    		- - classical 1.a.1.- Without exposing val to the model 
    		 	"status: Model 1: training accuracy (30 epochs): 92% val Accuracy: Not applicable
       				-model 3 (oov model + model 4: 60% accuracy)
-			- classical 1.a.2: with exposing val to model
+          	- - classical 1.a.2: with exposing val to model
     			- "status: Model 1: training accuracy (30 epochs): 92% val Accuracy:65%
       				-model 3 (oov model + model 4: 55% accuracy)
-    - 
-		- - classical 1.b:(with 100 data points train +1000 test)
+		- classical 1.b:(with 100 data points train +1000 test)
+   		  - - classical 1.b.1.- Without exposing val to the model 
+   		 	"status: Model 1: training accuracy (30 epochs): _____ val Accuracy: Not applicable
+      				-model 3 (oov model + model 4: ------- accuracy)
+          	- - classical 1.b.2: with exposing val to model
+    			- "status: Model 1: training accuracy (30 epochs): ----- val Accuracy:_____
+      				-model 3 (oov model + model 4: _____% accuracy)
+   - 
     		- - classical 1.c:(with 10k data points train)
     	- - **classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
         		 - status: same DTYpe mismatch error
