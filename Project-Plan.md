@@ -74,9 +74,9 @@ Status@Dec2nd202410am
       		- **Classical2 Spider parser, spider ansatz, pytorch model, pytorchtrainer)**
         		 - **status:IndexError: when no subspace is given, the number of index arrays cannot be above 31, but 32 index arrays found- if we do  if len(tokenized_sent)> 31: . If we do len(tokenized)>32 we get **
            - update used len(tokenized)>19 and it moved past first fit. wtf.
-           - update: **gives 95% training accuracy on first fit. bad news is OOV model accuracy is 54%**
+           - update: **without exposing val during first fit. gives 95% training accuracy on first fit. bad news is OOV model3 accuracy is 54%**
            -  todo:
-           - a) run with exposing val during first fit
+           - a) run with exposing val during first fit: after first fit, model1 training accuracy: 85.54 model1val accuracy = 77.27 model3 accuracy=45% (but that has early stopping from another dataset food_it/is tunable)
            - b) run without exposing val during first fit
            	- **Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)**
 		 	- status: Taking a long time, buut mostly will be not enough memory
