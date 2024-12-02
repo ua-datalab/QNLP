@@ -64,8 +64,9 @@ Status at the EOD
 - Non English
 	- ## Spanish
  		- Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
-   			- status: **ValueError**: not enough values to unpack (expected 2, got 1)
-      		 	- possible solution: **Should be an easy fix**. check branch spanish
+   			- status: mismatch datatype **Should be an easy fix**. check branch spanish 	- - also check if exposing val helps.
+      		- - also will increeasing base dimension help
+          	- - also build bobcat parser locally- there are some words which its giving dimension of 10- even in small sentences? i mean the word itself is n_ something. which means just one noun. then why 10?
       		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
         		 - status: doesnt even start
       		 	- possible solution: **should be an easy fix** this is being worked on another branch. called spanish. do merge
