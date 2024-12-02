@@ -904,8 +904,8 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default=spiders_reader(), help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--dataset', type=str, required=True, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--parser', type=CCGParser, required=False, default=spiders_reader, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
@@ -923,22 +923,20 @@ def parse_arguments():
     parser.add_argument('--data_base_folder', type=str, default="data", required=False, help="")
     parser.add_argument('--learning_rate_model3', type=float, default=3e-2, required=False, help="")
     parser.add_argument('--no_of_layers_in_ansatz', type=int, default=3, required=False, help="")
-    parser.add_argument('--no_of_training_data_points_to_use', type=int, default=20, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
-    parser.add_argument('--no_of_val_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
-    parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_training_data_points_to_use', type=int, default=100, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_val_data_points_to_use', type=int, default=1000, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_test_data_points_to_use', type=int, default=1000, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
     
     return parser.parse_args()
 
-
-
-
-def main():
-    args = parse_arguments()
+    
+def main(args=None):
     perform_task(args)
 
 if __name__=="__main__":
-        main()
+        parsed_args = parse_arguments()
+        main(parsed_args)
      
         
         
