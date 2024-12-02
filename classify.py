@@ -518,21 +518,25 @@ def convert_to_diagrams_with_try_catch(parser_obj,list_sents,labels,tokeniser, s
     skipped_sentences_counter_due_to_cant_parse=0
     desc_long = f"converting {split} data to diagrams"
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
-        tokenized = tokeniser.tokenise_sentence(sent)                
+        tokenized_sent = tokeniser.tokenise_sentence(sent)                
         #when we use numpy, max size of array is 32- update. even in quantum computer
-        if len(tokenized)> 32:                
+        if len(tokenized_sent)> 32:                
                 sent_count_longer_than_32+=1
                 continue
         try:
-            spiders_diagram = parser_obj.sentence2diagram(sentence=sent)
-        except:             
+            sent_diagram = parser_obj.sentence2diagram(tokenized_sent, suppress_exceptions=True, tokenised=True)
+        except Exception as ex:             
+            print(ex)
             skipped_sentences_counter_due_to_cant_parse+=1
             continue
-        list_target.append(spiders_diagram)
-        labels_target.append(label)
+        if(sent_diagram):
+            list_target.append(sent_diagram)
+            labels_target.append(label)
+        else:
+             print("found that there was a sentence which after conversion to diagram was None. i.e hit exception during parsing.")
     
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
-    print(f"out of a total of ={len(list_sents)}sentences {skipped_sentences_counter_due_to_cant_parse} were skipped because they were unparsable")
+    print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped because they were unparsable")
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
@@ -841,15 +845,15 @@ def perform_task(args):
     """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
     in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
     """
-    if (args.dataset in ["spanish","uspantek","sst2"]):
+    if (args.dataset in ["uspantek","sst2","spanish"]):
         train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
         val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
         test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
     else:
         #convert the plain text input to ZX diagrams
-        train_diagrams = parser_obj.sentences2diagrams(train_data)
-        val_diagrams = parser_obj.sentences2diagrams(val_data)
-        test_diagrams = parser_obj.sentences2diagrams(test_data)
+        train_diagrams = parser_obj.sentences2diagrams(train_data, suppress_exceptions=True)
+        val_diagrams = parser_obj.sentences2diagrams(val_data,suppress_exceptions=True)
+        test_diagrams = parser_obj.sentences2diagrams(test_data,suppress_exceptions=True)
 
     train_X = []
     val_X = []
@@ -894,7 +898,7 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="food_it" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--dataset', type=str, required=False, default="spanish" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=CCGParser, required=False, default=BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
