@@ -31,8 +31,7 @@
 # Meeting Notes
 
 ## Nov 30th 2024
-### Mithun's Logs and meeting notes
-- Status@Dec2nd202410am
+### Mithun's Logs and meeting notes: tatus@Dec2nd202410am
 - **English**
 	- **SST**
 	- **Classical 1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
@@ -90,10 +89,10 @@
 	  	- Dont use 	`remove_cups`--- nope same error
 			- Also build bobcat parser locally- there are some words which its giving dimension of 10- even in small sentences? i mean the word itself is n_ something. which means just one noun. then why 10? update, the word is NameError("name 'y_9__n' is not defined"). in sentence 15, eh tanto problema
       		- **Classical2 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)**
-        		 - **status:IndexError: when no subspace is given, the number of index arrays cannot be above 31, but 32 index arrays found- if we do  if len(tokenized_sent)> 31: . If we do len(tokenized)>32 we get **
-           - update used len(tokenized)>19 and it moved past first fit. wtf.
-           - update: **without exposing val during first fit. gives 95% training accuracy on first fit. bad news is OOV model3 accuracy is 54%**
-           -  todo:
+        		 - `status:IndexError`: when no subspace is given, the number of index arrays cannot be above 31, but 32 index arrays found- if we do  if len(tokenized_sent)> 31: . If we do len(tokenized)>32 we get:
+				- update used len(tokenized)>19 and it moved past first fit. wtf.
+           		- update: **without exposing val during first fit. gives 95% training accuracy on first fit. bad news is OOV model3 accuracy is 54%**
+		-  todo:
 		a. **run with exposing val during first fit: after first fit, model1 training accuracy: 85.54 model1val accuracy = 77.27 model3 accuracy=45% (but that has early stopping from another dataset food_it/is tunable)**
 		b. for both spanish 1 and 2 classical experiments, can we improve accuracy of model 3.
 			- then find a standard benchmark in spanish
@@ -582,7 +581,7 @@ ans: assertion error inside first fit? thought we moved beyond that long time ag
   		- Actually understanding the results   	  
 
 ## Oct 18th 2024
-- **Mithun's self hackathon **
+## Mithun's self hackathon
 - in mithun_dev branch
 - Our code (v7_merging_best_of_both_v6_andv4) is still stuck at the dimension mismatch between model.weights, and the parameters he is passing
 - so today to find the expected value, i thought i will debug  khatri's original code. (it is now kept in archive/original_code_by_khatri_oov_mrpc_paraphrase_task.py'.-
