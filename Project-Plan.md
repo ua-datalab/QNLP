@@ -31,6 +31,7 @@
 # Meeting Notes
 
 ## Nov 30th 2024
+### Mithun's Logs and meeting notes
 - Status@Dec2nd202410am
 - **English**
 	- **SST**
@@ -132,44 +133,38 @@
 		 	- status: IBM cloud login issue
 
 ## Nov 29th 2024
-
-- continuing with SST2 data
+- Continuing with SST2 data
 	- getting ty(p) error. Update: fixed it by adding p to ansatz
 	- next: AttributeError: 'int' object has no attribute 'rotate: 
-	- - try replacing spider ansatz with tensor ansatz
-	- - update. no luck, same error. Not sure what the error means, what has 
+		- try replacing spider ansatz with tensor ansatz
+		- update. no luck, same error. Not sure what the error means, what has 
 	functor got to do with english data. Todo: try plotting diagrams and circuits of first data point
-	- - update : diagram of first data point looks ok. todo: switch back to spider ansatz, to avoid too many moving parts ---done
-	todo: put try catch around erroring out circuits update: that worked. however out of initial 80 train data points, now its only 49 circuits. todo: figure out what is going on.
-	- - next error in .fit()  both inputs should have same dtype. todo: switch to everything quantum. if we are fighting might as well fight in quantum world
-	- - update: using IQPAnsatz, TKetmodel, Quantum trainer. now getting: ERROR: Insufficient memory to run circuit circuit-166 using the statevector simulator. Required memory: 4398046511104M, max memory: 16384M todo: a) try removing cups. else b) call onto penny lane or actual quantum computer?
-	- - - open up the cup removal--done
-	update: cup removal was useful. for example in the diagram of the first sentence, before cup removal tehre were 14 units, after removal it became 7. But still hitting memory issues.needs 4.29 Million GB of RAM...that too just for 10 sentences. beautiful..with remove cups it might come to 2million GB. very helpful
-
-	
-	- - - try replacing spider ansatz with tensor ansatz
-	- - after runs end to end 
-	- - - run pytest for food_it (pass variables) ---done
-	- - - add pytest for sst2
-	- - - turn on tuning
-	- - - get values with and without exposing dev during initialization
-	- - - move to cyverse for big run
-	- - - start replacing with Quantum trainers, iqp ansatz etc
-
-
-
-Mithuns log
-- branch. Stabilize_pytest_driver
-- to create
-- - driver function into which you pass 4 variables
-  - add a 5th variable, exposure val during build+ create new pytest case
+		- update : diagram of first data point looks ok. todo: switch back to spider ansatz, to avoid too many moving parts ---done
+	- todo: put try catch around erroring out circuits update: that worked. however out of initial 80 train data points, now its only 49 circuits. todo: figure out what is going on.
+	- next error in .fit()  both inputs should have same dtype. todo: switch to everything quantum. if we are fighting might as well fight in quantum world
+	- update: using IQPAnsatz, TKetmodel, Quantum trainer. now getting: ERROR: Insufficient memory to run circuit circuit-166 using the statevector simulator. Required memory: 4398046511104M, max memory: 16384M todo: a) try removing cups. else b) call onto penny lane or actual quantum computer?
+		- open up the cup removal--done
+	- update: cup removal was useful. for example in the diagram of the first sentence, before cup removal tehre were 14 units, after removal it became 7. But still hitting memory issues.needs 4.29 Million GB of RAM...that too just for 10 sentences. beautiful..with remove cups it might come to 2million GB. very helpful
+		- try replacing spider ansatz with tensor ansatz
+	- after runs end to end 
+		- run pytest for food_it (pass variables) ---done
+		- add pytest for sst2
+		- turn on tuning
+		- get values with and without exposing dev during initialization
+		- move to cyverse for big run
+		- start replacing with Quantum trainers, iqp ansatz etc
+- Mithuns log
+	- branch. Stabilize_pytest_driver
+	- to create
+		- driver function into which you pass 4 variables
+ 	- add a 5th variable, exposure val during build+ create new pytest case
 
 ## Nov 28th 2024
 - Dataset research: GLUE may not be a good fit for current setup. Need to find a classification task
-- VS Code debuggers  
+- VS Code debuggers: ran tests and Mithun rechecked conda installations on a new environment for Megh, with a functioning debugger calling the right environment.  
 
 ## Nov 27th 2024
-todo: load english datasets
+- todo: load english datasets
 - start with sst2- sentiment in glue- branch called read_sst
 	- read dataset into our code
  	- run our base code end to end
@@ -181,6 +176,7 @@ todo: load english datasets
    		- hit bobcat parser not able to read some sentences, solution: put try catch around them
      		- next issue Ty(p) not found. This means, there are prepositions, So both ansatz and bobcat parser need to be initialized with them
        		- still getting some domain codomain issue: pausing for now.  havent merged branch to main. Merge only if code runs end to end and you are completley confident nothing will break
+
 ## Nov 26th 2024
 - Updated code walkthrough
 	- All code in `classify.py`, without Mithun's notes, just tags. Copy of `v7` code.
@@ -327,35 +323,31 @@ Code clean up: keep a copy of the code with inline comments, and create a versio
 	-  for yes pair
  	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
 
-planning for experiments.
-- Qn)
-	- Ans:
-- Qn) Did you add test cases?
-	- Ans: yes. test_oov_no_pair.py. Can be run using the command `pytest` on command line.
- 	-  todo: either add this to a start up file, or to continous integration on github
-- Qn) What was the accuracy on dev set when you ran Food IT code +oov with spanish embeddings
-	- Ans:43.3%
-- Qn)Did you try running food IT code with english fast text embeddings.
-	- Ans: No not yet.
-	- update: just did. accuracy in dev is  51.66%. As much as this is not great, but this 8 points bump is huge IMHO, which means the patient is alive and is responding to meds.
- - - Qn) Remind me, what exactly are we using OOV for?
-	- Ans: So in FOOD_IT, there was exactly one symbol (not word) that was out of vocabulary. it was person_n@n.l or something. So when we test using the model that was 
-- Qn) What is the configuration you are currently using for FOOD-IT?
-	- Ans:
- 		- parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
-		- ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
-		- model_to_use  =  PytorchModel #[numpy, pytorch]
-		- trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
-		- embedding_model_to_use = "english"
-- Qn) what is the plan forward?
-	- Ans: High level: slowly bring in quantum stuff. Especially a quantum ansatz
-- Qn) What is the detailed level plan forward.
-	- Ans:
-- Qn)
-	- Ans:
+- planning for experiments:
+	- Qn) Did you add test cases?
+		- Ans: yes. test_oov_no_pair.py. Can be run using the command `pytest` on command line.
+	 	-  todo: either add this to a start up file, or to continous integration on github
+	- Qn) What was the accuracy on dev set when you ran Food IT code +oov with spanish embeddings
+		- Ans:43.3%
+	- Qn)Did you try running food IT code with english fast text embeddings.
+		- Ans: No not yet.
+		- update: just did. accuracy in dev is  51.66%. As much as this is not great, but this 8 points bump is huge IMHO, which means the patient is alive and is responding to meds.
+	 - - Qn) Remind me, what exactly are we using OOV for?
+		- Ans: So in FOOD_IT, there was exactly one symbol (not word) that was out of vocabulary. it was person_n@n.l or something. So when we test using the model that was 
+	- Qn) What is the configuration you are currently using for FOOD-IT?
+		- Ans:
+	 		- parser_to_use = bobCatParser  #[bobCatParser, spiders_reader]
+			- ansatz_to_use = SpiderAnsatz #[IQP, Sim14, Sim15Ansatz,TensorAnsatz ]
+			- model_to_use  =  PytorchModel #[numpy, pytorch]
+			- trainer_to_use= PytorchTrainer #[PytorchTrainer, QuantumTrainer]
+			- embedding_model_to_use = "english"
+	- Qn) what is the plan forward?
+		- Ans: High level: slowly bring in quantum stuff. Especially a quantum ansatz
+	- Qn) What is the detailed level plan forward.
+		- Ans:
 
-
-## Nov 16th- Mithun working on reproducing khatri values
+## Nov 16th
+### Mithun working on reproducing khatri values
 "stopping/giving up on trying to reproduce khatri code. Main issue is he uses depccg parser, which is impossible to setup. I tried bobcat parser, and spiders reader and even tree reader. bobcat parser, doesnt do well with remove cups, spider and tree does, but then they hit the ansatz error saying circuits vs diagrams.its amess. time to call it quits"
 - todo: update code with code for 1 sent (no pair)
 - update: done. we have 2 files now, one for yes pair of sentences (OOV_classification_yes_pair_sent.py) and other for nopair -classifcation of food IT(OOV_classification_no_pair_sents.py)
@@ -372,9 +364,11 @@ planning for experiments.
  	-  how did I get MNLI==1 - that code, how did it cross the depccg parser issue? and the ansatz comparator issue?
 - everythign is in mithun_dev branch as of today
 
-## Nov 14th- Mithun working on reproducing khatri values
+## Nov 14th-
+### Mithun working on reproducing khatri values
 - using just one file OOV_classification now on+ passing arguments as to pair based dataset or not. THe pair no pair file difference was causing too many versions.
-## nov 13th
+
+## Nov 13th
 1. megh pointed out that even thoughy i have end to end code OOV for food-IT, it is not correct, because I am using spanish embeddings. So as of now, we DONT have any end to end code. I was using spanish embeddings for english. We tried giving spanish data, and teh parser itself barfed. but remember it was bobcat parser. todo: try with spider parser, spider ansatz
    	- update: we finally have an end to end - system.  working for spanish embeddings. dev accuracy with OOV model is 59percent
 3. also, get gpt or fasttext embedding for english- and rerun food-IT again with OOV issue.
@@ -388,7 +382,8 @@ planning for experiments.
        	- also do note that FOOD-It is completely living in classical land, i.e spider ansatz and pytorch models- so we might want to experiment Glove+FOODIT on quantum tariner, quantum models and IQP ansatz before calling it a failure/moving to GPT/Fasttext land
        	- find if in the FOOD_IT paper do they explicitly say that they know they are feeding val data during training itself. Either way, do drop an email or a pull request for their lambeq documentation - to explicitly state this fact. Otherwise this is pure cheating, where youare telling the world here is a pathbreaking model which gives 100% accuracy on 100 sentences, and you will still get another Mithun kinda poor guy down a rabbit hole for 3 years, because they blindly belived it was the models ability which gave 100% as opposed to the simple fact that they were showing val data to model during training itself.
 
-## Nov 12th- Mithun's logs
+## Nov 12th
+### Mithun's logs
 - We finally have one end to end system working for OOV. for FOODIT  using bobCatParser,SpiderAnsatz,PytorchModel,PytorchTrainer. Not that the accuracy on val was only 45%, but since we are still in sanity check land, am not going to tune/investigate that FOR NOW
 - Next goal in sanity check: try to get values of Khatri back. Note khatri uses Depccg parser, IQPansatz, Numpymodel, quantum trainer. We definitely cant use DEpccg parser. Thats a nasty rabbit hole I dont want to go in.
 1. change data to MRPC -original, not the hacked version we have been using for classification toy experiments
@@ -396,7 +391,8 @@ planning for experiments.
 3. rewrite code for a pair of input, instead of just one
 4. and try to use all models and parser same as his.
 
-## Nov 11th- Mithuns logs
+## Nov 11th
+### Mithuns logs
 - Found what is causing the issue in .eval(). Pytorch model has staggered entries i.e for each word the tensor length is different.
 - However when you use OOV model, it flat predicts only 2 values. So if you hit a word with 4 tensor length, the 2 value is not enough to represent weights
  - Three solutions:
@@ -409,26 +405,20 @@ planning for experiments.
 		- try tensoransatz instead of spideranstaz. I Have a bad feeling spideransatz is not writing the params per word correctly. I dont know what spideransatz is or what spideransatz does, it was a vestigial choice from almost a year ago- because spider parser was the only one that was not bombing for the data we were using then. now bobcatparser is easily reading the data.-and our experiments arein classical land, so use the flagship of classical functors, i.e TensorAnsatz, (with bobcatparser, pytorchmodel and ppytorch trainer)- plus eventually once we move to quantum world, I think most of these issues will go. But even then its important that our foundation in classical equivalent (i.e tensors) is very strong.
   
 ## Nov 8th 2024
-Mithun's coding log
-
-Todo: 
-- add their differences 1,2,5,6 (from yesterday's notes) to our code --done
-- does it replicate an accuracy of one , even though the model is initlized with train, dev and test circuits. i.e dont test on val during training but instead let it run for 30 epochs,and use that model to instead test on val- Ans: yes, gives 100% accuracy
-- english
+### Mithun's coding log
+- Todo: 
+	- add their differences 1,2,5,6 (from yesterday's notes) to our code --done
+	- does it replicate an accuracy of one , even though the model is initlized with train, dev and test circuits. i.e dont test on val during training but instead let it run for 30 epochs,and use that model to instead test on val- Ans: yes, gives 100% accuracy
+- English
 	- add our OOV trick and see what accuracy you get for food IT (without all circuits initialized inside model 1)
- 		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding
-   		- update: getting this error:  `shape [2, 2] is invalid for input of size 2 ` inside trainer.fit()	 - sounds like label vs dimension issue. update: found out what the issue is. The dimension for each of the entry in qnlp.weights, must exactly match that of initial param vector. Infact that dimension is  decided by a) how many qbits/dimensions you assigned to
-                    n and s during the ansatz creationg an b) how complex the word's representation is.
-                    for example let's say you gave n=2 and s=4 qbits. So john_n will have a dimension of 2
-                    since it has only one noun. however, now look at prepares_0_n.r@s. This will have a dimension of 8 because
-                    it is the product of a nount and a sentence. therefore 2x4=8. Therefore the initial param vector
-                    also should have a tensor of dimension 8. i.e in the below code, am hard coding exactly 2 dimensions
-                    for all words. THAT IS WRONG. the number of dimensions must be picked from qnlp.weights 
-                    and the a initial parameter prepared, by that size. Now note that khatri is simply picking the 
-                    first n cells of the embedding vector- it is as good as initializing randomly. that's ok
-                    he has to start somewhere and this is a good experiment to mix and match. However, first and
-                    foremost the dimensions hs to match
-       		- manually look at the corresponding weights and pass this bug. this is a band aid. Ideally, todo: understand deeply dimensions and qbit assignments
+		- this is to check if person_0_n@n.l present in val issue will be taken care of by our embedding
+   		- update: getting this error:  `shape [2, 2] is invalid for input of size 2` inside trainer.fit()
+			- sounds like label vs dimension issue. update: found out what the issue is.
+     			- The dimension for each of the entry in qnlp.weights, must exactly match that of initial param vector. Infact that dimension is  decided by:
+				a. how many qbits/dimensions you assigned to
+                    n and s during the ansatz creationg an
+          			b. how complex the word's representation is. for example let's say you gave n=2 and s=4 qbits. So john_n will have a dimension of 2, since it has only one noun. however, now look at prepares_0_n.r@s. This will have a dimension of 8 because it is the product of a nount and a sentence. therefore 2x4=8. Therefore the initial param vector also should have a tensor of dimension 8. i.e in the below code, am hard coding exactly 2 dimensions for all words. THAT IS WRONG. the number of dimensions must be picked from qnlp.weights  and the a initial parameter prepared, by that size. Now note that khatri is simply picking the  first n cells of the embedding vector- it is as good as initializing randomly. that's ok he has to start somewhere and this is a good experiment to mix and match. However, first and foremost the dimensions hs to match
+		- manually look at the corresponding weights and pass this bug. this is a band aid. Ideally, todo: understand deeply dimensions and qbit assignments
          	- update: getting another error at model3 (nn).fit- expected shape[2] given shape[3]
           	- solution: this was because i was creating the vectors in NN_train_Y using maxparamlength+1- should have been just maxparamlength alone
           	- update: passed nn.fit() error for model3. Now another error inside evaluate_val_set. `index 2 is out of bounds for axis 0 with size 2`- Solution: this was because i was hardcoding parameters to be always a tuple of 2. that is not true- it depends on the _0 and _1 ka value.
@@ -437,8 +427,8 @@ Todo:
  	-  why do they pick epoch 30- add early stopping or atleast plot dev and train accuracies/losses and pick a decent epoch yourself.
   	-  reading
   		- todo of 1: read more on sentences2diagram
-  	 	-  todo of 2: why ansatz dimension 2 and 2
-  	  	-  todo of 5 above: why no remove cups
+  	 	- todo of 2: why ansatz dimension 2 and 2
+  	  	- todo of 5 above: why no remove cups
   	   	- todo of 7 above: why staggered weights  	
  -  Spanish
  	- todo: using Changes  1,2 and 5bobcatparser- run our code with spanish data.
@@ -466,8 +456,7 @@ Todo:
 		- Qn) same above scenario what accuracy do you get at the end of 30 epochs on training data?
 			- ans: 92.86 percentage (obviously, overfitting)
 		- Qn) what other major changes/differences are there between their code and ours
-			- ans
-
+			- ans:
 				1. they use sentences2diagrams while we use sentence2diagram. todo: Use their method. Our way was giving arrow/cod/dom level errors.
 				2. in ansatz definition they give dim 2 for both noun and sentence. we were giving 4. If I gave 4 in their code, error occurs. weird. todo: read more on this. Thought sentences were supposed to live in a dimension higher than nouns as per lambek
 				3. they initialize their model on all_circuits like shown above. TODO: Nothing in our code/continue initializing only on training
@@ -504,7 +493,6 @@ tensor([-0.4763, -1.8438], requires_grad=True)
     - ToDo English embeddings: find them online, and if not, figure out how to incorporate english vector files into our code.
     - Chronology: word2vec, BERT, Fasttext, Byte-Pair (used by GPT). We would ultimately need the n-gram embeddings. Fasttext is used to build words, by training on natural language, n-grams, and thus creating relations between words. Richer because it has seen more data
     	- Why do we need gpt embeddings- they have learnt word meanings after a level of training on the sub-word embeddings.  
-
 
 ## Nov 4
 - Model breakdown:
@@ -594,52 +582,51 @@ ans: assertion error inside first fit? thought we moved beyond that long time ag
   		- Actually understanding the results   	  
 
 ## Oct 18th 2024
-### Mithun doing self hackathon 
+- **Mithun's self hackathon **
 - in mithun_dev branch
 - Our code (v7_merging_best_of_both_v6_andv4) is still stuck at the dimension mismatch between model.weights, and the parameters he is passing
 - so today to find the expected value, i thought i will debug  khatri's original code. (it is now kept in archive/original_code_by_khatri_oov_mrpc_paraphrase_task.py'.-
-	- #### update: got it to work past initial .fit() of model1 and even started training of DNN model. This is the first time in 3 years...phew..hai esperanza...either his code, or our code one of them will cross till the finish line soon. note that this is using the datasets `"data/mrpc_train_small.txt` and `"data/mrpc_dev_small.txt"`. That after bobcat parser throwing things out has just 1 and 1 in training and test. meanwhile if we use `"data/mrpc_train.txt"` `"data/mrpc_dev.txt"`- getting broadcast error. weird.
+	- **update**: got it to work past initial .fit() of model1 and even started training of DNN model. This is the first time in 3 years...phew..hai esperanza...either his code, or our code one of them will cross till the finish line soon. note that this is using the datasets `"data/mrpc_train_small.txt` and `"data/mrpc_dev_small.txt"`. That after bobcat parser throwing things out has just 1 and 1 in training and test. meanwhile if we use `"data/mrpc_train.txt"` `"data/mrpc_dev.txt"`- getting broadcast error. weird.
  	- update: both `*_small` will give good positive count for train and dev if we use `MAXLEN = 20`.
   	- update: still getting the input mismatch in loss
     	- update: oh that's because we are using BCELoss from torch. switching back to his custom loss
-  	  - update: getting the old error of `loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss ValueError: operands could not be broadcast together with shapes (30,2) (30,2,2) ` note that the 30 here is batch size. so somewhere the dimension between gold y and preds y_hat are getting mismatched..update: this is the issue with how khatri is writing the loss funciton. Just use bce from torch instead.
+		- update: getting the old error of `loss = lambda y_hat, y: -np.sum(y * np.log(y_hat)) / len(y)  # binary cross-entropy loss ValueError: operands could not be broadcast together with shapes (30,2) (30,2,2) ` note that the 30 here is batch size. so somewhere the dimension between gold y and preds y_hat are getting mismatched..update: this is the issue with how khatri is writing the loss funciton. Just use bce from torch instead.
   	  - update: that fixed the issue. i.e using our own accuracy instead of what khatri defined. Now getting another error
-  	  - `File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/modules/loss.py", line 731, in forward
-    return F.binary_cross_entropy_with_logits(input, target,
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/functional.py", line 3223, in binary_cross_entropy_with_logits
-    if not (target.size() == input.size()):
-            ^^^^^^^^^^^^^
-TypeError: 'int' object is not callable`
-Note that all this was fixed in our v7 code, just that we neve documented it.
-  	 
-  	  - 
+  	  -
+  	    ``` File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/modules/loss.py", line 731, in forward
+    		return F.binary_cross_entropy_with_logits(input, target,
+           	^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  		File "/Users/mithun/miniconda3/envs/qnlp/lib/python3.12/site-packages/torch/nn/functional.py", line 3223, in 			binary_cross_entropy_with_logits
+    		if not (target.size() == input.size()):
+            	^^^^^^^^^^^^^
+		TypeError: 'int' object is not callable`
+  	    ```	
+	- Note that all this was fixed in our v7 code, just that we neve documented it.
   	  - i think its time to read the LAMBEQ documentation again. Had last read it in 2022, when my knowledge/consciousness was much much less. So I think its time to read it all paperback to paperback again.
-
 - lots of good findings
-- 	his train_vocab is written as `'meanwhile__s'`
-- 	he is literally taking the idx value of the fasttext embedding in this code. weird 	`initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])` i.e initial_param_vectoris just a list of floats
-- 	qnlp_model.weights is also a list of numbers...WTF
-- 	`[0.5488135039273248, 0.7151893663724195, ..]`
-- 	Also len(qnlp_model.weights) =48=len(initial_param_vector)
-- 	so why is our qnlp_model giving a list of tuples instead?
-- 	48 is the total number of symbols, which i think in our case is 408 or 463
-- 	its easy if we know what the qnlp_model does when it does .fit(). But that is bottom up reading, which is at 95%
-- 	meanwhile we are approaching it brute force/top down/nasty analytical skills only based coding.
-- 	next find if qnlp_model using pytorch is different in weights than when using numpy model
-	- 	answer: at initialization both are empty lists
- 	- 	getting error with numpy model when used with pytorch trainer. its expecting same trainer/compatible trainer like quantum trainer
-  	- 	why not use numpy model and quantum trainer in our class, and some cross .fit()- we just want to see if the weights is any different. answer: yes that fixed the shape[2] error. But now getting assert circuit error. update. Shape[2] error almost always means the weights of the qnlp.model is expecting a tuple of 2 and you are giving it just 1. or vice versa
-  	- 	update getting the below error in first trainer.fit() ` line 140, in get_diagram_output assert isinstance(d, Circuit)
-AssertionError`. i.e something in the train_dataset is not a good circuit..
+	- his train_vocab is written as `'meanwhile__s'`
+	- he is literally taking the idx value of the fasttext embedding in this code. weird 	`initial_param_vector.append(train_vocab_embeddings[wrd][int(idx)])` i.e initial_param_vectoris just a list of floats
+	- qnlp_model.weights is also a list of numbers...WTF
+	- `[0.5488135039273248, 0.7151893663724195, ..]`
+	- Also len(qnlp_model.weights) =48=len(initial_param_vector)
+	- so why is our qnlp_model giving a list of tuples instead?
+	- 48 is the total number of symbols, which i think in our case is 408 or 463
+	- its easy if we know what the qnlp_model does when it does .fit(). But that is bottom up reading, which is at 95%
+	- meanwhile we are approaching it brute force/top down/nasty analytical skills only based coding.
+	- next find if qnlp_model using pytorch is different in weights than when using numpy model
+		- answer: at initialization both are empty lists
+ 		- getting error with numpy model when used with pytorch trainer. its expecting same trainer/compatible trainer like quantum trainer
+  		- why not use numpy model and quantum trainer in our class, and some cross .fit()- we just want to see if the weights is any different. answer: yes that fixed the shape[2] error. But now getting assert circuit error. update. Shape[2] error almost always means the weights of the qnlp.model is expecting a tuple of 2 and you are giving it just 1. or vice versa
+  	- update getting the below error in first trainer.fit()
+  	- ``` line 140, in get_diagram_output assert isinstance(d, Circuit)
+		AssertionError
+  	  ```
+	- i.e something in the train_dataset is not a good circuit..
 if nothing else this we can do dataset by dataset comparison and find out. what is different between khatri code and our code.
-   - 	
-   
-
 - todo:
-- 	debug both code line by line and find if everything matches, including the idx, _s and even the size of weights and params
-- 	- 	his max param length is 2+1 =3 because there were values like `Thursday__s_2')`. Note that i am even using spider reader. so why is our spider reader not producing _2. i.e parsing different words to same time
-   - 	his wrd= 'Friday__s' while ours is `Friday`
+	-  debug both code line by line and find if everything matches, including the idx, _s and even the size of weights and params
+		- his max param length is 2+1 =3 because there were values like `Thursday__s_2')`. Note that i am even using spider reader. so why is our spider reader not producing _2. i.e parsing different words to same time
+		- his wrd= `Friday__s` while ours is `Friday`
    
 ## October 16th 2024
 ### HACKATHON
@@ -666,11 +653,18 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 -  BOTTOM LINE: the training QNLP model gives a 72% accuracy on the test set. It learns, but isn't doing a perfect memorization. We need to complete the pipeline to see performance on the dev set. 
  
 ## October 14th 2024
-- Mithun canceled meeting due to family emergency (dog not well). However Mithun did start the experiments. Results are kept [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) inside the tab titled "oct14th2024_noEmb"
+- Mithun canceled meeting due to family emergency (dog not well).
+	- However Mithun did start the experiments. Results are kept [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) inside the tab titled "oct14th2024_noEmb"
 - Will be using the version of the code kept [here](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v7_merging_best_of_both_v6_andv4)
 
 ## October 9 2024
-- Background story: When megh and mithun met on wed oct 9th 2024- we had two paths we could take. a) there was an investor ready to jump in if we could show that QNLP is great off the shelf for native american languages. Earlier results were conducive. Right now the status of the code is that, it works end to end without embeddings or khatri's 4 model solution. However, we were thinking of give a week of status quo/experiment/parameter search/fine tuning to ensure that out of the box (i.e only 1 off the shelf model in khatri code) works. Goal is between october 14th and 18th, we take the code and run it till plain QNLP model train+dev- spread it across various ansatz and diagram convertor, try it on a)uspantek b) english c) spanish, and find the max dev accuracy. If nothing inteesting shows up (i.e no high accuracyies/above 80%) we will continue with incorporating embedding path, Planning for next week
+- Background: When megh and mithun met on wed oct 9th 2024- we had two paths we could take.
+	a. there was an investor ready to jump in if we could show that QNLP is great off the shelf for native american languages.
+		- Earlier results were conducive. Right now the status of the code is that, it works end to end without embeddings or khatri's 4 model solution.
+  		- However, we were thinking of give a week of status quo/experiment/parameter search/fine tuning to ensure that out of the box (i.e only 1 off the shelf model in khatri code) works.
+  		- Goal is between october 14th and 18th, we take the code and run it till plain QNLP model train+dev- spread it across various ansatz and diagram convertor, try it on a)uspantek b) english c) spanish, and find the max dev accuracy.
+  		- If nothing inteesting shows up (i.e no high accuracyies/above 80%) we will continue with
+  	b. incorporating embedding path, Planning for next week
 - plan for week of oct 14th to 18th 2024
 - Monday: hackathon for analysis and reporting the performance of the no-embeddings model.
 	- Access F1 scores and analysis of the confusion matrix
@@ -690,7 +684,6 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 - Options:
 	- Try functioning models with actual quantum hardware.
  		- Strong chances for English or Spanish
-   
 
 ## October 2nd 2024
 - Discussion of category theory
@@ -703,11 +696,11 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
  	- `train.datasets`- has 85 sentences with <n words. Length is same as `train_labels`.
   	- `train_labels`- requires a matrix. Label 0 is [0.0, 1.0] and Label 1 is [1.0,0.0]. Mithun was able to provide the same format.
   	- Khatri et al. uses an equation to define loss, we replaced it with `torch.nn.loss()`
-- ToDo: what is shape '[2]'? Where is it being defined?
+- ToDo: what is shape `[2]`? Where is it being defined?
 
 ## September 30th 2024
 - Debug trainer"
-	- `sym` explantion- aldea_0__s- word, label, ways in which it can be expressed in lambeq
+	- `sym` explantion- `aldea_0__s`- word, label, ways in which it can be expressed in lambeq
 	- The embeddings from Fasttext model (2nd model initialized) are used as initial parameters of the qnlp model
 		- Get QNLP model initialized with embedding weights
 	 	- Trying to assess the issue with assigned weights 
