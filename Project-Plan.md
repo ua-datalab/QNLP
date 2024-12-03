@@ -30,109 +30,105 @@
 
 # Meeting Notes
 
-## nov 30th2024
-Status@Dec2nd202410am
-- English
-	- **sst**
-	- - **classical 1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-	  	- classical 1.a:(with 20 data points)
-    		- - classical 1.a.1.- Without exposing val to the model 
-   		 	"status: Model 1: training accuracy (30 epochs): 92% val Accuracy: Not applicable
-      				-model 3 (oov model + model 4: 60% accuracy)
-          	- - classical 1.a.2: with exposing val to model
+## Nov 30th 2024
+- Status@Dec2nd202410am
+- **English**
+	- **SST**
+	- **Classical 1** (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+	- classical 1.a:(with 20 data points)
+    		- Classical 1.a.1.- Without exposing val to the model
+			- "status: Model 1: training accuracy (30 epochs): 92% val Accuracy: Not applicable
+   			- model 3 (oov model + model 4: 60% accuracy)
+          		- classical 1.a.2: with exposing val to model
     			- "status: Model 1: training accuracy (30 epochs): 92% val Accuracy:65%
-      				-model 3 (oov model + model 4: 55% accuracy)
-		- classical 1.b:(with 100 data points train +1000 test)- started at 3.19pm from terminal in the folder testing_megh_*
-   		  - - classical 1.b.1.- Without exposing val to the model 
-   		 	"status: Model 1: training accuracy (30 epochs): _____ val Accuracy: Not applicable
-      				-model 3 (oov model + model 4: ------- accuracy)
-          	- - classical 1.b.2: with exposing val to model
-    			- "status: Model 1: training accuracy (30 epochs): ----- val Accuracy:_____
-      				-model 3 (oov model + model 4: _____% accuracy)
-   - 
-    		- - classical 1.c:(with 10k data points train)
-    	- - **classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
-        		 - status: same DTYpe mismatch error
-      		 	- possible solution:
-           		- todos
-           			- run again and confirm
-           			- make sure it is ran over 65k training data
-	- - **quantum1-simulation**  (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)):
+				- model 3 (oov model + model 4: 55% accuracy)
+			- classical 1.b:(with 100 data points train +1000 test)- started at 3.19pm from terminal in the folder testing_megh_*
+		- Classical 1.b.1.- Without exposing val to the model 
+			- "status: Model 1: training accuracy (30 epochs): _____ val Accuracy: Not applicable
+			- model 3 (oov model + model 4: ------- accuracy)
+          	- Classical 1.b.2: with exposing val to model
+          		- "status: Model 1: training accuracy (30 epochs): ----- val Accuracy:_____
+      			- model 3 (oov model + model 4: _____% accuracy)
+    		- Classical 1.c:(with 10k data points train)
+    	- **Classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
+     		- Status: same DTYpe mismatch error
+		- Possible solution:
+		- Todos
+			- run again and confirm
+			- make sure it is ran over 65k training data
+	- **Quantum1-simulation**  (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)):
        		- status: ran into memory issues needs 460 Million GB memory or something
          	- possible solutions/next step: **end of road**
-	    -  **quantum2-simulation-actual quantum computer** (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
-       			- no response for first fit for a few hours)
-	      + - - possible solution: does that change if you expose val data during model creation?
-           	- run it on cyverse.  ?
-           - MNLI ?
-           - MRPC ?
-           - Food IT toy data
-           -  Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
-   			- status: 
-      		 	- possible solution: 
-      		- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
-        		 - status: 
-      		 	- possible solution: 
-           	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
-		 	- status:
-    		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
-		 	- status:
+   	-  **Quantum2-simulation-actual quantum computer** (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
+		- No response for first fit for a few hours)
+	      	- Possible solution: does that change if you expose val data during model creation?
+           	- Run it on cyverse.  ?
+   	- MNLI ?
+   	- MRPC ?
+   	- Food IT toy data
+   	-  Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
+		- status: 
+		- possible solution: 
+	- Classical2  (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+		 - status: 
+		- possible solution: 
+	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
+		- status:
+	- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
+		- status:
 - Non English
-	- ## Spanish
+	- **Spanish**
  		- **Classical 1 (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)**
-   			- **status: error mismatch datatype**Should be an easy fix.check branch spanish 		- - update: Turns out not so easy fix
-       		- - also check if exposing val helps.--nope same error.
-          	- - - also will increeasing/reducing base dimension help- different erro,ValueError: not enough values to unpack (expected 2, got 1).-**once you find out what exactly is base dimension it will solve your dtype issue also**
-        	- - - note: am working on the new branch: merge_spanish_to_main
-          	  - - use suprress_exceptions=True--nope same error
-          	  - dont use remove_cups--- nope same error
-        		- - also build bobcat parser locally- there are some words which its giving dimension of 10- even in small sentences? i mean the word itself is n_ something. which means just one noun. then why 10? update, the word is NameError("name 'y_9__n' is not defined"). in sentence 15, eh tanto problema
+			- **status: error mismatch datatype**Should be an easy fix.check branch spanish
+   			- update: Turns out not so easy fix
+       			- Also check if exposing val helps.--nope same error.
+          		- Also will increeasing/reducing base dimension help- different erro,ValueError: not enough values to unpack (expected 2, got 1).
+		- **Once you find out what exactly is base dimension it will solve your dtype issue also**
+		- Note: am working on the new branch:` merge_spanish_to_main`
+	  	- Use `suprress_exceptions=Tru`e--nope same error
+	  	- Dont use 	`remove_cups`--- nope same error
+			- Also build bobcat parser locally- there are some words which its giving dimension of 10- even in small sentences? i mean the word itself is n_ something. which means just one noun. then why 10? update, the word is NameError("name 'y_9__n' is not defined"). in sentence 15, eh tanto problema
       		- **Classical2 (Spider parser, spider ansatz, pytorch model, pytorchtrainer)**
         		 - **status:IndexError: when no subspace is given, the number of index arrays cannot be above 31, but 32 index arrays found- if we do  if len(tokenized_sent)> 31: . If we do len(tokenized)>32 we get **
            - update used len(tokenized)>19 and it moved past first fit. wtf.
            - update: **without exposing val during first fit. gives 95% training accuracy on first fit. bad news is OOV model3 accuracy is 54%**
            -  todo:
-           - a) **run with exposing val during first fit: after first fit, model1 training accuracy: 85.54 model1val accuracy = 77.27 model3 accuracy=45% (but that has early stopping from another dataset food_it/is tunable)**
-           - ## todo
-           	- -
-     - - for both spanish 1 and 2 classical experiments, can we improve accuracy of model 3.
-          	- - then find a standard benchmark in spanish
-           		- in the absence of huge datasets, QNLP is a viable option.
-           	
-	- ### goals
-           	- 1. benchmark for QNLP + spanish
-           	  2. see what happens if english is not the core language
-           	 	- Qn) why not LLMs
-           	  	- Ans: we think there are no natively trained LLM.  
-           	- bring in GPT embeddings and see if accuracy improves
-          	- is it scaleable on- spideransatz- if yes: try on large spanish dataset? say 10K sentences
-          	- has there someone trained an LLM in spanish from scratch- if yes what dataset,. how much can we get.
-           	
-	- **Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)**
-		 	- status: Taking a long time, buut mostly will be not enough memory
-    			- - possible solution: **Try to run for hours, if memory issue, end of road**
-	- **Quantum 2 -actual quantum computer** (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
-		 	- status: killed- taking a long time
-    			- - possible solution: **todo:Try to run for hours- maybe from cyverse?**
-   	 - ## Uspantek
+		a. **run with exposing val during first fit: after first fit, model1 training accuracy: 85.54 model1val accuracy = 77.27 model3 accuracy=45% (but that has early stopping from another dataset food_it/is tunable)**
+		b. for both spanish 1 and 2 classical experiments, can we improve accuracy of model 3.
+			- then find a standard benchmark in spanish
+           		- in the absence of huge datasets, QNLP is a viable option.           	
+		- **Goals**
+			1. benchmark for QNLP + spanish
+			2. see what happens if english is not the core language
+				- Qn) why not LLMs
+	           	  	- Ans: we think there are no natively trained LLM.  
+	           	- bring in GPT embeddings and see if accuracy improves
+	          	- is it scaleable on- spideransatz- if yes: try on large spanish dataset? say 10K sentences
+	          	- has there someone trained an LLM in spanish from scratch- if yes what dataset,. how much can we get.           	
+		- **Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)**
+			- status: Taking a long time, buut mostly will be not enough memory
+			- possible solution: **Try to run for hours, if memory issue, end of road**
+		- **Quantum 2 -actual quantum computer** (BobCatParser+IQPAnsatz+PennyLaneModel+PyTorchTrainer)
+			- status: killed- taking a long time
+			- possible solution: **todo:Try to run for hours- maybe from cyverse?**
+	- **Uspantek**
  		- Classical 1 (Spider parser, spider ansatz, pytorch model, pytorchtrainer) + exposing val data
-   			- status: **runs end to end. phew. model 1. train accuracy =90% validation accuracy: 59.09 (note: this is 30 epochs- which is hard coded. tuneable)**
-   	  			- model 3  accuracy=50%
-   	    		- todo: run without exposing val data
+			- status: **runs end to end. phew. model 1. train accuracy =90% validation accuracy: 59.09 (note: this is 30 epochs- which is hard coded. tuneable)**
+				- model 3  accuracy=50%
+				- todo: run without exposing val data
    	      			- model 1 training accuracy 90%
    	         		-  model 3: 54.54%
-   	           	-  todo: value after adding in word alignment	
+			-  todo: value after adding in word alignment	
    	  		
       		- Classical2  (bobcat parser, spider ansatz, pytorch model, pytorchtrainer)
-        		 -  status: **both inputsshould have same dtype**
+        		- status: **both inputsshould have same dtype**
       		 	- possible solution: **Should be an easy fix**. check branch spanish
    	      - todo
-   	      	- alignment dictionary translate basedon the dictionary between uspantek and spanish
-   	       	    			
-           	- Quantum 1 -simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
+   	      	- Alignment dictionary translate basedon the dictionary between uspantek and spanish   	       	    			
+           	- Quantum 1: simulation (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)
 		 	- status: Taking a long time, buut mostly will be not enough memory
-    			- - possible solution: **Try to run for hours, if memory issue, end of road**
-    		- Quantum 2 -actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
+    			- possible solution: **Try to run for hours, if memory issue, end of road**
+    		- Quantum 2: actual quantum computer (BobCatParser+PennyLaneModel+PyTorchTrainer+IQPAnsatz)
 		 	- status: IBM cloud login issue
 
 ## Nov 29th 2024
