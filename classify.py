@@ -745,6 +745,21 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
     
     return smart_loss.item(), smart_acc.item()
 
+def remove_nones_from_diagrams(diagrams, labels):
+    assert len(diagrams)== len(labels)
+    cleaned_diagrams=[]
+    cleaned_labels=[]
+    for diagram, label in tqdm(zip(diagrams,labels)):
+          if diagram:
+               cleaned_diagrams.append(diagram)
+               cleaned_labels.append(label)
+          else:
+               continue
+    assert len(cleaned_diagrams) >0 
+    assert len(cleaned_labels)>0
+    assert len(cleaned_diagrams) == len(cleaned_labels)
+    return cleaned_diagrams, cleaned_labels
+
 
     
 def perform_task(args):
@@ -847,19 +862,29 @@ def perform_task(args):
         test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST))
 
 
+        
 
     """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
     in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
     """
-    if (args.dataset in ["uspantek","sst2","spanish"]):
+    if (args.dataset in ["uspantek","spanish"]):
         train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
         val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
         test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
     else:
         #convert the plain text input to ZX diagrams
         train_diagrams = parser_obj.sentences2diagrams(train_data, suppress_exceptions=True)
+        train_diagrams,train_labels= remove_nones_from_diagrams(train_diagrams,train_labels)
+
+        
         val_diagrams = parser_obj.sentences2diagrams(val_data,suppress_exceptions=True)
+        val_diagrams,val_labels= remove_nones_from_diagrams(val_diagrams,val_labels)
+
         test_diagrams = parser_obj.sentences2diagrams(test_data,suppress_exceptions=True)
+        test_diagrams,test_labels= remove_nones_from_diagrams(test_diagrams,test_labels)
+
+        
+
 
     train_X = []
     val_X = []
@@ -905,7 +930,7 @@ def perform_task(args):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
     parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default=spiders_reader, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--parser', type=CCGParser, required=False, default= BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
