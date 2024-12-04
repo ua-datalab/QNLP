@@ -30,6 +30,16 @@
 
 # Meeting Notes
 
+## Dec 4th 2024
+
+Status
+
+
+2 things we can do today
+1. Classical 1 - Uspantek- add dict and see if we can improve accuracy (want)
+2. Classical 2- Bobcat parser (need)
+	- bobcat parser works well on quantum2 and quantum1 pipeline.	
+
 ## Nov 30th 2024
 ### Mithun's Logs and meeting notes: tatus@Dec2nd202410am
 - **English**
@@ -39,14 +49,14 @@
     		- Classical 1.a.1.- Without exposing val to the model
 			- "status: Model 1: training accuracy (30 epochs): 92% val Accuracy: Not applicable
    			- model 3 (oov model + model 4: 60% accuracy)
-          		- classical 1.a.2: with exposing val to model
+		- classical 1.a.2: with exposing val to model
     			- "status: Model 1: training accuracy (30 epochs): 92% val Accuracy:65%
 				- model 3 (oov model + model 4: 55% accuracy)
-			- classical 1.b:(with 100 data points train +1000 test)- started at 3.19pm from terminal in the folder testing_megh_*
-		- Classical 1.b.1.- Without exposing val to the model 
-			- "status: Model 1: training accuracy (30 epochs): _____ val Accuracy: Not applicable
-			- model 3 (oov model + model 4: ------- accuracy)
-          	- Classical 1.b.2: with exposing val to model
+		- classical 1.b:(with 100 data points train +1000 test)- started at 3.19pm from terminal in the folder testing_megh_*
+			- **Classical 1.b.1**.- Without exposing val to the model 
+				- "status: Model 1: training accuracy (30 epochs): _____ val Accuracy: Not applicable
+				- model 3 (oov model + model 4: ------- accuracy)
+          		- **Classical 1.b.2**: with exposing val to model
           		- "status: Model 1: training accuracy (30 epochs): ----- val Accuracy:_____
       			- model 3 (oov model + model 4: _____% accuracy)
     		- Classical 1.c:(with 10k data points train)
@@ -102,7 +112,7 @@
 			2. see what happens if english is not the core language
 				- Qn) why not LLMs
 	           	  	- Ans: we think there are no natively trained LLM.  
-	           	- bring in GPT embeddings and see if accuracy improves
+	           	- (want)bring in GPT embeddings and see if accuracy improves
 	          	- is it scaleable on- spideransatz- if yes: try on large spanish dataset? say 10K sentences
 	          	- has there someone trained an LLM in spanish from scratch- if yes what dataset,. how much can we get.           	
 		- **Quantum 1 -simulation (BobcatParser+IQPansatz+TKetmodel+QuantumTrainer)**
