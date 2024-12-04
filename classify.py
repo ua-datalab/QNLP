@@ -233,8 +233,8 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
                     initial_param_vector.append(tup)
                 else:
                     initial_param_vector.append(train_vocab_embeddings[cleaned_wrd_with_type][int(idx)])
-            else:                            
-                print(f"ERROR: found that this word {cleaned_wrd_with_type} was OOV from train vocab")
+            else:                                            
+                print(f"FYI: found that this word {cleaned_wrd_with_type} was OOV from train vocab")
              
     
     # assert len(qnlp_model.weights) == len(initial_param_vector)
@@ -520,7 +520,7 @@ def convert_to_diagrams_with_try_catch(parser_obj,list_sents,labels,tokeniser, s
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
         tokenized_sent = tokeniser.tokenise_sentence(sent)                
         #when we use numpy, max size of array is 32- update. even in quantum computer
-        if len(tokenized_sent)> 29:                
+        if len(tokenized_sent)> 31:                
                  sent_count_longer_than_32+=1
                  continue
         try:
@@ -867,21 +867,35 @@ def perform_task(args):
     """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
     in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
     """
-    if (args.dataset in ["uspantek","spanish"]):
-        train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
-        val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
-        test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
-    else:
+    # if (args.dataset in ["uspantek","spanish"]):
+    #     train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
+    #     val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
+    #     test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
+    # else:
+
+    
+        
         #convert the plain text input to ZX diagrams
-        train_diagrams = parser_obj.sentences2diagrams(train_data, suppress_exceptions=True)
-        train_diagrams,train_labels= remove_nones_from_diagrams(train_diagrams,train_labels)
+    train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")        
+    val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
+    test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
+        
+        # train_diagrams = parser_obj.sentences2diagrams(train_data)
+        # val_diagrams = parser_obj.sentences2diagrams(val_data)
+        # test_diagrams = parser_obj.sentences2diagrams(test_data)
+        
+    # else:
+    #  #convert the plain text input to ZX diagrams
+    #     train_diagrams = parser_obj.sentences2diagrams(train_data, suppress_exceptions=True)
+    #     train_diagrams,train_labels= remove_nones_from_diagrams(train_diagrams,train_labels)
 
         
-        val_diagrams = parser_obj.sentences2diagrams(val_data,suppress_exceptions=True)
-        val_diagrams,val_labels= remove_nones_from_diagrams(val_diagrams,val_labels)
+    #     val_diagrams = parser_obj.sentences2diagrams(val_data,suppress_exceptions=True)
+    #     val_diagrams,val_labels= remove_nones_from_diagrams(val_diagrams,val_labels)
 
-        test_diagrams = parser_obj.sentences2diagrams(test_data,suppress_exceptions=True)
-        test_diagrams,test_labels= remove_nones_from_diagrams(test_diagrams,test_labels)
+    #     test_diagrams = parser_obj.sentences2diagrams(test_data,suppress_exceptions=True)
+    #     test_diagrams,test_labels= remove_nones_from_diagrams(test_diagrams,test_labels)
+
 
         
 
