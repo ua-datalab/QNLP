@@ -183,7 +183,13 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
         max_word_param_length_train = max(get_max_word_param_length_all_other_ansatz(train_circuits))
         max_word_param_length_val = max(get_max_word_param_length_all_other_ansatz(val_circuits))
 
-    max_word_param_length = max(max_word_param_length_train, max_word_param_length_val) + 1
+    """#so this value max_word_param_length will eventually
+      become the length of the last layer of model 3. 
+      i.e the output produced by model 3 will be of this length. 
+      however , we dont want the last layer output of model 3 to be less than the
+      maximum vector of qnlp_model_weight. so we pick whichever is longer"""
+    max_qnlp_model_weight = max([len(x) for x in qnlp_model.weights]) 
+    max_word_param_length = max(max(max_word_param_length_train, max_word_param_length_val) + 1,max_qnlp_model_weight)
 
 
     """ max param length should include a factor from dimension
@@ -339,10 +345,15 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     for wrd in wrds_in_order:
         if len(dict2[wrd])==max_word_param_length:
             NN_train_Y.append(dict2[wrd])
-        else:            
-            pad= np.zeros(max_word_param_length-len(dict2[wrd]))
-            combined = np.hstack([dict2[wrd],pad])                          
-            NN_train_Y.append(combined)                                
+        else: 
+            if(len(dict2[wrd])) < max_word_param_length:         
+                pad= np.zeros(max_word_param_length-len(dict2[wrd]))
+                combined = np.hstack([dict2[wrd],pad])                          
+                NN_train_Y.append(combined)                                
+            else: #else if weight vector is longer - take/trime till the first max_param_length
+                combined = dict2[wrd][:max_word_param_length]       
+                NN_train_Y.append(combined)                                
+                 
     
     if (args.do_model3_tuning):
         build_model(keras_tuner.HyperParameters())  
@@ -473,12 +484,15 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
         #the weights should have the same dimension vector as that from embedding. 
         #note that oov model always produces max vector of size MAX_PARAM_LENGTH. however, your QNLP model might need less than that. so just trim it
         if(len(x)!= len(y)):
-             assert len(y)>len(x)
-             new_y=y[:len(x)]
-             trimmed_pred_weight_vector.append(new_y)
+             if len(y)>len(x):
+                new_y=y[:len(x)]
+                trimmed_pred_weight_vector.append(new_y)
+             else:
+                  pass
         else:
              trimmed_pred_weight_vector.append(y)
         
+    assert len(pred_model.weights) == len(nn.ParameterList(trimmed_pred_weight_vector))
     pred_model.weights = nn.ParameterList(trimmed_pred_weight_vector)
 
     
@@ -954,7 +968,7 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="spanish" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--dataset', type=str, required=False, default="uspantek" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=CCGParser, required=False, default= BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
