@@ -40,9 +40,10 @@
 	- is it sentences2diagram? Update: nope. Doesnt matter if we are using sentence2diagram or sentences2diagram 
 	- is it the none returned added when suppress_exceptions=True for bobcat parser? -Ans/Update: no, that didnt make a difference/same error.
  	- is it because during bobcatparser declaration we use 3 base types (N,NP,S)instead of the two original defined by lambek (N,S)-Ans/Update: no, that didnt make a difference/same error.
-  - will it work if we combined bobcat parser with some other ansatz.
+  - will it work if we combined bobcat parser with some other ansatz e.g. tensor?.
   - - what are the typical ansatz that the sample code/examples in lambeq docs use?
     - meanwhile in main branch, turn on wandb and run 3 classical1s (sst, spanish, uspantek)
+    - maybe stop doing top down knob turning/mixing and matching/permutation and combination and instead try reading and understanding the error more deeply
 - Mithun implemented many try catches to investigate output at multiple points in the code   
  - Sentence2Diagram and Sentences2Diagram work differently
  	- of 20 sentences, 7 removed for colloquisms, fragment- parser couldn't work with them 
