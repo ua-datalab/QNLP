@@ -189,7 +189,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     """ max param length should include a factor from dimension
           for example if bakes is n.r@s, and n=2 and s=2, the parameter 
           length must be 4. """
-    max_word_param_length = max_word_param_length * max (args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase)
+    # max_word_param_length = max_word_param_length * max (args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase)
 
 
     assert max_word_param_length!=0
@@ -468,9 +468,18 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     assert len(pred_model.symbols) == len(pred_weight_vector)
     assert type(pred_model.weights) == type( nn.ParameterList(pred_weight_vector))
     #also assert dimension of every single symbol/weight matches that of initial_para_vector
+    trimmed_pred_weight_vector=[]
     for x,y in zip(pred_model.weights, pred_weight_vector):
-        assert len(x) == len(y)  
-    pred_model.weights = nn.ParameterList(pred_weight_vector)
+        #the weights should have the same dimension vector as that from embedding. 
+        #note that oov model always produces max vector of size MAX_PARAM_LENGTH. however, your QNLP model might need less than that. so just trim it
+        if(len(x)!= len(y)):
+             assert len(y)>len(x)
+             new_y=y[:len(x)]
+             trimmed_pred_weight_vector.append(new_y)
+        else:
+             trimmed_pred_weight_vector.append(y)
+        
+    pred_model.weights = nn.ParameterList(trimmed_pred_weight_vector)
 
     
     #use the model now to create predictions on the test set.
@@ -511,7 +520,7 @@ def read_data(filename):
             return labels, sentences
 
 
-def convert_to_diagrams_with_try_catch(parser_obj,list_sents,labels,tokeniser, split="train"):
+def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokeniser, split="train"):
     list_target = []
     labels_target = []
     sent_count_longer_than_32=0
@@ -520,7 +529,7 @@ def convert_to_diagrams_with_try_catch(parser_obj,list_sents,labels,tokeniser, s
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
         tokenized_sent = tokeniser.tokenise_sentence(sent)                
         #when we use numpy, max size of array is 32- update. even in quantum computer
-        if len(tokenized_sent)> 31:                
+        if len(tokenized_sent)> args.max_tokens_per_sent:                
                  sent_count_longer_than_32+=1
                  continue
         try:
@@ -540,6 +549,7 @@ def convert_to_diagrams_with_try_catch(parser_obj,list_sents,labels,tokeniser, s
     
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
     print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped because they were unparsable")
+    print(f"out of a total of ={len(list_sents)} sentences {sent_count_longer_than_32} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
     print("no. of items processed= ", len(list_target))
     return list_target, labels_target
 
@@ -780,7 +790,8 @@ def perform_task(args):
     #spiders reader, we are directly using the reader, whilbobcat needs someone to create an obj of it
     assert embedding_model!=None
     if(args.parser==BobcatParser):
-        parser_obj=BobcatParser(verbose='text',root_cats=['N','NP','S'])
+        # parser_obj=BobcatParser(verbose='text',root_cats=['N','NP','S'])
+        parser_obj=BobcatParser(verbose='text')
 
     
 
@@ -876,9 +887,9 @@ def perform_task(args):
     
         
         #convert the plain text input to ZX diagrams
-    train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")        
-    val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
-    test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
+    train_diagrams, train_labels = convert_to_diagrams_with_try_catch(args,parser_obj,train_data,train_labels,spacy_tokeniser, split="train")        
+    val_diagrams, val_labels= convert_to_diagrams_with_try_catch(args,parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
+    test_diagrams, test_labels = convert_to_diagrams_with_try_catch(args,parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
         
         # train_diagrams = parser_obj.sentences2diagrams(train_data)
         # val_diagrams = parser_obj.sentences2diagrams(val_data)
@@ -909,18 +920,18 @@ def perform_task(args):
     assert len(val_diagrams)== len(val_labels)
     assert len(test_diagrams)== len(test_labels)
     
-    # if not args.ansatz==SpiderAnsatz: #for some reason spider ansatz doesnt like you removing cups
-    #   remove_cups = RemoveCupsRewriter()
-    #   train_X = []
-    #   val_X = []
-    #   for d in tqdm(train_diagrams):
-    #       train_X.append(remove_cups(d).normal_form())
+    if not args.ansatz==SpiderAnsatz: #for some reason spider ansatz doesnt like you removing cups
+      remove_cups = RemoveCupsRewriter()
+      train_X = []
+      val_X = []
+      for d in tqdm(train_diagrams):
+          train_X.append(remove_cups(d).normal_form())
 
-    #   for d in tqdm(val_diagrams):    
-    #       val_X.append(remove_cups(d).normal_form())
+      for d in tqdm(val_diagrams):    
+          val_X.append(remove_cups(d).normal_form())
 
-    #   train_diagrams  = train_X
-    #   val_diagrams    = val_X
+      train_diagrams  = train_X
+      val_diagrams    = val_X
 
 
 
@@ -943,7 +954,7 @@ def perform_task(args):
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--dataset', type=str, required=False, default="spanish" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=CCGParser, required=False, default= BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
@@ -966,6 +977,7 @@ def parse_arguments():
     parser.add_argument('--no_of_val_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
+    parser.add_argument('--max_tokens_per_sent', type=int, default=10, required=False, help="")
     
     return parser.parse_args()
 
