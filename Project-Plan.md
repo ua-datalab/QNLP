@@ -40,9 +40,15 @@
 	- is it sentences2diagram? Update: nope. Doesnt matter if we are using sentence2diagram or sentences2diagram 
 	- is it the none returned added when suppress_exceptions=True for bobcat parser? -Ans/Update: no, that didnt make a difference/same error.
  	- is it because during bobcatparser declaration we use 3 base types (N,NP,S)instead of the two original defined by lambek (N,S)-Ans/Update: no, that didnt make a difference/same error.
-  	- what happens if we give no declaration at all
-  	- what happens if we add verbose =text in bobcat parser declaration
-  	- update: doesnt error out for food_it data. Only sst, usp, and spanish..weird 
+  	- what happens if we give no root_cats in bobcat declaration at all-Ans/Update: no, that didnt make a difference/same error.
+  	- what happens if we add verbose =text in bobcat parser declaration-Ans/Update: no, that didnt make a difference/same error.
+  	- update: doesnt error out for food_it data. Only sst, usp, and spanish..weird
+  	- what happens if you combine bobcatparser+IQpansatz+pytorchtrainer+pytorchmodel- symbol has no attribute size. clearly bobcat+iqp needs quantum trainer and atleast a tket model
+  	- what happens when you reduce the max token length to 10. ans:holy shit it works..wow, token lenght was the issue? WTF bobcatparser-
+  	- what is the max you can go without error-?ans: it is 10 , especially for a new language like spanish or uspantek WTF
+  	- how about for sst2/english?
+  	- so will your quantum models 1 and 2 reply if you have tokens less than 10 for sst2?
+  		 
   - will it work if we combined bobcat parser with some other ansatz e.g. tensor?.ans/update: hits another error because looks like tensor ansatz doesnt following andrea_n@s_0 format
   - - what are the typical ansatz that the sample code/examples in lambeq docs use? bobcat+spider, bobcat+IQP, Bobcat+IQP
     - meanwhile in main branch, turn on wandb and run 3 classical1s (sst, spanish, uspantek)
