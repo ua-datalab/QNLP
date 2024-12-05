@@ -31,6 +31,26 @@
 
 ## Dec 4th 2024
 
+update @10pm
+with max tokens per sent =10
+- sst2 
+	- also using only 20 in train, 10 in val and 10 in test. 
+	- classical 1 (spider parser): runs
+ 	- clasical 2 (bob cat parser): dtype error- no val data after max len=10
+  	- quantum 1: error (atleast its not out of memory error) ((max token length=12 because else val was becoming empty)
+  	- quantum 2:taking forever+ have to run overnight(max token length=10 because else val was becoming empty)
+- uspantek
+	- classical 1: runs
+ 	- clasical 2: runs
+  	- quantum 1:
+  	- quantum 2:
+	 
+- spanish
+- 	- classical 1: runs
+ 	- clasical 2: runs
+  	- quantum 1:
+  	- quantum 2:
+
 - Hackathon quest: Spider parser runs without error, Bobcat throws errors. We need to find the differences between both parsers, in order to debug Bobcat, which is the real parser we need to implement.
 - things we can do today
 	1. Classical 1 - Uspantek- add dict and see if we can improve accuracy (want)
@@ -47,6 +67,7 @@
   	- what happens when you reduce the max token length to 10. ans:holy shit it works..for spanish...atleast passes first fit. there is a bug in secnod eval of model 4 weights.wow, token lenght was the issue? WTF bobcatparser-
   	- ## update. passes all 4 models and succesfully produces result for spanish in classical2 @10pm dec 4th 2024
   	- what is the max you can go without error-?ans: it is 10 , especially for a new language like spanish or uspantek WTF
+  	- HOW ABOUT uspantek? ans: throws away shit load of sentences, but yes, passes fit 1/model 1. now hitting a bug in model3 np.zeroes
   	- how about for sst2/english?- that maa ka lavda tho is barfing even with max token size=10
   	- so will your quantum models 1 and 2 reply if you have tokens less than 10 for sst2?
   		 
