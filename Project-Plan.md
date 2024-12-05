@@ -44,7 +44,8 @@
   	- what happens if we add verbose =text in bobcat parser declaration-Ans/Update: no, that didnt make a difference/same error.
   	- update: doesnt error out for food_it data. Only sst, usp, and spanish..weird
   	- what happens if you combine bobcatparser+IQpansatz+pytorchtrainer+pytorchmodel- symbol has no attribute size. clearly bobcat+iqp needs quantum trainer and atleast a tket model
-  	- what happens when you reduce the max token length to 10. ans:holy shit it works..wow, token lenght was the issue? WTF bobcatparser-
+  	- what happens when you reduce the max token length to 10. ans:holy shit it works..for spanish...atleast passes first fit. there is a bug in secnod eval of model 4 weights.wow, token lenght was the issue? WTF bobcatparser-
+  	- ## update. passes all 4 models and succesfully produces result for spanish in classical2 @10pm dec 4th 2024
   	- what is the max you can go without error-?ans: it is 10 , especially for a new language like spanish or uspantek WTF
   	- how about for sst2/english?- that maa ka lavda tho is barfing even with max token size=10
   	- so will your quantum models 1 and 2 reply if you have tokens less than 10 for sst2?
