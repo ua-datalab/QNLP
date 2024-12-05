@@ -188,8 +188,11 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       i.e the output produced by model 3 will be of this length. 
       however , we dont want the last layer output of model 3 to be less than the
       maximum vector of qnlp_model_weight. so we pick whichever is longer"""
-    max_qnlp_model_weight = max([len(x) for x in qnlp_model.weights]) 
-    max_word_param_length = max(max(max_word_param_length_train, max_word_param_length_val) + 1,max_qnlp_model_weight)
+    if(args.model == PytorchModel):
+        max_qnlp_model_weight = max([len(x) for x in qnlp_model.weights]) 
+        max_word_param_length = max(max(max_word_param_length_train, max_word_param_length_val) + 1,max_qnlp_model_weight)
+    else:
+        max_word_param_length = max(max_word_param_length_train, max_word_param_length_val)+1
 
 
     """ max param length should include a factor from dimension
@@ -969,15 +972,15 @@ def perform_task(args):
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
     parser.add_argument('--dataset', type=str, required=False, default="uspantek" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default= BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--parser', type=CCGParser, required=False, default= spiders_reader, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
-    parser.add_argument('--model', type=Model, required=False, default=PytorchModel , help="type of model to use: [numpy, pytorch,TketModel]")
+    parser.add_argument('--model', type=Model, required=False, default=PytorchModel  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
-    parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")
-    parser.add_argument('--base_dimension_for_sent', type=int, default=2, required=False, help="")
-    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_noun', type=int, default=1, required=False, help="")
+    parser.add_argument('--base_dimension_for_sent', type=int, default=1, required=False, help="")
+    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=1, required=False, help="")
     parser.add_argument('--maxparams', type=int, default=300, required=False, help="")
     parser.add_argument('--batch_size', type=int, default=30, required=False, help="")
     parser.add_argument('--epochs_train_model1', type=int, default=30, required=False, help="")
