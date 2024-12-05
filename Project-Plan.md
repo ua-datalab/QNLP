@@ -36,14 +36,18 @@
 	1. Classical 1 - Uspantek- add dict and see if we can improve accuracy (want)
 	2. Classical 2- Bobcat parser (need)
 - bobcat parser works well on quantum2 and quantum1 pipeline.
-- Question: why does spider parser give errors for things bobcat parser works fine for?
-	- is it sentences2diagram?
-	- is it the parser?
+- Question: why does bobcat parser give errors for things spider parser works fine for?
+	- is it sentences2diagram? Update: nope. Doesnt matter if we are using sentence2diagram or sentences2diagram 
+	- is it the none returned added when suppress_exceptions=True for bobcat parser? -Ans/Update: no, that didnt make a difference/same error.
+ 	- is it because during bobcatparser declaration we use 3 base types (N,NP,S)instead of the two original defined by lambek (N,S)-Ans/Update: no, that didnt make a difference/same error.
+  - will it work if we combined bobcat parser with some other ansatz.
+  - - what are the typical ansatz that the sample code/examples in lambeq docs use?
+    - meanwhile in main branch, turn on wandb and run 3 classical1s (sst, spanish, uspantek)
 - Mithun implemented many try catches to investigate output at multiple points in the code   
  - Sentence2Diagram and Sentences2Diagram work differently
  	- of 20 sentences, 7 removed for colloquisms, fragment- parser couldn't work with them 
 - Update: Unable to find source of main error
-- ToDos:
+- ToDos for meg:
 	-  set up argparse correctly to work with pytest, so we can run unit tests: right now, all requirements have been turned to false. We need to set things up so it works with required arguments
 		- ToDo (pri5): set this up withlaunch.json on VSCode
  		- `logger.info()`: learn how to set errors, warning, info
