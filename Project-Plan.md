@@ -46,7 +46,7 @@
   	- what happens if you combine bobcatparser+IQpansatz+pytorchtrainer+pytorchmodel- symbol has no attribute size. clearly bobcat+iqp needs quantum trainer and atleast a tket model
   	- what happens when you reduce the max token length to 10. ans:holy shit it works..wow, token lenght was the issue? WTF bobcatparser-
   	- what is the max you can go without error-?ans: it is 10 , especially for a new language like spanish or uspantek WTF
-  	- how about for sst2/english?
+  	- how about for sst2/english?- that maa ka lavda tho is barfing even with max token size=10
   	- so will your quantum models 1 and 2 reply if you have tokens less than 10 for sst2?
   		 
   - will it work if we combined bobcat parser with some other ansatz e.g. tensor?.ans/update: hits another error because looks like tensor ansatz doesnt following andrea_n@s_0 format
