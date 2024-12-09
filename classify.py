@@ -17,6 +17,11 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
+# import debugpy
+# debugpy.listen(5678)
+# print("waiting for debugger")
+# debugpy.wait_for_client()
+# print("attached")
 
 
 import argparse
@@ -540,20 +545,24 @@ def read_data(filename):
 def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokeniser, split="train"):
     list_target = []
     labels_target = []
-    sent_count_longer_than_32=0
+    sentences_with_token_more_than_limit=0
     skipped_sentences_counter_due_to_cant_parse=0
     desc_long = f"converting {split} data to diagrams"
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
         tokenized_sent = tokeniser.tokenise_sentence(sent)                
-        #when we use numpy, max size of array is 32- update. even in quantum computer
-        if len(tokenized_sent)> args.max_tokens_per_sent:                
-                 sent_count_longer_than_32+=1
-                 continue
+        
         try:
-            if(parser_obj==spiders_reader):
+            if(parser_obj==spiders_reader): 
+                 if len(tokenized_sent)> 32:         #spider parser max is 32        
+                    sentences_with_token_more_than_limit+=1
+                    continue                
                  sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
-            else:
-                 sent_diagram = parser_obj.sentence2diagram(tokenized_sent, suppress_exceptions=True, tokenised=True)
+            elif(parser_obj==BobcatParser):
+                 #bobcat doesnt take more than 10 tokens
+                if len(tokenized_sent)> args.max_tokens_per_sent:                
+                    sentences_with_token_more_than_limit+=1
+                    continue
+                sent_diagram = parser_obj.sentence2diagram(tokenized_sent, suppress_exceptions=True, tokenised=True)
         except Exception as ex:             
             print(ex)
             skipped_sentences_counter_due_to_cant_parse+=1
@@ -564,9 +573,9 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
         else:
              print("found that there was a sentence which after conversion to diagram was None. i.e hit exception during parsing.")
     
-    print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
+    print(f"sent_count_longer_than_32={sentences_with_token_more_than_limit}")
     print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped during conversion to diagrams because they were unparsable")
-    print(f"out of a total of ={len(list_sents)} sentences {sent_count_longer_than_32} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
+    print(f"out of a total of ={len(list_sents)} sentences {sentences_with_token_more_than_limit} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
     print(f"Therefore no. of data points left in {split} dataset =  {len(list_target)}")
     return list_target, labels_target
 
@@ -963,8 +972,7 @@ def perform_task(args):
     # But  commenting out due to lack of ram in laptop 
     tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-    
-    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,args.no_of_layers_in_ansatz,args.batch_size,args.learning_rate_model1,args.expose_model1_val_during_model_initialization,args.model,args.epochs_train_model1,args.trainer)
+    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model,      args.epochs_train_model1,args.trainer)
 
 def parse_name_model(val):
     try:
@@ -1047,9 +1055,9 @@ def parse_arguments():
     parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=False, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
-    parser.add_argument('--base_dimension_for_noun', type=int, default=1, required=False, help="")
-    parser.add_argument('--base_dimension_for_sent', type=int, default=1, required=False, help="")
-    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=1, required=False, help="")
+    parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_sent', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=2, required=False, help="")
     parser.add_argument('--maxparams', type=int, default=300, required=False, help="")
     parser.add_argument('--batch_size', type=int, default=30, required=False, help="")
     parser.add_argument('--epochs_train_model1', type=int, default=30, required=False, help="")
@@ -1065,6 +1073,7 @@ def parse_arguments():
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
     parser.add_argument('--max_tokens_per_sent', type=int, default=10, required=False, help="")
     
+
     return parser.parse_args()
 
 
@@ -1078,8 +1087,13 @@ def main():
     print(f"value of trainer is {args.trainer}")
     print(f"value of ansatz is {args.ansatz}")
     print(f"value of parser is {args.parser}")
-    import sys
-    sys.exit()
+
+    #spider parser wants minimum 2 tensor dimensions
+    if(args.parser == spiders_reader):
+        assert args.base_dimension_for_noun == 2
+        assert args.base_dimension_for_sent == 2
+        assert args.base_dimension_for_prep_phrase == 2
+
     return perform_task(args)
 
 if __name__=="__main__":
