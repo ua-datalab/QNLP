@@ -28,6 +28,9 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+## Dec 9th
+- Pytest implementation complete
+- Code is functional and has checks. 
 
 ## Dec 8th 
 Todo at EOD Dec 8th:
