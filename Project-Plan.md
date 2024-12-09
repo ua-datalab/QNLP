@@ -77,7 +77,9 @@ print("attached")
     ]
 }
     ```
-    11. now just click the play button next to top left Run an: Python Debugger:Remote attach
+    11. now just click the play button next to top left Run an: Python Debugger:Remote attach (or whatever name you choose to provide in the luanch.json)
+    12. this is extremely useful when you have command line arguments to pass in inside vscode, and yous till want to debug line by line. Else there is no other way to get the command line arguments, required ones
+    
 ## Dec 4th 2024
 
 update @10pm
