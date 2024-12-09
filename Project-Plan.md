@@ -31,6 +31,10 @@
 # Meeting Notes
 
 ## Dec 8th 
+Todo at eod dec 8th:
+1. merge branch run_sst1_classical1 with main and delete branch
+3. make yes and no expose a command line argument action=store_true- branch for itself?
+4. 2. add pytest for run_sst1_run_sst1_classical1 both for yes expose and no expose
 
 Mithun coding
 How to run code without debugging but using command line arguments:
