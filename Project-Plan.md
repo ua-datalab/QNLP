@@ -52,12 +52,13 @@ print("attached")
 2. view->terminal
 3. python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer
 4. while its waiting click on the play button on the left most column panel with a bug on it.
-5. create launch.json
-6. python debugger
-7. remote attach
-8. localhost
-9. port: 5678
-10. next launch.json with the following text will be created
+5. if(launch.json) is not there
+	6. create launch.json
+	7. pick python debugger
+	8. pick remote attach
+	9. pick localhost
+	10. pick port: 5678
+11. next launch.json with the following text will be created
     ```
     {
     // Use IntelliSense to learn about possible attributes.
