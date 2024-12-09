@@ -552,7 +552,10 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
         tokenized_sent = tokeniser.tokenise_sentence(sent)                
         
         try:
-            if(parser_obj==spiders_reader):                 
+            if(parser_obj==spiders_reader): 
+                 if len(tokenized_sent)> 32:         #spider parser max is 32        
+                    sentences_with_token_more_than_limit+=1
+                    continue                
                  sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
             elif(parser_obj==BobcatParser):
                  #bobcat doesnt take more than 10 tokens
@@ -969,8 +972,7 @@ def perform_task(args):
     # But  commenting out due to lack of ram in laptop 
     tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-    
-    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,args.no_of_layers_in_ansatz,args.batch_size,args.learning_rate_model1,args.expose_model1_val_during_model_initialization,args.model,args.epochs_train_model1,args.trainer)
+    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model,      args.epochs_train_model1,args.trainer)
 
 def parse_name_model(val):
     try:
@@ -1050,7 +1052,7 @@ def parse_arguments():
     parser.add_argument('--ansatz', type=parse_name_ansatz, required=True, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=parse_name_model, required=True  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
     parser.add_argument('--trainer', type=parse_name_trainer, required=True, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
-    parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=True, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
+    parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=False, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
     parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")
