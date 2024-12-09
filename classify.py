@@ -124,9 +124,9 @@ symbol and create a dictionary full of it
 :param vocab: circuits- created from diagrams using an anstaz
 :return: returns a set of all unique words associated i.e vocab
 """ 
-def create_vocab_from_circuits(circuits,args):
+def create_vocab_from_circuits(circuits,ansatz):
     vocab=set()
-    if(args.ansatz==SpiderAnsatz):  
+    if(ansatz==SpiderAnsatz):  
         for d in circuits:
             for symb in d.free_symbols:                  
                     cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symb.name)                
@@ -153,11 +153,11 @@ as of nov21st2024 - is hurting the first model's fit- i.e loss not reducing.
 
 """
 
-def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model,args):   
+def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model,ansatz,model_type_class):   
 
     
-    train_vocab=create_vocab_from_circuits(train_circuits,args)
-    val_vocab=create_vocab_from_circuits(val_circuits,args)
+    train_vocab=create_vocab_from_circuits(train_circuits,ansatz)
+    val_vocab=create_vocab_from_circuits(val_circuits,ansatz)
     print(len(val_vocab.union(train_vocab)), len(train_vocab), len(val_vocab))    
     print(f"OOV word count: i.e out of {len(val_vocab)} words in the testing vocab there are  {len(val_vocab - train_vocab)} words that are not found in training. So they are OOV")
     oov_words=val_vocab - train_vocab
@@ -175,7 +175,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
    
     max_word_param_length=0
 
-    if(args.ansatz==SpiderAnsatz):
+    if(ansatz==SpiderAnsatz):
         max_word_param_length_train = max(get_max_word_param_length_spider_ansatz(train_circuits))
         max_word_param_length_val = max(get_max_word_param_length_spider_ansatz(val_circuits))
 
@@ -188,7 +188,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
       i.e the output produced by model 3 will be of this length. 
       however , we dont want the last layer output of model 3 to be less than the
       maximum vector of qnlp_model_weight. so we pick whichever is longer"""
-    if(args.model == PytorchModel):
+    if(model_type_class == PytorchModel):
         max_qnlp_model_weight = max([len(x) for x in qnlp_model.weights]) 
         max_word_param_length = max(max(max_word_param_length_train, max_word_param_length_val) + 1,max_qnlp_model_weight)
     else:
@@ -203,7 +203,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
 
     assert max_word_param_length!=0
     
-    if(args.ansatz==SpiderAnsatz):               
+    if(ansatz==SpiderAnsatz):               
         #for each word in train and test vocab get its embedding from fasttext
         train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model)
         val_vocab_embeddings = get_vocab_emb_dict(val_vocab,embedding_model)            
@@ -224,14 +224,14 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
         Note that this is coming from deep qnlp_model.symbols where each qbit in a given
         word is stored separately. refer this symbols lambeq
         documentation:https://cqcl.github.io/lambeq-docs/tutorials/training-symbols.html"""
-        if(args.ansatz==SpiderAnsatz):  
+        if(ansatz==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
             
             
             if cleaned_wrd_with_type in train_vocab_embeddings:
-                if args.model == PytorchModel:                                                        
+                if model_type_class == PytorchModel:                                                        
                     # dimension of initial param vector is decided by the actual dimension assigned in qnlp.weights for that word
                     list_of_params_for_this_word=[]
                     for i in range(len(weight)):
@@ -565,9 +565,9 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
              print("found that there was a sentence which after conversion to diagram was None. i.e hit exception during parsing.")
     
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
-    print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped because they were unparsable")
+    print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped during conversion to diagrams because they were unparsable")
     print(f"out of a total of ={len(list_sents)} sentences {sent_count_longer_than_32} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
-    print("no. of items processed= ", len(list_target))
+    print("Therefeor no. of data points left in {split} dataset = ", len(list_target))
     return list_target, labels_target
 
 
@@ -580,7 +580,8 @@ def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     for diagram,label in tqdm(zip(diagrams,labels), desc=desc_long, total=len(labels)):
         try:
             circuit= ansatz(diagram)
-        except:
+        except Exception as ex:            
+            print(ex)
             counter_skipped_data+=1
             continue
         list_circuits.append(circuit)
@@ -589,27 +590,32 @@ def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     return list_circuits, list_labels
 
 
-def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model):
-    if args.ansatz in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
-        ansatz = args.ansatz ({AtomicType.NOUN: args.base_dimension_for_noun,
-                    AtomicType.SENTENCE: args.base_dimension_for_sent,
-                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase} ,n_layers= args.no_of_layers_in_ansatz,n_single_qubit_params=args.single_qubit_params)    
+def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use ):
+    if ansatz in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
+        ansatz_obj = ansatz ({AtomicType.NOUN: base_dimension_for_noun,
+                    AtomicType.SENTENCE: base_dimension_for_sent,
+                    AtomicType.PREPOSITIONAL_PHRASE:base_dimension_for_prep_phrase} ,n_layers= no_of_layers_in_ansatz,n_single_qubit_params=single_qubit_params)    
+    elif ansatz in [SpiderAnsatz]:
+        ansatz_obj = ansatz ({AtomicType.NOUN: Dim(base_dimension_for_noun),
+                    AtomicType.SENTENCE: Dim(base_dimension_for_sent),
+                    AtomicType.PREPOSITIONAL_PHRASE: base_dimension_for_prep_phrase}  )    
+
     else:
-        ansatz = args.ansatz ({AtomicType.NOUN: Dim(args.base_dimension_for_noun),
-                    AtomicType.SENTENCE: Dim(args.base_dimension_for_sent),
-                    AtomicType.PREPOSITIONAL_PHRASE: args.base_dimension_for_prep_phrase}  )    
+        ansatz_obj = ansatz ({AtomicType.NOUN: Dim(base_dimension_for_noun),
+                    AtomicType.SENTENCE: Dim(base_dimension_for_sent),
+                    AtomicType.PREPOSITIONAL_PHRASE: base_dimension_for_prep_phrase}  )    
 
    
     assert len(train_diagrams) == len(train_labels)
     #use the anstaz to create circuits from diagrams
-    train_circuits, train_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=train_diagrams, ansatz=ansatz,labels=train_labels, split="train")        
+    train_circuits, train_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=train_diagrams, ansatz=ansatz_obj,labels=train_labels, split="train")        
     assert len(train_circuits) == len(train_labels)
 
 
-    val_circuits, val_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=val_diagrams, ansatz=ansatz,labels=val_labels, split="val")
+    val_circuits, val_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=val_diagrams, ansatz=ansatz_obj,labels=val_labels, split="val")
     assert len(val_circuits) == len(val_labels)
 
-    test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz,labels=test_labels, split="test")
+    test_circuits, test_labels =  convert_diagram_to_circuits_with_try_catch(diagrams=test_diagrams, ansatz=ansatz_obj,labels=test_labels, split="test")
     assert len(test_circuits) == len(test_labels)
     
     assert len(train_circuits) > 0
@@ -618,17 +624,23 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
 
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
+    combined_circuits=train_circuits
+    if(expose_model1_val_during_model_initialization==True):
+        combined_circuits=train_circuits+val_circuits
 
-    if(args.model==TketModel):
+
+    if(model_class_to_use==TketModel):
         backend = AerBackend()
         backend_config = {
                     'backend': backend,
                     'compilation': backend.default_compilation_pass(2),
                     'shots': 8192
                 }
-        qnlp_model= TketModel.from_diagrams(train_circuits, backend_config=backend_config)
 
-    elif(args.model==PennyLaneModel): #to run on an actual quantum computer
+                
+        model1_obj= TketModel.from_diagrams(combined_circuits, backend_config=backend_config)
+
+    elif(model_class_to_use==PennyLaneModel): #to run on an actual quantum computer
         
         from qiskit_ibm_provider import IBMProvider
 
@@ -637,19 +649,19 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
         backend_config = {'backend': 'qiskit.ibmq',
                         'device': 'ibm_brisbane',
                         'shots': 1000}
-        qnlp_model = PennyLaneModel.from_diagrams(train_circuits,
+        model1_obj = PennyLaneModel.from_diagrams(combined_circuits,
                                        probabilities=True,
                                        normalize=True,
                                        backend_config=backend_config)
-        qnlp_model.initialise_weights()
+        model1_obj.initialise_weights()
 
     else:
-        qnlp_model = args.model.from_diagrams(train_circuits + val_circuits)
+        model1_obj = model_class_to_use.from_diagrams(combined_circuits)
 
     train_dataset = Dataset(
                 train_circuits,
                 train_labels,
-                batch_size=args.batch_size)
+                batch_size=batch_size)
 
     val_dataset = Dataset(val_circuits, val_labels, shuffle=False)
 
@@ -660,13 +672,13 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
     assert len(test_circuits)== len(test_labels)
 
 
-    if(args.trainer==QuantumTrainer):
-        trainer = QuantumTrainer(
-        model=qnlp_model,
+    if(trainer_class_to_use==QuantumTrainer):
+        trainer_obj = QuantumTrainer(
+        model=model1_obj,
         loss_function=BinaryCrossEntropyLoss(),
-        epochs=args.epochs_train_model1,
+        epochs=epochs_train_model1,
         optimizer=SPSAOptimizer,
-        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*args.epochs_train_model1}, #todo: move this abc values to argparse defaults
+        optim_hyperparams={'a': 0.05, 'c': 0.06, 'A':0.001*epochs_train_model1}, #todo: move this abc values to argparse defaults
         evaluate_functions=eval_metrics,
         evaluate_on_train=True,
         verbose='text',
@@ -674,12 +686,12 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
         seed=seed
         )
     else:
-        trainer = args.trainer(
-            model=qnlp_model,
+        trainer_obj = trainer_class_to_use(
+            model=model1_obj,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
-            learning_rate=args.learning_rate_model1,            
-            epochs=args.epochs_train_model1,
+            learning_rate=learning_rate_model1,            
+            epochs=epochs_train_model1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
@@ -687,16 +699,19 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
 
     
 
-    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(
-        train_circuits, val_circuits, embedding_model, qnlp_model,args=args)
-
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, model1_obj,ansatz, model_class_to_use)
+    
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
-    print(qnlp_model.weights[0])
+    print(model1_obj.weights[0])
     print(type(train_dataset.targets[0]))
 
-    trainer.fit(train_dataset, val_dataset,eval_interval=1, log_interval=1)
-    print(qnlp_model.weights[0])
+    if(expose_model1_val_during_model_initialization==True):
+        trainer_obj.fit(train_dataset, val_dataset,eval_interval=1, log_interval=1)
+    else:
+        trainer_obj.fit(train_dataset,eval_interval=1, log_interval=1)
+
+    print(model1_obj.weights[0])
 
     print("***********Training of first model completed**********")
     """if there are no OOV words, we dont need the model 2 through model 4. 
@@ -715,36 +730,36 @@ def run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,t
         ax_tl.set_ylabel('Loss')
 
         colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-        range_ = np.arange(1, trainer.epochs+1)
-        ax_tl.plot(range_, trainer.train_epoch_costs, color=next(colours))
-        ax_bl.plot(range_, trainer.train_eval_results['acc'], color=next(colours))
-        ax_tr.plot(range_, trainer.val_costs, color=next(colours))
-        ax_br.plot(range_, trainer.val_eval_results['acc'], color=next(colours))
+        range_ = np.arange(1, trainer_class_to_use.epochs+1)
+        ax_tl.plot(range_, trainer_class_to_use.train_epoch_costs, color=next(colours))
+        ax_bl.plot(range_, trainer_class_to_use.train_eval_results['acc'], color=next(colours))
+        ax_tr.plot(range_, trainer_class_to_use.val_costs, color=next(colours))
+        ax_br.plot(range_, trainer_class_to_use.val_eval_results['acc'], color=next(colours))
 
 
-        val_preds = qnlp_model.get_diagram_output(val_circuits)    
+        val_preds = model1_obj.get_diagram_output(val_circuits)    
         loss_pyTorch =torch.nn.BCEWithLogitsLoss()
         val_loss= loss_pyTorch(val_preds, torch.tensor(val_labels))
         val_acc =accuracy(val_preds, torch.tensor(val_labels))
         print(f"value of val_loss={val_loss} and value of val_acc ={val_acc}")
 
         # print test accuracy- not the value above and below must be theoretically same, but isnt todo: find out why
-        val_acc = accuracy(qnlp_model(val_circuits), torch.tensor(val_labels))
+        val_acc = accuracy(model1_obj(val_circuits), torch.tensor(val_labels))
         print('Val accuracy:', val_acc.item())
     
         import sys
         sys.exit()
 
    
-    NN_model,trained_wts = generate_OOV_parameterising_model(qnlp_model, train_embeddings, max_w_param_length,args)
-    prediction_model = args.model.from_diagrams(val_circuits)
+    NN_model,trained_wts = generate_OOV_parameterising_model(model1_obj, train_embeddings, max_w_param_length,args)
+    prediction_model = model_class_to_use.from_diagrams(val_circuits)
 
-    trainer = args.trainer(
+    trainer_obj2 = trainer_class_to_use(
             model=prediction_model,
             loss_function=torch.nn.BCEWithLogitsLoss(),
             optimizer=torch.optim.AdamW,
-            learning_rate=args.learning_rate_model3,
-            epochs=args.epochs_train_model1,
+            learning_rate=learning_rate_model3,
+            epochs=epochs_train_model1,
             evaluate_functions=eval_metrics,
             evaluate_on_train=True,
             verbose='text',
@@ -908,23 +923,7 @@ def perform_task(args):
     val_diagrams, val_labels= convert_to_diagrams_with_try_catch(args,parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
     test_diagrams, test_labels = convert_to_diagrams_with_try_catch(args,parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
         
-        # train_diagrams = parser_obj.sentences2diagrams(train_data)
-        # val_diagrams = parser_obj.sentences2diagrams(val_data)
-        # test_diagrams = parser_obj.sentences2diagrams(test_data)
-        
-    # else:
-    #  #convert the plain text input to ZX diagrams
-    #     train_diagrams = parser_obj.sentences2diagrams(train_data, suppress_exceptions=True)
-    #     train_diagrams,train_labels= remove_nones_from_diagrams(train_diagrams,train_labels)
-
-        
-    #     val_diagrams = parser_obj.sentences2diagrams(val_data,suppress_exceptions=True)
-    #     val_diagrams,val_labels= remove_nones_from_diagrams(val_diagrams,val_labels)
-
-    #     test_diagrams = parser_obj.sentences2diagrams(test_data,suppress_exceptions=True)
-    #     test_diagrams,test_labels= remove_nones_from_diagrams(test_diagrams,test_labels)
-
-
+       
         
 
 
@@ -964,18 +963,19 @@ def perform_task(args):
     # But  commenting out due to lack of ram in laptop 
     tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-
-    return run_experiment(args,train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model)
+    
+    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,args.no_of_layers_in_ansatz,args.batch_size,args.learning_rate_model1,args.expose_model1_val_during_model_initialization,args.model,args.epochs_train_model1,args.trainer)
        
 
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="uspantek" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default= spiders_reader, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
-    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=SpiderAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
-    parser.add_argument('--model', type=Model, required=False, default=PytorchModel  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
-    parser.add_argument('--trainer', type=Trainer, required=False, default=PytorchTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
+    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--parser', type=CCGParser, required=False, default= BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=IQPAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
+    parser.add_argument('--model', type=Model, required=False, default=TketModel  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
+    parser.add_argument('--trainer', type=Trainer, required=False, default=QuantumTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
+    parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=False, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
     parser.add_argument('--base_dimension_for_noun', type=int, default=1, required=False, help="")
