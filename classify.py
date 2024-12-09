@@ -567,7 +567,7 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
     print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped during conversion to diagrams because they were unparsable")
     print(f"out of a total of ={len(list_sents)} sentences {sent_count_longer_than_32} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
-    print("Therefeor no. of data points left in {split} dataset = ", len(list_target))
+    print(f"Therefore no. of data points left in {split} dataset =  {len(list_target)}")
     return list_target, labels_target
 
 
@@ -965,16 +965,85 @@ def perform_task(args):
     tf.random.set_seed(tf_seed)
     
     return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,args.no_of_layers_in_ansatz,args.batch_size,args.learning_rate_model1,args.expose_model1_val_during_model_initialization,args.model,args.epochs_train_model1,args.trainer)
-       
 
+def parse_name_model(val):
+    try:
+        output_parser_class = None
+        match val:
+            case "PytorchModel":
+                output_parser_class = PytorchModel
+            case "TketModel":
+                output_parser_class = TketModel
+            case "PennyLaneModel":
+                output_parser_class = PennyLaneModel
+            
+        
+    except ValueError:
+        raise argparse.ArgumentTypeError("invalid parser specificed'")
+
+    assert output_parser_class != None
+    return output_parser_class
+
+def parse_name_trainer(val):
+    try:
+        output_parser_class = None
+        match val:
+            case "PytorchTrainer":
+                output_parser_class = PytorchTrainer
+            case "QuantumTrainer":
+                output_parser_class = QuantumTrainer
+           
+        
+    except ValueError:
+        raise argparse.ArgumentTypeError("invalid parser specificed'")
+
+    assert output_parser_class != None
+    return output_parser_class
+
+       
+def parse_name_ansatz(val):
+    try:
+        output_parser_class = None
+        match val:
+            case "IQPAnsatz":
+                output_parser_class = IQPAnsatz
+            case "SpiderAnsatz":
+                output_parser_class = SpiderAnsatz
+            case "Sim14Ansatz":
+                output_parser_class = Sim14Ansatz
+            case "Sim15Ansatz":
+                output_parser_class = Sim15Ansatz
+            case "TensorAnsatz":
+                output_parser_class = TensorAnsatz
+        
+    except ValueError:
+        raise argparse.ArgumentTypeError("invalid parser specificed'")
+
+    assert output_parser_class != None
+    return output_parser_class
+
+def parse_name_parser(val):
+    try:
+        output_parser_class = None
+        match val:
+            case "BobcatParser":
+                output_parser_class = BobcatParser
+            case "Spider":
+                output_parser_class = spiders_reader
+        
+    except ValueError:
+        raise argparse.ArgumentTypeError("invalid parser specificed'")
+
+    assert output_parser_class != None
+    return output_parser_class
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default= BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
-    parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=IQPAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
-    parser.add_argument('--model', type=Model, required=False, default=TketModel  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
-    parser.add_argument('--trainer', type=Trainer, required=False, default=QuantumTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
+    parser.add_argument('--dataset', type=str, required=True, default="food_it" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--parser', type=parse_name_parser, required=True, help="type of parser to use: [BobCatParser, Spider]")
+    parser.add_argument('--ansatz', type=parse_name_ansatz, required=True, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
+    parser.add_argument('--model', type=parse_name_model, required=True  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
+    parser.add_argument('--trainer', type=parse_name_trainer, required=True, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
     parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=False, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
@@ -1003,7 +1072,15 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    perform_task(args)
+
+    print(f"value of dataset is {args.dataset}")
+    print(f"value of model is {args.model}")
+    print(f"value of trainer is {args.trainer}")
+    print(f"value of ansatz is {args.ansatz}")
+    print(f"value of parser is {args.parser}")
+    import sys
+    sys.exit()
+    return perform_task(args)
 
 if __name__=="__main__":
         main()
