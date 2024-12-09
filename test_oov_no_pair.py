@@ -20,7 +20,8 @@ def test_sst2_classical1(monkeypatch):
                              '--ansatz', 'SpiderAnsatz',
                              '--model14type', 'PytorchModel',
                              '--trainer', 'PytorchTrainer',
-                             '--epochs_train_model1', '7'
+                             '--epochs_train_model1', '7',
+                             '--no_of_training_data_points_to_use', '20'
                              ])
         model4_loss, model4_acc=classify.main()                         
         assert round(model4_loss,2)  >= 0.6

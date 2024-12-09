@@ -1069,7 +1069,7 @@ def parse_arguments():
     parser.add_argument('--data_base_folder', type=str, default="data", required=False, help="")
     parser.add_argument('--learning_rate_model3', type=float, default=3e-2, required=False, help="")
     parser.add_argument('--no_of_layers_in_ansatz', type=int, default=3, required=False, help="")
-    parser.add_argument('--no_of_training_data_points_to_use', type=int, default=20, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_training_data_points_to_use', type=int,required=True, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_val_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
