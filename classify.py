@@ -567,7 +567,7 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
     print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
     print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped during conversion to diagrams because they were unparsable")
     print(f"out of a total of ={len(list_sents)} sentences {sent_count_longer_than_32} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
-    print("Therefeor no. of data points left in {split} dataset = ", len(list_target))
+    print(f"Therefore no. of data points left in {split} dataset =  {len(list_target)}")
     return list_target, labels_target
 
 
@@ -966,12 +966,23 @@ def perform_task(args):
     
     return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,args.no_of_layers_in_ansatz,args.batch_size,args.learning_rate_model1,args.expose_model1_val_during_model_initialization,args.model,args.epochs_train_model1,args.trainer)
        
+def parse_name_parser(val):
+    try:
+        output_parser_class = None
+        match val:
+             case "BobcatParser":
+                output_parser_class = BobcatParser
+        
+    except ValueError:
+        raise argparse.ArgumentTypeError("invalid parser specificed'")
 
+    assert output_parser_class != None
+    return output_parser_class
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--dataset', type=str, required=False, default="sst2" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
-    parser.add_argument('--parser', type=CCGParser, required=False, default= BobcatParser, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
+    parser.add_argument('--dataset', type=str, required=True, default="food_it" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
+    parser.add_argument('--parser', type=parse_name_parser, required=True, help="type of parser to use: [tree_reader,bobCatParser, spiders_reader,depCCGParser]")
     parser.add_argument('--ansatz', type=BaseAnsatz, required=False, default=IQPAnsatz, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model', type=Model, required=False, default=TketModel  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
     parser.add_argument('--trainer', type=Trainer, required=False, default=QuantumTrainer, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
@@ -1003,7 +1014,7 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
-    perform_task(args)
+    return perform_task(args)
 
 if __name__=="__main__":
         main()
