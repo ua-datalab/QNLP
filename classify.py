@@ -1062,7 +1062,7 @@ def parse_arguments():
     parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=2, required=False, help="")
     parser.add_argument('--maxparams', type=int, default=300, required=False, help="maximum size of the embedding function's embeddings which will become the first layer of model3")
     parser.add_argument('--batch_size', type=int, default=30, required=False, help="")
-    parser.add_argument('--epochs_train_model1', type=int, default=1, required=False, help="")
+    parser.add_argument('--epochs_train_model1', type=int, required=True, help="")
     parser.add_argument('--epochs_model3_oov_model', type=int, default=100, required=False, help="")
     parser.add_argument('--learning_rate_model1', type=float, default=3e-2, required=False, help="")
     parser.add_argument('--seed', type=int, default=0, required=False, help="")
