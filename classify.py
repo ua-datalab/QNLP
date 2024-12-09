@@ -17,11 +17,11 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
-import debugpy
-debugpy.listen(5678)
-print("waiting for debugger")
-debugpy.wait_for_client()
-print("attached")
+# import debugpy
+# debugpy.listen(5678)
+# print("waiting for debugger")
+# debugpy.wait_for_client()
+# print("attached")
 
 
 import argparse
@@ -1053,9 +1053,9 @@ def parse_arguments():
     parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=False, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
-    parser.add_argument('--base_dimension_for_noun', type=int, default=1, required=False, help="")
-    parser.add_argument('--base_dimension_for_sent', type=int, default=1, required=False, help="")
-    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=1, required=False, help="")
+    parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_sent', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=2, required=False, help="")
     parser.add_argument('--maxparams', type=int, default=300, required=False, help="")
     parser.add_argument('--batch_size', type=int, default=30, required=False, help="")
     parser.add_argument('--epochs_train_model1', type=int, default=30, required=False, help="")
@@ -1071,6 +1071,7 @@ def parse_arguments():
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
     parser.add_argument('--max_tokens_per_sent', type=int, default=10, required=False, help="")
     
+
     return parser.parse_args()
 
 
@@ -1084,6 +1085,12 @@ def main():
     print(f"value of trainer is {args.trainer}")
     print(f"value of ansatz is {args.ansatz}")
     print(f"value of parser is {args.parser}")
+
+    #spider parser wants minimum 2 tensor dimensions
+    if(args.parser == spiders_reader):
+        assert args.base_dimension_for_noun == 2
+        assert args.base_dimension_for_sent == 2
+        assert args.base_dimension_for_prep_phrase == 2
 
     return perform_task(args)
 
