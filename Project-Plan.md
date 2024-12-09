@@ -30,12 +30,12 @@
 # Meeting Notes
 
 ## Dec 8th 
-Todo at eod dec 8th:
-1. merge branch run_sst1_classical1 with main and delete branch
-3. make yes and no expose a command line argument action=store_true- branch for itself?
-4. 2. add pytest for run_sst1_run_sst1_classical1 both for yes expose and no expose
+Todo at EOD Dec 8th:
+1. merge branch `run_sst1_classical1` with `main` and delete branch
+2. make yes and no expose a command line argument `action=store_true` - branch for itself?
+3.  add pytest for run_sst1_run_sst1_classical1 both for yes expose and no expose
 
-Mithun coding
+### Mithun coding
 How to run code without debugging but using command line arguments:
 
 `python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer --expose_model1_val_during_model_initialization False`
@@ -88,8 +88,8 @@ print("attached")
     
 ## Dec 4th 2024
 
-update @10pm
-with max tokens per sent =10
+### Update @10pm
+- with max tokens per sent =10
 - sst2 
 	- also using only 20 in train, 10 in val and 10 in test. 
 	- classical 1 (spider parser): runs
@@ -103,7 +103,7 @@ with max tokens per sent =10
   	- quantum 2:
 	 
 - spanish
-- 	- classical 1: runs
+	- classical 1: runs
  	- clasical 2: runs
   	- quantum 1:
   	- quantum 2:
