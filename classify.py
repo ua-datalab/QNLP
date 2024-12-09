@@ -17,6 +17,12 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
+# #uncomment only for debugging/accessing breakpoints
+# import debugpy
+# debugpy.listen(5678)
+# print("waiting for debugger")
+# debugpy.wait_for_client()
+# print("attached")
 
 
 import argparse
@@ -298,7 +304,7 @@ def trained_params_from_model(trained_qnlp_model, train_embeddings, max_word_par
 
     return trained_parameterisation_map
 
-def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length,args):
+def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings, max_word_param_length,ansatz,do_model3_tuning,maxparams,epochs_model3_oov_model):
     """
     in the previous func `generate_initial_parameterisation` we took model 1 i.e the QNLP model
     and initialized its weights with the embeddings of the words
@@ -320,7 +326,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
     
     cleaned_wrd_with_type=""
     for symbol, trained_weights in dict1.items():
-        if(args.ansatz==SpiderAnsatz):  
+        if(ansatz==SpiderAnsatz):  
             #symbol and word are different. e.g. aldea_0. From this extract the word
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(symbol.name)
             rest = symbol.name.split('_', 1)[1]
@@ -358,7 +364,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
                 NN_train_Y.append(combined)                                
                  
     
-    if (args.do_model3_tuning):
+    if (do_model3_tuning):
         build_model(keras_tuner.HyperParameters())  
     
         tuner = keras_tuner.GridSearch(
@@ -371,7 +377,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             project_name="oov_model3",
         )
         
-        tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=2, epochs=EPOCHS_MODEL3_OOV_MODEL)
+        tuner.search(NN_train_X, np.array(NN_train_Y),validation_split=0.2, verbose=2, epochs=epochs_model3_oov_model)
         print(tuner.search_space_summary())
         models = tuner.get_best_models(num_models=2)
         
@@ -382,7 +388,7 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         print(tuner.results_summary())
     else:
         OOV_NN_model = keras.Sequential([
-        layers.Dense(int((max_word_param_length + args.maxparams) / 2), activation='tanh'),
+        layers.Dense(int((max_word_param_length +maxparams) / 2), activation='tanh'),
         layers.Dense(max_word_param_length, activation='tanh'),
         ])
 
@@ -400,10 +406,10 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
             start_from_epoch=0
         )
     
-        OOV_NN_model.build(input_shape=(None, args.maxparams))
+        OOV_NN_model.build(input_shape=(None,maxparams))
 
    
-        hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=args.epochs_model3_oov_model,callbacks=[callback])
+        hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=epochs_model3_oov_model,callbacks=[callback])
         print(hist.history.keys())
         print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
         plt.plot(hist.history['loss'], label='loss')
@@ -446,7 +452,7 @@ def build_model(hp):
     model = call_existing_code(lr=lr)
     return model
 
-def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings, max_word_param_length, args,OOV_strategy='random', OOV_model=None):   
+def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_vocab_embeddings,max_word_param_length,ansatz,model14type,OOV_strategy='random', OOV_model=None):   
     pred_parameter_map = {}
 
     #Use the words from train wherever possible, else use DNN prediction
@@ -467,12 +473,12 @@ def evaluate_val_set(pred_model, val_circuits, val_labels, trained_weights, val_
     assert len(pred_model.symbols) == len(pred_model.weights)
 
     for sym,weight in zip(pred_model.symbols,pred_model.weights):
-        if(args.ansatz==SpiderAnsatz):  
+        if(ansatz==SpiderAnsatz):  
             cleaned_wrd_just_plain_text,cleaned_wrd_with_type =  clean_wrd_for_spider_ansatz(sym.name)
             rest = sym.name.split('_', 1)[1]
             idx = rest.split('__')[0]      
             if cleaned_wrd_with_type in pred_parameter_map:
-                if args.model == PytorchModel:
+                if model14type == PytorchModel:
                     pred_weight_vector.append(pred_parameter_map[cleaned_wrd_with_type])
 
                     
@@ -540,20 +546,24 @@ def read_data(filename):
 def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokeniser, split="train"):
     list_target = []
     labels_target = []
-    sent_count_longer_than_32=0
+    sentences_with_token_more_than_limit=0
     skipped_sentences_counter_due_to_cant_parse=0
     desc_long = f"converting {split} data to diagrams"
     for sent, label in tqdm(zip(list_sents, labels),desc=desc_long,total=len(list_sents)):                        
         tokenized_sent = tokeniser.tokenise_sentence(sent)                
-        #when we use numpy, max size of array is 32- update. even in quantum computer
-        if len(tokenized_sent)> args.max_tokens_per_sent:                
-                 sent_count_longer_than_32+=1
-                 continue
+        
         try:
-            if(parser_obj==spiders_reader):
+            if(parser_obj==spiders_reader): 
+                 if len(tokenized_sent)> 32:         #spider parser max is 32        
+                    sentences_with_token_more_than_limit+=1
+                    continue                
                  sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
-            else:
-                 sent_diagram = parser_obj.sentence2diagram(tokenized_sent, suppress_exceptions=True, tokenised=True)
+            elif(parser_obj==BobcatParser):
+                 #bobcat doesnt take more than 10 tokens
+                if len(tokenized_sent)> args.max_tokens_per_sent:                
+                    sentences_with_token_more_than_limit+=1
+                    continue
+                sent_diagram = parser_obj.sentence2diagram(tokenized_sent, suppress_exceptions=True, tokenised=True)
         except Exception as ex:             
             print(ex)
             skipped_sentences_counter_due_to_cant_parse+=1
@@ -564,9 +574,9 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
         else:
              print("found that there was a sentence which after conversion to diagram was None. i.e hit exception during parsing.")
     
-    print(f"sent_count_longer_than_32={sent_count_longer_than_32}")
+    print(f"sent_count_longer_than_32={sentences_with_token_more_than_limit}")
     print(f"out of a total of ={len(list_sents)} sentences {skipped_sentences_counter_due_to_cant_parse} were skipped during conversion to diagrams because they were unparsable")
-    print(f"out of a total of ={len(list_sents)} sentences {sent_count_longer_than_32} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
+    print(f"out of a total of ={len(list_sents)} sentences {sentences_with_token_more_than_limit} were skipped because they were longer than max token length of {args.max_tokens_per_sent}")
     print(f"Therefore no. of data points left in {split} dataset =  {len(list_target)}")
     return list_target, labels_target
 
@@ -590,18 +600,18 @@ def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     return list_circuits, list_labels
 
 
-def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use ):
-    if ansatz in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
-        ansatz_obj = ansatz ({AtomicType.NOUN: base_dimension_for_noun,
+def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz_class, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use,do_model3_tuning,learning_rate_model3 ,maxparams,epochs_model3_oov_model,model14type):
+    if ansatz_class in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
+        ansatz_obj = ansatz_class ({AtomicType.NOUN: base_dimension_for_noun,
                     AtomicType.SENTENCE: base_dimension_for_sent,
                     AtomicType.PREPOSITIONAL_PHRASE:base_dimension_for_prep_phrase} ,n_layers= no_of_layers_in_ansatz,n_single_qubit_params=single_qubit_params)    
-    elif ansatz in [SpiderAnsatz]:
-        ansatz_obj = ansatz ({AtomicType.NOUN: Dim(base_dimension_for_noun),
+    elif ansatz_class in [SpiderAnsatz]:
+        ansatz_obj = ansatz_class ({AtomicType.NOUN: Dim(base_dimension_for_noun),
                     AtomicType.SENTENCE: Dim(base_dimension_for_sent),
                     AtomicType.PREPOSITIONAL_PHRASE: base_dimension_for_prep_phrase}  )    
 
     else:
-        ansatz_obj = ansatz ({AtomicType.NOUN: Dim(base_dimension_for_noun),
+        ansatz_obj = ansatz_class ({AtomicType.NOUN: Dim(base_dimension_for_noun),
                     AtomicType.SENTENCE: Dim(base_dimension_for_sent),
                     AtomicType.PREPOSITIONAL_PHRASE: base_dimension_for_prep_phrase}  )    
 
@@ -699,7 +709,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
 
     
 
-    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, model1_obj,ansatz, model_class_to_use)
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, model1_obj,ansatz_class, model_class_to_use)
     
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
@@ -749,9 +759,8 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
     
         import sys
         sys.exit()
-
-   
-    NN_model,trained_wts = generate_OOV_parameterising_model(model1_obj, train_embeddings, max_w_param_length,args)
+                            
+    NN_model,trained_wts = generate_OOV_parameterising_model(model1_obj, train_embeddings, max_w_param_length,ansatz_class,do_model3_tuning,maxparams,epochs_model3_oov_model)
     prediction_model = model_class_to_use.from_diagrams(val_circuits)
 
     trainer_obj2 = trainer_class_to_use(
@@ -764,7 +773,8 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
             evaluate_on_train=True,
             verbose='text',
             seed=seed)
-
+    
+                         
 
     smart_loss, smart_acc, smart_f1 = evaluate_val_set(prediction_model,
                                                 val_circuits,
@@ -772,7 +782,8 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
                                                 trained_wts,
                                                 val_embeddings,
                                                 max_w_param_length,
-                                                args,
+                                                ansatz_class,
+                                                model14type,
                                                 OOV_strategy='model',
                                                 OOV_model=NN_model)
     print(f"value of smart_loss={smart_loss} , value of smart_acc ={smart_acc} value of smart_f1 ={smart_f1}")
@@ -860,7 +871,7 @@ def perform_task(args):
         
 
     # a unique name to identify this run inside wandb data and graph
-    arch = f"{args.ansatz}+'_'+{args.dataset}+'_'+{args.parser}+'_'+{args.trainer}+'_'+{args.model}+'_'+{embedding_model}"
+    arch = f"{args.ansatz}+'_'+{args.dataset}+'_'+{args.parser}+'_'+{args.trainer}+'_'+{args.model14type}+'_'+{embedding_model}"
 
     wandb.init(    
         project="qnlp_nov2024_expts",    
@@ -963,8 +974,7 @@ def perform_task(args):
     # But  commenting out due to lack of ram in laptop 
     tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-    
-    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,args.no_of_layers_in_ansatz,args.batch_size,args.learning_rate_model1,args.expose_model1_val_during_model_initialization,args.model,args.epochs_train_model1,args.trainer)
+    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model14type,      args.epochs_train_model1,args.trainer,args.do_model3_tuning,args.learning_rate_model3,args.maxparams,args.epochs_model3_oov_model, args.model14type)
 
 def parse_name_model(val):
     try:
@@ -1042,17 +1052,17 @@ def parse_arguments():
     parser.add_argument('--dataset', type=str, required=True, default="food_it" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=parse_name_parser, required=True, help="type of parser to use: [BobCatParser, Spider]")
     parser.add_argument('--ansatz', type=parse_name_ansatz, required=True, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
-    parser.add_argument('--model', type=parse_name_model, required=True  , help="type of model to use: [numpy,PennyLaneModel PytorchModel,TketModel]")
+    parser.add_argument('--model14type', type=parse_name_model, required=True  , help="type of model to use for model1 and model4: [numpy,PennyLaneModel PytorchModel,TketModel]")
     parser.add_argument('--trainer', type=parse_name_trainer, required=True, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
     parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=False, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
-    parser.add_argument('--base_dimension_for_noun', type=int, default=1, required=False, help="")
-    parser.add_argument('--base_dimension_for_sent', type=int, default=1, required=False, help="")
-    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=1, required=False, help="")
-    parser.add_argument('--maxparams', type=int, default=300, required=False, help="")
+    parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_sent', type=int, default=2, required=False, help="")
+    parser.add_argument('--base_dimension_for_prep_phrase', type=int, default=2, required=False, help="")
+    parser.add_argument('--maxparams', type=int, default=300, required=False, help="maximum size of the embedding function's embeddings which will become the first layer of model3")
     parser.add_argument('--batch_size', type=int, default=30, required=False, help="")
-    parser.add_argument('--epochs_train_model1', type=int, default=30, required=False, help="")
+    parser.add_argument('--epochs_train_model1', type=int, required=True, help="")
     parser.add_argument('--epochs_model3_oov_model', type=int, default=100, required=False, help="")
     parser.add_argument('--learning_rate_model1', type=float, default=3e-2, required=False, help="")
     parser.add_argument('--seed', type=int, default=0, required=False, help="")
@@ -1065,6 +1075,7 @@ def parse_arguments():
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
     parser.add_argument('--max_tokens_per_sent', type=int, default=10, required=False, help="")
     
+
     return parser.parse_args()
 
 
@@ -1074,12 +1085,17 @@ def main():
     args = parse_arguments()
 
     print(f"value of dataset is {args.dataset}")
-    print(f"value of model is {args.model}")
+    print(f"value of model is {args.model14type}")
     print(f"value of trainer is {args.trainer}")
     print(f"value of ansatz is {args.ansatz}")
     print(f"value of parser is {args.parser}")
-    import sys
-    sys.exit()
+
+    #spider parser wants minimum 2 tensor dimensions
+    if(args.parser == spiders_reader):
+        assert args.base_dimension_for_noun == 2
+        assert args.base_dimension_for_sent == 2
+        assert args.base_dimension_for_prep_phrase == 2
+
     return perform_task(args)
 
 if __name__=="__main__":
