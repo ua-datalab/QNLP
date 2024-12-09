@@ -30,6 +30,54 @@
 
 # Meeting Notes
 
+## Dec 8th 
+
+Mithun coding
+How to debug from command line.
+1. add these code to the top of your classify.py
+```
+import debugpy
+debugpy.listen(5678)
+print("waiting for debugger")
+debugpy.wait_for_client()
+print("attached")
+
+```
+2. view->terminal
+3. python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer
+4. while its waiting click on the play button on the left most column panel with a bug on it.
+5. create launch.json
+6. python debugger
+7. remote attach
+8. localhost
+9. port: 5678
+10. next launch.json with the following text will be created
+    ```
+    {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ]
+        }
+    ]
+}
+    ```
+    11. now just click the play button next to top left Run an: Python Debugger:Remote attach
 ## Dec 4th 2024
 
 update @10pm
