@@ -9,4 +9,4 @@ Requirements:
 
 Note: the last line of ./run_me_first.sh will try to download a 5GB file. alternately you can download spanish fasttext embeddings: go to [this](https://github.com/dccuchile/spanish-word-embeddings?tab=readme-ov-file#fasttext-embeddings-from-suc) url and download manually the .bin file for spanish unannotated corpora to the same location where this code is.
 
-- `python OOV.py`
+- ` python classify.py --dataset food_it --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer`
