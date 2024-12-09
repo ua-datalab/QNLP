@@ -33,6 +33,9 @@
 ## Dec 8th 
 
 Mithun coding
+How to run code without debugging but using command line arguments:
+
+`python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer`
 How to debug from command line.
 1. add these code to the top of your classify.py
 ```
