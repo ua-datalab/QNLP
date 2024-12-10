@@ -3,9 +3,9 @@
 * [Google sheet](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) listing the latest status of all experiments at any given point of time
 * live or dead status of all experiments as of :dec 10th 2024
 	*  sst2_classical_1: runs well end to end+ has pytest. Latest version can be found in branch titled: run_sst1_classical1
-	* sst2_classical2:
+	* sst2_classical2: i.e with bob cat parser, is hitting `both inputs must be same dtype` error again. end of road for now.Latest version can be found in branch titled: run_sst_classical2
 	* sst2_quantum1:
-	*  sst2_quantum2:
+	* sst2_quantum2:
 	* spanish_classical_1: 
 	* spanish_classical2:
 	* spanish_quantum1:
