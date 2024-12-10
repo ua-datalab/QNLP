@@ -45,6 +45,12 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+## dec 10th
+1. add pytest for run_sst1_run_sst1_classical2 for yes expose- catch error
+2. add pytest for run_sst1_run_sst1_classical2 for no expose
+3. add pytest for  run_sst1_run_sst1_quantum1
+4. add pytest for run_sst1_run_sst1_quantum1
+   
 ## Dec 9th
 - Pytest implementation complete
 - Code is functional and has checks. 
@@ -53,9 +59,9 @@
 Todo at EOD Dec 8th:
 1. merge branch `run_sst1_classical1` with `main` and delete branch
 	2. update: merge done. Branch not deleted. Will stay back to hold latest version of god
-3. make yes and no for `if expose val` a command line argument `action=store_true` - branch for itself?
+3. make yes and no for `if expose val` a command line argument `action=store_true` - branch for itself? ---done
 4.  add pytest for run_sst1_run_sst1_classical1 for yes expose---done
-5.  add pytest for run_sst1_run_sst1_classical1 for no expose 
+5.  add pytest for run_sst1_run_sst1_classical1 for no expose ---done
 
 ### Mithun coding
 How to run code without debugging but using command line arguments:
