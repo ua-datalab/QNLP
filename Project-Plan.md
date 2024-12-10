@@ -1,14 +1,30 @@
-# References and links:
-* ## Latest Status of all experiments at any given point of time is kept [here](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing)
 
-* Link to github started by Robert Henderson: [here](https://www.google.com/url?q=https://github.com/bkeej/usp_qnlp&sa=D&source=editors&ust=1717607867014854&usg=AOvVaw3ji0W3TH7OhJaizgZHp14m)
-	* QNLP dataset: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
-	* QNLP code repo: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
+# References and links:
+* [Google sheet](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) listing the latest status of all experiments at any given point of time
+* live or dead status of all experiments as of :dec 10th 2024
+	*  sst2_classical_1: runs well end to end+ has pytest. Latest version can be found in branch titled: run_sst1_classical1
+	* sst2_classical2: i.e with bob cat parser, is hitting `both inputs must be same dtype` error again. end of road for now.Latest version can be found in branch titled: run_sst_classical2
+	* sst2_quantum1:
+	* sst2_quantum2:
+	* spanish_classical_1: 
+	* spanish_classical2:
+	* spanish_quantum1:
+	* spanish_quantum2:
+	* uspantek_classical_1: 
+	* uspantek_classical2:
+	* uspantek_quantum1:
+	* uspantek_quantum2:
+ * latest command line command to run the code of any branch will be found in its respective readme.md
+ * always run pytest before merging a branch or even git push
+  
+* Link to github started by Robert Henderson:
+	* Private repo with the QNLP dataset, shared by Robert Henderson: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
+	* QNLP code repo [this repo]: [https://github.com/ua-datalab/QNLP/blob/main](https://github.com/ua-datalab/QNLP/blob/main)
 * Link to white paper: [https://www.overleaf.com/4483532232tcfnfdrrcbdc#12a1b4](https://www.google.com/url?q=https://www.overleaf.com/4483532232tcfnfdrrcbdc%2312a1b4&sa=D&source=editors&ust=1717607867015283&usg=AOvVaw0VwgWn_tu2jNMuTmaj2PDL)
 * All data (e.g. spanish only files) is stored in a [gdrive folder here](https://www.google.com/url?q=https://drive.google.com/drive/folders/1m4nFZwsUcZ2DQzN3nYaK0_oKJXGhV575?usp%3Ddrive_link&sa=D&source=editors&ust=1717607867015673&usg=AOvVaw32Cbwsxm70wOGxbbRLFbb0)
 	- Uspantekan data: [https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link](https://drive.google.com/drive/folders/1CtMhTf-v0nSUSaTJVelILkDMrLfF1U5Y?usp=share_link)
  	- Spanish data: [https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link](https://drive.google.com/drive/folders/1SThJ6tyUAzvfVSFo6w_VyB4HPt381jp1?usp=share_link) 
-* Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)     
+* Jira Link: [https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27](https://www.google.com/url?q=https://cyverse.atlassian.net/jira/software/projects/QNLP/boards/27&sa=D&source=editors&ust=1717607867016357&usg=AOvVaw2fccm9pIgF5Yw5sAb26eH0)     
 * [Miro Whiteboard](https://miro.com/app/board/uXjVKVPCIK4=/?share_link_id=77584526552) 
 * Papers:
 	* the most fundamental paper which introduces QNLP is 2010 DISCOCAT [paper](https://drive.google.com/file/d/1T7H5WH1q0mKng-zwqOYrlqEkBpOIcUDR/view?usp=sharing)
@@ -29,11 +45,74 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+## Dec 9th
+- Pytest implementation complete
+- Code is functional and has checks. 
 
+## Dec 8th 
+Todo at EOD Dec 8th:
+1. merge branch `run_sst1_classical1` with `main` and delete branch
+	2. update: merge done. Branch not deleted. Will stay back to hold latest version of god
+3. make yes and no for `if expose val` a command line argument `action=store_true` - branch for itself?
+4.  add pytest for run_sst1_run_sst1_classical1 for yes expose---done
+5.  add pytest for run_sst1_run_sst1_classical1 for no expose 
+
+### Mithun coding
+How to run code without debugging but using command line arguments:
+
+`python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer --expose_model1_val_during_model_initialization False`
+How to debug from command line.
+1. add these code to the top of your classify.py
+```
+import debugpy
+debugpy.listen(5678)
+print("waiting for debugger")
+debugpy.wait_for_client()
+print("attached")
+
+```
+2. view->terminal
+3. python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer
+4. while its waiting click on the play button on the left most column panel with a bug on it.
+5. if(launch.json) is not there
+	6. create launch.json
+	7. pick python debugger
+	8. pick remote attach
+	9. pick localhost
+	10. pick port: 5678
+11. next launch.json with the following text will be created
+    ```
+    {
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Remote Attach",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port": 5678
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ]
+        }
+    ]
+    }
+    ```
+    11. now just click the play button next to top left Run an: Python Debugger:Remote attach (or whatever name you choose to provide in the luanch.json)
+    12. this is extremely useful when you have command line arguments to pass in inside vscode, and yous till want to debug line by line. Else there is no other way to get the command line arguments, required ones
+    
 ## Dec 4th 2024
 
-update @10pm
-with max tokens per sent =10
+### Update @10pm
+- with max tokens per sent =10
 - sst2 
 	- also using only 20 in train, 10 in val and 10 in test. 
 	- classical 1 (spider parser): runs
@@ -47,7 +126,7 @@ with max tokens per sent =10
   	- quantum 2:
 	 
 - spanish
-- 	- classical 1: runs
+	- classical 1: runs
  	- clasical 2: runs
   	- quantum 1:
   	- quantum 2:
@@ -110,7 +189,7 @@ with max tokens per sent =10
     		- Classical 1.c:(with 10k data points train)
     	- **Classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
      		- Status: same DTYpe mismatch error
-		- Possible solution:
+		- Possible solution: its a bobcat parser error. Bobcat parser doesnt like sentences more than a certain limit. usually its 9 or 10 tokens. So remove all sentences in dataset which is more than 10 tokens
 		- Todos
 			- run again and confirm
 			- make sure it is ran over 65k training data
@@ -1147,8 +1226,8 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 
 ## May 7th, 2024:
 * Classical case:
-	- Filename non-ASCII issue resolved with rename   and train, test, dev splits saved
-	- Classical case-  [ran into error while running sentence2diagram](https://www.google.com/url?q=https://colab.research.google.com/drive/12kNxLNX162hGznIYenBSqLJbflmFaE1y?usp%3Dsharing&sa=D&source=editors&ust=1717607867019672&usg=AOvVaw1SAvjipfXEAOkwHKcnRCgQ)
+	- Filename non-ASCII issue resolved with rename   and train, test, dev splits saved
+	- Classical case-  [ran into error while running sentence2diagram](https://www.google.com/url?q=https://colab.research.google.com/drive/12kNxLNX162hGznIYenBSqLJbflmFaE1y?usp%3Dsharing&sa=D&source=editors&ust=1717607867019672&usg=AOvVaw1SAvjipfXEAOkwHKcnRCgQ)
 	- Check classical case with Spanish, assign spanish SpaCY language model to pipeline if needed
 	- ToDo for Mithun
 	- Fix classical trainer, section “Training the model”, cell 67
@@ -1163,7 +1242,7 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 * Data pipeline todo \[Megh\]:
 	- randomize sentences, and create test, val, train splits
 	- Convert the sentences to a dataset in the format: Label\[Tab\]Text\[Tab\].
-		+  0 for bailar, 1 for educacion
+		+  0 for bailar, 1 for educacion
 * ToDo Mithun: create list of file names, and convert them to ASCII
 
 ## April 11th, 2024:
@@ -1184,7 +1263,7 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 * Data pipeline todo: \[DONE\]
 	- randomize sentences, and create test, val, train splits
 	- Convert the sentences to a dataset in the format: Label\[Tab\]Text\[Tab\].
-		+  0 for bailar, 1 for educacion
+		+  0 for bailar, 1 for educacion
 	- ToDo Mithun: create list of file names, and convert them to ASCII
 * QNLP pipeline setup
 	- ToDo Megh: Run classical case on Cyverse with Spanish data
@@ -1198,7 +1277,7 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 	4. Rewriter+ reduce cups
 	5. Go through full fledged training example of classification of IT or ood
 2. Todo \[Megh\] for next week:
-	1. Set up and Try out lambeq classification [task](https://www.google.com/url?q=https://cqcl.github.io/lambeq/tutorials/trainer-classical.html&sa=D&source=editors&ust=1717607867023254&usg=AOvVaw3Se6n9TAlMX5oyEHCO2C1Z)  on Cyverse
+	1. Set up and Try out lambeq classification [task](https://www.google.com/url?q=https://cqcl.github.io/lambeq/tutorials/trainer-classical.html&sa=D&source=editors&ust=1717607867023254&usg=AOvVaw3Se6n9TAlMX5oyEHCO2C1Z)  on Cyverse
 	2. With spanish text from the Robert henderson’s data
 		1. Pick 2 classes (i.e file names in the data directory)
 			1. dancing/bailes
@@ -1206,8 +1285,8 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 			3. Try to recreate the same ML pipeline shown in the lambeq task above.
 				1. Using spacy spanish tokenizer.
 3. Concrete steps:
-	1. Download code from the Lambeq tutorial’s   [Quantum](https://www.google.com/url?q=https://cqcl.github.io/lambeq/tutorials/trainer-quantum.html&sa=D&source=editors&ust=1717607867024391&usg=AOvVaw0hSG13wlkmHZP5akrEMoPD)  case
-	2. Replace [training](https://www.google.com/url?q=https://github.com/CQCL/lambeq/blob/main/docs/examples/datasets/rp_train_data.txt&sa=D&source=editors&ust=1717607867024688&usg=AOvVaw0C4Tf2Ane5m0bQGPVI7Mj4)  data from relative clauses to the text classification task (see ‘Classical Case’ [https://cqcl.github.io/lambeq/tutorials/trainer-classical.html](https://www.google.com/url?q=https://cqcl.github.io/lambeq/tutorials/trainer-classical.html&sa=D&source=editors&ust=1717607867024954&usg=AOvVaw0iw7KHxbXYMsbUCXhl0ft6)
+	1. Download code from the Lambeq tutorial’s   [Quantum](https://www.google.com/url?q=https://cqcl.github.io/lambeq/tutorials/trainer-quantum.html&sa=D&source=editors&ust=1717607867024391&usg=AOvVaw0hSG13wlkmHZP5akrEMoPD)  case
+	2. Replace [training](https://www.google.com/url?q=https://github.com/CQCL/lambeq/blob/main/docs/examples/datasets/rp_train_data.txt&sa=D&source=editors&ust=1717607867024688&usg=AOvVaw0C4Tf2Ane5m0bQGPVI7Mj4)  data from relative clauses to the text classification task (see ‘Classical Case’ [https://cqcl.github.io/lambeq/tutorials/trainer-classical.html](https://www.google.com/url?q=https://cqcl.github.io/lambeq/tutorials/trainer-classical.html&sa=D&source=editors&ust=1717607867024954&usg=AOvVaw0iw7KHxbXYMsbUCXhl0ft6)
 	3. Run the code and assess performance.
 	
 	4. Lambeq- removed “glue” words, or ones that don’t add to the semantics of a sentence. these correspond to the stop words of a language
@@ -1264,9 +1343,9 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 * Bag of words
 	- sentences split into smaller meaning carrying chunks (words), which can be interchangeably combined in different ways
 	- However- word combination is governed by semantic relationships between words
-* Lambeq- pip install lambeq  to install
+* Lambeq- pip install lambeq  to install
 * If we know the minima of the gradient descent- can we build language up from it?
-* TODO- install lambeq  and feed it a sentence \[done on Cyverse\]
+* TODO- install lambeq  and feed it a sentence \[done on Cyverse\]
 * Run end to end- work on it like a tutorial
 * Think- tokenizer available for English, Spanish, but not other languages. How do we work without one?
 	- Run this on Spanish first
@@ -1276,7 +1355,7 @@ if nothing else this we can do dataset by dataset comparison and find out. what 
 # Project plan 
 Goal: we want to show Robert a proof of concept that QNLP can work with uspantekan- limited resources- and still give good accuracy
 1. Can qnlp + uspantekan- straight out of the box give a good classification accuracy- if yes:
-	1. Path 1 bottom up:  
+	1. Path 1 bottom up:  
 		1. Pick one thread. Eg. spider
 			1. Trying on spanish
 			2. Find embedding spanish

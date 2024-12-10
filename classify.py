@@ -17,12 +17,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 """
 
-# #uncomment only for debugging/accessing breakpoints
-# import debugpy
-# debugpy.listen(5678)
-# print("waiting for debugger")
-# debugpy.wait_for_client()
-# print("attached")
+
 
 
 import argparse
@@ -558,7 +553,7 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
                     sentences_with_token_more_than_limit+=1
                     continue                
                  sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
-            elif(parser_obj==BobcatParser):
+            elif(type(parser_obj)==BobcatParser):
                  #bobcat doesnt take more than 10 tokens
                 if len(tokenized_sent)> args.max_tokens_per_sent:                
                     sentences_with_token_more_than_limit+=1
@@ -1036,8 +1031,8 @@ def parse_name_ansatz(val):
 def parse_name_parser(val):
     try:
         output_parser_class = None
-        match val:
-            case "BobcatParser":
+        match val:            
+            case "BobCatParser":
                 output_parser_class = BobcatParser
             case "Spider":
                 output_parser_class = spiders_reader
@@ -1048,8 +1043,19 @@ def parse_name_parser(val):
     assert output_parser_class != None
     return output_parser_class
 
+def do_debug(val):#uncomment only for debugging/accessing breakpoints
+    if bool(val):
+        import debugpy
+        debugpy.listen(5678)
+        print("waiting for debugger")
+        debugpy.wait_for_client()
+        print("attached")
+    else:
+        print("not doing any debugging")
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
+    parser.add_argument('--do_debug', action= "store_true",help="to run debug or not to debug. If yes, will uncomment the attachment code")
     parser.add_argument('--dataset', type=str, required=True, default="food_it" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=parse_name_parser, required=True, help="type of parser to use: [BobCatParser, Spider]")
     parser.add_argument('--ansatz', type=parse_name_ansatz, required=True, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
@@ -1074,7 +1080,7 @@ def parse_arguments():
     parser.add_argument('--no_of_val_data_points_to_use', type=int, required=True, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
-    parser.add_argument('--max_tokens_per_sent', type=int, default=10, required=False, help="")
+    parser.add_argument('--max_tokens_per_sent', type=int, required=True, help="Bobcat parser doesn't like longer sentences 9 or 10 is like the upper limit")
     
 
     return parser.parse_args()
@@ -1084,6 +1090,9 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+
+    print(f"value of args.do_debug is {args.do_debug}")
+    do_debug(args.do_debug)
 
     print(f"value of dataset is {args.dataset}")
     print(f"value of model is {args.model14type}")
