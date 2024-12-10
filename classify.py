@@ -553,7 +553,7 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
                     sentences_with_token_more_than_limit+=1
                     continue                
                  sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
-            elif(parser_obj==BobcatParser):
+            elif(type(parser_obj)==BobcatParser):
                  #bobcat doesnt take more than 10 tokens
                 if len(tokenized_sent)> args.max_tokens_per_sent:                
                     sentences_with_token_more_than_limit+=1
@@ -1079,7 +1079,7 @@ def parse_arguments():
     parser.add_argument('--no_of_val_data_points_to_use', type=int, required=True, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
-    parser.add_argument('--max_tokens_per_sent', type=int, default=10, required=False, help="")
+    parser.add_argument('--max_tokens_per_sent', type=int, required=True, help="Bobcat parser doesn't like longer sentences 9 or 10 is like the upper limit")
     
 
     return parser.parse_args()
