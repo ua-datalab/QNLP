@@ -45,8 +45,7 @@ def test_sst2_classical1_no_expose(monkeypatch):
                              '--trainer', 'PytorchTrainer',
                              '--epochs_train_model1', '7',
                              '--no_of_training_data_points_to_use', '20',
-                             '--no_of_val_data_points_to_use', '10'
-                             
+                             '--no_of_val_data_points_to_use', '10'                             
                              ])
         model4_loss, model4_acc=classify.main()                         
         assert round(model4_loss,2)  >= 0.6
