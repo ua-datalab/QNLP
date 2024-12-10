@@ -40,6 +40,10 @@
   	- Khatri et al, for Uspantekan: [https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb)
 
 # Working Group Best Practices
+- Never work on main branch
+- For every new bug fix/new feature create a new branch.
+- Always merge and test that new branch with `staging_merge_here_and_test_before_merging_to_main`, checkout on laptop, run pytest
+- merge `staging_merge_here_and_test_before_merging_to_main` with `main` only if it clears all pytests 
 - Save all data in the private repository, to prevent leaks: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
 - Save code to public repository, so it can be opened on Cyverse and run on colab: [https://github.com/ua-datalab/QNLP/blob/main/](https://github.com/ua-datalab/QNLP/blob/main/OOV_MRPC_paraphrase_task.ipynb)
 - Cyverse has resource allocations- so all big training done there. Example: 
