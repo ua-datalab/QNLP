@@ -14,6 +14,8 @@
 	* uspantek_classical2:
 	* uspantek_quantum1:
 	* uspantek_quantum2:
+ * latest command line command to run the code of any branch will be found in its respective readme.md
+ * always run pytest before merging a branch or even git push
   
 * Link to github started by Robert Henderson:
 	* Private repo with the QNLP dataset, shared by Robert Henderson: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
