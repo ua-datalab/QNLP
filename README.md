@@ -12,5 +12,10 @@ Note: the last line of ./run_me_first.sh will try to download a 5GB file. altern
 command to run this code as of dec 9th 2024
 
 - `pytest`
-- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000
-`
+- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000`
+
+## if you want to debug the code use:
+
+- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000 --do_debug`
+
+Note: you will have to explicitly attach debugger. Refer projectplan.md
