@@ -11,8 +11,23 @@ Note: the last line of ./run_me_first.sh will try to download a 5GB file. altern
 
 ## command to run this code as of dec 10th 2024
 
+
+
 - `pytest` (ensure nothing fails)
+
+#### To run on dataset sst2 classical 1 combination (i.e SpiderReader, SpiderAnsatz, PytorchModel,PytorchTrainer+ expose val)
 - ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000 --expose_model1_val_during_model_initialization`
+
+#### To run on dataset sst2 classical 1 combination (i.e SpiderReader, SpiderAnsatz, PytorchModel,PytorchTrainer+no  expose val)
+
+- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000 --expose_model1_val_during_model_initialization`
+
+
+
+
+#### To run on dataset sst2 classical 2 combination (i.e BobCatParser, SpiderAnsatz, PytorchModel,PytorchTrainer+no  expose val)
+
+` python classify.py --dataset sst2 --parser BobCatParser --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000  --max_tokens_per_sent 10 `
 
 ## if you want to debug the code use:
 
