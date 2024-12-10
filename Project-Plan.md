@@ -185,7 +185,7 @@ print("attached")
     		- Classical 1.c:(with 10k data points train)
     	- **Classical 2** (BobcatParser, spider ansatz, pytorch model, pytorchtrainer)
      		- Status: same DTYpe mismatch error
-		- Possible solution:
+		- Possible solution: its a bobcat parser error. Bobcat parser doesnt like sentences more than a certain limit. usually its 9 or 10 tokens. So remove all sentences in dataset which is more than 10 tokens
 		- Todos
 			- run again and confirm
 			- make sure it is ran over 65k training data
