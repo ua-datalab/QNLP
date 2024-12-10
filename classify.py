@@ -554,7 +554,7 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
         
         try:
             if(parser_obj==spiders_reader): 
-                 if len(tokenized_sent)> 32:         #spider parser max is 32        
+                 if len(tokenized_sent)> 31:         #spider parser max is 32        
                     sentences_with_token_more_than_limit+=1
                     continue                
                  sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
