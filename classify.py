@@ -554,7 +554,7 @@ def convert_to_diagrams_with_try_catch(args,parser_obj,list_sents,labels,tokenis
         
         try:
             if(parser_obj==spiders_reader): 
-                 if len(tokenized_sent)> 32:         #spider parser max is 32        
+                 if len(tokenized_sent)> 29:         #spider parser max is 32        
                     sentences_with_token_more_than_limit+=1
                     continue                
                  sent_diagram = parser_obj.sentence2diagram(tokenized_sent, tokenised=True)
@@ -1069,8 +1069,8 @@ def parse_arguments():
     parser.add_argument('--data_base_folder', type=str, default="data", required=False, help="")
     parser.add_argument('--learning_rate_model3', type=float, default=3e-2, required=False, help="")
     parser.add_argument('--no_of_layers_in_ansatz', type=int, default=3, required=False, help="")
-    parser.add_argument('--no_of_training_data_points_to_use', type=int, default=20, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
-    parser.add_argument('--no_of_val_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_training_data_points_to_use', type=int,required=True, help="65k of sst data was taking a long time. temporarily training on a smaller data")
+    parser.add_argument('--no_of_val_data_points_to_use', type=int, required=True, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
     parser.add_argument('--max_tokens_per_sent', type=int, default=10, required=False, help="")

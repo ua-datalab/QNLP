@@ -9,4 +9,6 @@ Requirements:
 
 Note: the last line of ./run_me_first.sh will try to download a 5GB file. alternately you can download spanish fasttext embeddings: go to [this](https://github.com/dccuchile/spanish-word-embeddings?tab=readme-ov-file#fasttext-embeddings-from-suc) url and download manually the .bin file for spanish unannotated corpora to the same location where this code is.
 
-- ` python classify.py --dataset food_it --parser Spider --ansatz SpiderAnsatz --model PytorchModel --trainer PytorchTrainer`
+command to run this code as of dec 9th 2024
+
+- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 100`
