@@ -635,7 +635,8 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
     print("length of each circuit in train is:")
     print([len(x) for x in train_circuits])
     combined_circuits=train_circuits
-    if(expose_model1_val_during_model_initialization==True):
+    
+    if(bool(expose_model1_val_during_model_initialization)):
         combined_circuits=train_circuits+val_circuits
 
 
@@ -716,7 +717,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
     print(model1_obj.weights[0])
     print(type(train_dataset.targets[0]))
 
-    if(expose_model1_val_during_model_initialization==True):
+    if(bool(expose_model1_val_during_model_initialization)):
         trainer_obj.fit(train_dataset, val_dataset,eval_interval=1, log_interval=1)
     else:
         trainer_obj.fit(train_dataset,eval_interval=1, log_interval=1)
@@ -1054,7 +1055,7 @@ def parse_arguments():
     parser.add_argument('--ansatz', type=parse_name_ansatz, required=True, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
     parser.add_argument('--model14type', type=parse_name_model, required=True  , help="type of model to use for model1 and model4: [numpy,PennyLaneModel PytorchModel,TketModel]")
     parser.add_argument('--trainer', type=parse_name_trainer, required=True, help="type of trainer to use: [PytorchTrainer, QuantumTrainer]")
-    parser.add_argument('--expose_model1_val_during_model_initialization', type=bool, required=False, default=True, help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
+    parser.add_argument('--expose_model1_val_during_model_initialization', action="store_true" , help="Do we want to expose the dev data during the initialization of model 1. Note that this is not cheating. We are just assigning random weights for dev data, and it doesnt get updated during training. the advantage of this methodology is that we can do a live comparision with dev data during training of model 1. Used mainly for debug purposes and finding good epoch for early stopping, but its not wrong to claim this as a good run")
     parser.add_argument('--max_param_length_global', type=int, required=False, default=0, help="a global value which will be later replaced by the actual max param length")
     parser.add_argument('--do_model3_tuning', type=bool, required=False, default=False, help="only to be used during training, when a first pass of code works and you need to tune up for parameters")
     parser.add_argument('--base_dimension_for_noun', type=int, default=2, required=False, help="")

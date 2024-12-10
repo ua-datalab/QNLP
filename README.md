@@ -11,4 +11,7 @@ Note: the last line of ./run_me_first.sh will try to download a 5GB file. altern
 
 command to run this code as of dec 9th 2024
 
-- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 100`
+- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 100  --no_of_val_data_points_to_use 20 --expose_model1_val_during_model_initialization`
+
+Details of args
+`--expose_model1_val_during_model_initialization`: pass this only if you want debugging done. i.e you are planning to attaching a debugging process from an IDE like visual studio code.
