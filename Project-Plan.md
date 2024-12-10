@@ -3,9 +3,9 @@
 * [Google sheet](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) listing the latest status of all experiments at any given point of time
 * live or dead status of all experiments as of :dec 10th 2024
 	*  sst2_classical_1: runs well end to end+ has pytest. Latest version can be found in branch titled: run_sst1_classical1
-	* sst2_classical2:
+	* sst2_classical2: i.e with bob cat parser, is hitting `both inputs must be same dtype` error again. end of road for now.Latest version can be found in branch titled: run_sst_classical2
 	* sst2_quantum1:
-	*  sst2_quantum2:
+	* sst2_quantum2:
 	* spanish_classical_1: 
 	* spanish_classical2:
 	* spanish_quantum1:
@@ -14,6 +14,8 @@
 	* uspantek_classical2:
 	* uspantek_quantum1:
 	* uspantek_quantum2:
+ * latest command line command to run the code of any branch will be found in its respective readme.md
+ * always run pytest before merging a branch or even git push
   
 * Link to github started by Robert Henderson:
 	* Private repo with the QNLP dataset, shared by Robert Henderson: [https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)
@@ -43,6 +45,12 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+## dec 10th
+1. add pytest for run_sst1_run_sst1_classical2 for yes expose- catch error
+2. add pytest for run_sst1_run_sst1_classical2 for no expose
+3. add pytest for  run_sst1_run_sst1_quantum1
+4. add pytest for run_sst1_run_sst1_quantum1
+   
 ## Dec 9th
 - Pytest implementation complete
 - Code is functional and has checks. 
@@ -50,8 +58,10 @@
 ## Dec 8th 
 Todo at EOD Dec 8th:
 1. merge branch `run_sst1_classical1` with `main` and delete branch
-2. make yes and no expose a command line argument `action=store_true` - branch for itself?
-3.  add pytest for run_sst1_run_sst1_classical1 both for yes expose and no expose
+	2. update: merge done. Branch not deleted. Will stay back to hold latest version of god
+3. make yes and no for `if expose val` a command line argument `action=store_true` - branch for itself? ---done
+4.  add pytest for run_sst1_run_sst1_classical1 for yes expose---done
+5.  add pytest for run_sst1_run_sst1_classical1 for no expose ---done
 
 ### Mithun coding
 How to run code without debugging but using command line arguments:
