@@ -24,6 +24,8 @@ Note: you will have to explicitly attach debugger. Refer projectplan.md
 ### Details of args:
 
 
-`--expose_model1_val_during_model_initialization`: pass this only if you want debugging done. i.e you are planning to attaching a debugging process from an IDE like visual studio code.
+`--expose_model1_val_during_model_initialization`: Pass this (dont have to do ==True) if you want the model1 to evaluate its performance in val/dev data while training itself. 
+
+`--do_debug`:  pass this only if you want debugging done. i.e you are planning to attaching a debugging process from an IDE like visual studio code.
 
 
