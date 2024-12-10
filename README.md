@@ -21,7 +21,9 @@ Note: the last line of ./run_me_first.sh will try to download a 5GB file. altern
 Note: you will have to explicitly attach debugger. Refer projectplan.md
 
 ---
-Details of args
+### Details of args:
+
+
 `--expose_model1_val_during_model_initialization`: pass this only if you want debugging done. i.e you are planning to attaching a debugging process from an IDE like visual studio code.
 
 
