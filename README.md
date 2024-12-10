@@ -11,4 +11,6 @@ Note: the last line of ./run_me_first.sh will try to download a 5GB file. altern
 
 command to run this code as of dec 9th 2024
 
-- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 100`
+- `pytest`
+- ` python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000
+`
