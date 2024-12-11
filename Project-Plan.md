@@ -52,9 +52,17 @@
 
 # Meeting Notes
 ## Dec 11th 2024
+- Discussion of monthly goals and future plan:
+	- English: find a dataset for topic classification, which is an NLP task that Khatri et al. did not run in their work.
+ 		- Q: Can QNLP offer flexibility in NLP task, or is it restricted to one task alone (text paraphrasing)
+	- Spanish, Uspantekan: actually set benchmark for topic classification. English results will offer further evidence    
+- updates on `runner.sh`: it runs `pytest` first, to ensure the code updates do not break existing code.
+- Question
+
 Megh todo
-- cyverse
-- paper
+- Setup and Run english pipeline on cyverse, end to end: assess and document
+- Update readme with all steps for running the pipeline
+- Paper
 
 ## dec 10th
 1. add pytest for run_sst1_run_sst1_classical2 for yes expose- catch error
