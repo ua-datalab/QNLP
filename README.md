@@ -12,9 +12,9 @@
     - `wget -c "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz"`
     - `gunzip cc.en.300.bin.gz`
   - Spanish:
-    - `wget -c
+    - `wget -c "https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1" -O ./embeddings-l-model.bin`
 - Run `pytest`
-  - If you encounter any modulenotfound errors, use `pip install <module>` to add the needed libraries 
+  - If you encounter any modulenotfound errors, use `pip install <module>` to add the needed libraries
 
 **Steps for accessing and using data files:**
 - Clone this reposory to access the data files (e.g. spanish_test.txt): [Private Repository](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data).
