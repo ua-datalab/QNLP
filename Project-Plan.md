@@ -64,6 +64,10 @@ Megh todo
 - Update readme with all steps for running the pipeline
 - Paper
 
+Mithun todo
+- Make wandb an optional parameter in argparse, (save metrics to csv?)
+- Push updated `run_me_first.sh` to `main` branch
+
 ## dec 10th
 1. add pytest for run_sst1_run_sst1_classical2 for yes expose- catch error
 2. add pytest for run_sst1_run_sst1_classical2 for no expose
