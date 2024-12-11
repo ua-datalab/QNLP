@@ -7,6 +7,12 @@
 - `conda create --name qnlp_temp7 python==3.11.10`
 - `conda activate qnlp_temp7` 
 - `./run_me_first.sh`
+- Get embeddings files:
+  - English:
+    - `wget -c "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz"`
+    - `gunzip cc.en.300.bin.gz`
+  - Spanish:
+    - `wget -c
 - Run `pytest`
   - If you encounter any modulenotfound errors, use `pip install <module>` to add the needed libraries 
 
