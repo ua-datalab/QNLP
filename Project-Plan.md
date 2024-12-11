@@ -49,6 +49,11 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+## Dec 11th 2024
+Megh todo
+- cyverse
+- paper
+
 ## dec 10th
 1. add pytest for run_sst1_run_sst1_classical2 for yes expose- catch error
 2. add pytest for run_sst1_run_sst1_classical2 for no expose
