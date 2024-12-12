@@ -15,6 +15,7 @@ pip install datasets
 pip install lightning
 pip install torchmetrics
 pip install wandb
+pip install pytest-timeout
 export TOKENIZERS_PARALLELISM=True
 python3 -m spacy download es_core_news_sm
 python3 -m spacy download en_core_web_sm
