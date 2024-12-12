@@ -51,6 +51,20 @@
 - Cyverse has resource allocations- so all big training done there. Example: 
 
 # Meeting Notes
+
+## Dec 12th 20204
+todos:
+3. add pytest for  run_sst1_run_sst1_quantum1
+	- add time out 
+ 	- add if wandb
+  	- merge to staging
+   	- merge to main
+4. add pytest for run_sst1_run_sst1_quantum2
+	- mostly same as above- timeout
+
+
+
+
 ## Dec 11th 2024
 - Discussion of monthly goals and future plan:
 	- English: find a dataset for topic classification, which is an NLP task that Khatri et al. did not run in their work.
@@ -66,11 +80,11 @@ Megh todo
 
 Mithun todo
 - Make wandb an optional parameter in argparse, (save metrics to csv?)
-- Push updated `run_me_first.sh` to `main` branch
+- Push updated `run_me_first.sh` to `main` branch ---done
 
 ## dec 10th
-1. add pytest for run_sst1_run_sst1_classical2 for yes expose- catch error
-2. add pytest for run_sst1_run_sst1_classical2 for no expose
+1. add pytest for run_sst1_run_sst1_classical2 for yes expose- catch error---doe
+2. add pytest for run_sst1_run_sst1_classical2 for no expose ---done
 3. add pytest for  run_sst1_run_sst1_quantum1
 4. add pytest for run_sst1_run_sst1_quantum1
    
