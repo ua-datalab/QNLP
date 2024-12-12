@@ -7,6 +7,17 @@
 - `conda create --name qnlp_temp7 python==3.11.10`
 - `conda activate qnlp_temp7` 
 - `./run_me_first.sh`
+
+
+"""
+some definitions
+ Classical 1= the combination of (Spider parser, spider ansatz, pytorch model, pytorchtrainer)
+ Classical 2= the combination of (bobCatParser , spider ansatz, pytorch model, pytorchtrainer)
+ Quantum1= (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)- this runs on a simulation f a quantum computer
+ Quantum2 = **Quantum2-simulation-actual quantum computer**=(penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
+"""
+
+
 - Get embeddings files:
   - English:
     - `wget -c "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz"`
@@ -20,6 +31,7 @@
 - Clone this reposory to access the data files (e.g. spanish_test.txt): [Private Repository](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data).
 - Copy the folder qnlp_data to the QNLP repository: `cp -r usp_qnlp/qnlp-data QNLP/data`
 - Create a new branch to test the code: `git checkout -b test_branch`
+
 
 Once all requirements and the environment has been set up, you can begin training the QNLP model and testing it.
 
@@ -46,6 +58,13 @@ python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model1
 python classify.py --dataset sst2 --parser BobCatParser --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 20 --no_of_val_data_points_to_use 10 --max_tokens_per_sent 10 
 ```
 
+#### To run on dataset sst2 quantum1 combination 
+
+```bash
+python classify.py --dataset sst2 --parser BobCatParser --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 20 --no_of_val_data_points_to_use 10 --max_tokens_per_sent 10 
+```
+
+python classify.py --dataset sst2 --parser BobCatParser --ansatz IQPAnsatz --model14type TketModel --trainer QuantumTrainer --epochs_train_model1 30 --no_of_training_data_points_to_use 20 --no_of_val_data_points_to_use 10 --max_tokens_per_sent 10
 
 ## if you want to debug the code use:
 
