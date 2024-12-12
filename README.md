@@ -3,10 +3,11 @@
 - Minimum 16 GB ram to load the fasttext model and lambeq models
 
 **Steps for setup:**
-- download data files  (e.g. spanish_test.txt)from [this](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data)  repo to the same location where this code is
+
 - `conda create --name qnlp_temp7 python==3.11.10`
 - `conda activate qnlp_temp7` 
 - `./run_me_first.sh`
+
 
 """
 some definitions
@@ -17,10 +18,25 @@ some definitions
 """
 
 
+- Get embeddings files:
+  - English:
+    - `wget -c "https://dl.fbaipublicfiles.com/fasttext/vectors-crawl/cc.en.300.bin.gz"`
+    - `gunzip cc.en.300.bin.gz`
+  - Spanish:
+    - `wget -c "https://zenodo.org/record/3234051/files/embeddings-l-model.bin?download=1" -O ./embeddings-l-model.bin`
+- Run `pytest`
+  - If you encounter any modulenotfound errors, use `pip install <module>` to add the needed libraries
+
+**Steps for accessing and using data files:**
+- Clone this reposory to access the data files (e.g. spanish_test.txt): [Private Repository](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data).
+- Copy the folder qnlp_data to the QNLP repository: `cp -r usp_qnlp/qnlp-data QNLP/data`
+- Create a new branch to test the code: `git checkout -b test_branch`
+
+
 Once all requirements and the environment has been set up, you can begin training the QNLP model and testing it.
 
 **Steps for training and testing the QNLP Model:**
-- 
+- Run `python classify.py`
 
 **Note:** the last line of ./run_me_first.sh will try to download a 5GB file. Alternately you can download spanish fasttext embeddings: go to [this](https://github.com/dccuchile/spanish-word-embeddings?tab=readme-ov-file#fasttext-embeddings-from-suc) url and download manually the `.bin` file for spanish unannotated corpora to the same location where this code is.
 
