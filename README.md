@@ -84,4 +84,4 @@ Also note, during development its a healthy habit to always run pytest before th
 
 `--do_debug`:  pass this only if you want debugging done. i.e you are planning to attaching a debugging process from an IDE like visual studio code.
 
-
+`--use_wandb`: pass this if you want to turn on wandb/logging all variables online. making it optional since wandb doesnt work well with cyverse.
