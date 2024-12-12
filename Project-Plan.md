@@ -63,7 +63,12 @@ todos:
    	- merge to main
 - add pytest for run_sst1_run_sst1_quantum2---done/ignored
 	- mostly same as above- timeout
-- make wandb optional 
+- make wandb optional  ---done
+	- in a branch called make_wandb_optional_commandline_arg ---done
+ 	-  run pytest locally 
+ 	- merge to staging 
+  	- run pytest locally 
+  	- merge to main  
  
 
 
