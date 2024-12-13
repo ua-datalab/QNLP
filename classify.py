@@ -528,13 +528,18 @@ def read_glue_data(dataset_downloaded,split,lines_to_read=0):
 
 
 
-def read_data(filename):         
+def read_data(filename,lines_to_read):         
             labels, sentences = [], []
+            line_counter=0
             with open(filename) as f:
                 for line in f:           
                     t = float(line[0])            
                     labels.append([t, 1-t])            
                     sentences.append(line[1:].strip())
+                    line_counter+=1
+                    if (line_counter> lines_to_read):
+                        break 
+
             return labels, sentences
 
 
@@ -918,9 +923,9 @@ def perform_task(args):
 
     else:
         #read the base data, i.e plain text english.
-        train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN))
-        val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV))
-        test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST))
+        train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN),lines_to_read= args.no_of_training_data_points_to_use)
+        val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV),lines_to_read= args.no_of_training_data_points_to_use)
+        test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST),lines_to_read= args.no_of_training_data_points_to_use)
 
 
         
