@@ -260,7 +260,7 @@ print("attached")
 	- **Quantum1-simulation**  (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)):
        		- status: ran into memory issues needs 460 Million GB memory or something
          	- possible solutions/next step: **end of road**
-   	-  **Quantum2-simulation-actual quantum computer** (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
+   	-  **Quantum2-actual quantum computer** (penny lane model, bob cat parser, iqp ansatz, pytorchtrainer):
 		- No response for first fit for a few hours)
 	      	- Possible solution: does that change if you expose val data during model creation?
            	- Run it on cyverse.  ?
