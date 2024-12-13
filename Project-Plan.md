@@ -42,9 +42,9 @@
   	- Khatri et al, for Uspantekan: [https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb](https://github.com/ua-datalab/QNLP/blob/mithun_dev/v2_khatri_thesis_version_which_gave1_mnli_100_runs_end_to_end.ipynb)
 
 # Working Group Best Practices
+- Golden rule: Don't get emotionally entangled with results/errors. They are just that, problems to solve. Don't take them personally/nothing to do with you.
 - Never work on main branch (unless you are working on Projectplan.md)
-- After every code change, before pushing, always run pytest before the actual code in any branch. This can be achieved using 
-`./runner.sh`
+- After every code change, before pushing, always run pytest before the actual code in any branch. This can be achieved using `./runner.sh`
 - For every new bug fix/new feature create a new branch.
 - Always merge and test that new branch with `staging_merge_here_and_test_before_merging_to_main`, checkout on laptop, run pytest
 - merge `staging_merge_here_and_test_before_merging_to_main` with `main` only if it clears all pytests 
