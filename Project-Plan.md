@@ -12,8 +12,8 @@
 	* spanish_quantum1:
 	* spanish_quantum2:
    
-	* uspantek_classical_1: 
-	* uspantek_classical2:
+	* uspantek_classical_1:  works+ have added a pytest
+	* uspantek_classical2: works+ have added a pytest
 	* uspantek_quantum1:
 	* uspantek_quantum2:
  * latest command line command to run the code of any branch will be found in its respective readme.md
