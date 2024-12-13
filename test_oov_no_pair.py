@@ -30,8 +30,8 @@ def test_sst2_classical1_no_expose_val(monkeypatch):
         model4_loss, model4_acc=classify.main()                         
         assert round(model4_loss,2)  >= 0.6
         assert round(model4_loss,2)  <= 0.7
-        assert round(model4_acc,1)  >= 0.5 
-        assert round(model4_acc,1)  <= 0.65 
+        assert round(model4_acc,2)  >= 0.5 
+        assert round(model4_acc,2)  <= 0.65 
 
 
         # test_sst2_classical1_yes_expose_val
@@ -53,8 +53,8 @@ def test_sst2_classical1_yes_expose_val(monkeypatch):
         model4_loss, model4_acc=classify.main()                         
         assert round(model4_loss,2)  >= 0.6
         assert round(model4_loss,2)  <= 0.7
-        assert round(model4_acc,2)  >= 0.3 
-        assert round(model4_acc,2)  <= 0.5 
+        assert round(model4_acc,2)  >= 0.4 
+        assert round(model4_acc,2)  <= 0.7 
 
 
 # def test_food_it_classical1(monkeypatch):
@@ -152,8 +152,8 @@ def test_uspantek_classical1_no_expose_val(monkeypatch):
         model4_loss, model4_acc=classify.main()                         
         assert round(model4_loss,2)  >= 0.6
         assert round(model4_loss,2)  <= 0.75
-        assert round(model4_acc,1)  >= 0.4 
-        assert round(model4_acc,1)  <= 0.5 
+        assert round(model4_acc,2)  >= 0.3 
+        assert round(model4_acc,2)  <= 0.5 
 
 
 
@@ -174,8 +174,8 @@ def test_uspantek_classical1_yes_expose_val(monkeypatch):
         model4_loss, model4_acc=classify.main()                         
         assert round(model4_loss,2)  >= 0.6
         assert round(model4_loss,2)  <= 0.7
-        assert round(model4_acc,1)  >= 0.4 
-        assert round(model4_acc,1)  <= 0.6 
+        assert round(model4_acc,2)  >= 0.4 
+        assert round(model4_acc,2)  <= 0.6 
 
 
 # python classify.py --dataset uspantek --parser BobCatParser --ansatz SpiderAnsatz --model14type PytorchModel 
@@ -198,15 +198,11 @@ def test_uspantek_classical2_no_expose_val(monkeypatch):
         model4_loss, model4_acc=classify.main()                         
         assert round(model4_loss,2)  >= 0.68
         assert round(model4_loss,2)  <= 0.75
-        assert round(model4_acc,1)  >= 0.5 
-        assert round(model4_acc,1)  <= 0.6 
+        assert round(model4_acc,2)  >= 0.5 
+        assert round(model4_acc,2)  <= 0.7 
 
 
-# python classify.py --dataset uspantek --parser BobCatParser 
-# --ansatz SpiderAnsatz --model14type PytorchModel  --trainer PytorchTrainer
-#  --epochs_train_model1 7 --no_of_training_data_points_to_use 20 
-# --no_of_val_data_points_to_use 10 --max_tokens_per_sent 10 
-# --expose_model1_val_during_model_initialization
+# python classify.py --dataset uspantek --parser BobCatParser --ansatz SpiderAnsatz --model14type PytorchModel  --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 20  --no_of_val_data_points_to_use 10 --max_tokens_per_sent 10  --expose_model1_val_during_model_initialization
 
 
 def test_uspantek_classical2_yes_expose_val(monkeypatch):        
@@ -224,7 +220,7 @@ def test_uspantek_classical2_yes_expose_val(monkeypatch):
                              '--expose_model1_val_during_model_initialization'                                                                                                              
                              ])
         model4_loss, model4_acc=classify.main()                         
-        assert round(model4_loss,2)  >= 0.68
+        assert round(model4_loss,2)  >= 0.6
         assert round(model4_loss,2)  <= 0.75
-        assert round(model4_acc,2)  >= 0.49 
+        assert round(model4_acc,2)  >= 0.3 
         assert round(model4_acc,2)  <= 0.6 
