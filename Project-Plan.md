@@ -66,18 +66,18 @@ todos:
 - make wandb optional  ---done
 	- in a branch called make_wandb_optional_commandline_arg ---done
  	-  run pytest locally --done  	
-  	- merge to main---done
+  	- merge to main **---done
   	- pull and run pytest locally : started at 7pm dec 12th
 - create 8 pytests for spanish
 	- classical1 x2
  	- classical2 x2
    	- quantum1 x2
-    - quantum2 x2
+    	- quantum2 x2
 - create 8 pytests for uspantek
-	- classical1 x2
- 	- classical2 x2
+	- classical1 x2**---done**
+ 	- classical2 x2**---done**
    	- quantum1 x2
-     - quantum2 x2
+     	- quantum2 x2
 - add python dictionary
 - start tuning uspantek with whatever of the 8 above you think is best 
  
