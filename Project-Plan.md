@@ -14,7 +14,7 @@
    
 	* uspantek_classical_1:  works+ have added a pytest
 	* uspantek_classical2: works+ have added a pytest
-	* uspantek_quantum1: error (KeyError: ResultHandle('d06e4535-1edc-4190-b0e3-838b257d7612', 1, 10, 'null'))
+	* uspantek_quantum1: error (KeyError: ResultHandle('d06e4535-1edc-4190-b0e3-838b257d7612', 1, 10, 'null'))+added pytestx2
 	* uspantek_quantum2:
  * latest command line command to run the code of any branch will be found in its respective readme.md
  * always run pytest before merging a branch or even git push
@@ -56,6 +56,7 @@
 
 ## Dec 12th 20204
 todos:
+- overall: add pytests: no fixing things. just add pytest
 - add pytest for  run_sst1_run_sst1_quantum1 ---done
 	- add time out 
  	- add if wandb
