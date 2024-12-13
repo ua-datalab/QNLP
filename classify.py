@@ -407,11 +407,11 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=epochs_model3_oov_model,callbacks=[callback])
         print(hist.history.keys())
         print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
-        plt.plot(hist.history['loss'], label='loss')
-        plt.plot(hist.history['val_loss'], label='val_loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Error')
-        plt.legend()
+        # plt.plot(hist.history['loss'], label='loss')
+        # plt.plot(hist.history['val_loss'], label='val_loss')
+        # plt.xlabel('Epoch')
+        # plt.ylabel('Error')
+        # plt.legend()
         # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
         best_model= OOV_NN_model
@@ -528,13 +528,18 @@ def read_glue_data(dataset_downloaded,split,lines_to_read=0):
 
 
 
-def read_data(filename):         
+def read_data(filename,lines_to_read):         
             labels, sentences = [], []
+            line_counter=0
             with open(filename) as f:
                 for line in f:           
                     t = float(line[0])            
                     labels.append([t, 1-t])            
                     sentences.append(line[1:].strip())
+                    line_counter+=1
+                    if (line_counter> lines_to_read):
+                        break 
+
             return labels, sentences
 
 
@@ -723,24 +728,24 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
     """if there are no OOV words, we dont need the model 2 through model 4. 
     just use model 1 to evaluate and exit"""
     if oov_word_count==0:
-        import matplotlib.pyplot as plt
+        
         import numpy as np
 
-        fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
+        # fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
 
-        ax_tl.set_title('Training set')
-        ax_tr.set_title('Development set')
-        ax_bl.set_xlabel('Epochs')
-        ax_br.set_xlabel('Epochs')
-        ax_bl.set_ylabel('Accuracy')
-        ax_tl.set_ylabel('Loss')
+        # ax_tl.set_title('Training set')
+        # ax_tr.set_title('Development set')
+        # ax_bl.set_xlabel('Epochs')
+        # ax_br.set_xlabel('Epochs')
+        # ax_bl.set_ylabel('Accuracy')
+        # ax_tl.set_ylabel('Loss')
 
-        colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-        range_ = np.arange(1, trainer_class_to_use.epochs+1)
-        ax_tl.plot(range_, trainer_class_to_use.train_epoch_costs, color=next(colours))
-        ax_bl.plot(range_, trainer_class_to_use.train_eval_results['acc'], color=next(colours))
-        ax_tr.plot(range_, trainer_class_to_use.val_costs, color=next(colours))
-        ax_br.plot(range_, trainer_class_to_use.val_eval_results['acc'], color=next(colours))
+        # colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+        # range_ = np.arange(1, trainer_class_to_use.epochs+1)
+        # ax_tl.plot(range_, trainer_class_to_use.train_epoch_costs, color=next(colours))
+        # ax_bl.plot(range_, trainer_class_to_use.train_eval_results['acc'], color=next(colours))
+        # ax_tr.plot(range_, trainer_class_to_use.val_costs, color=next(colours))
+        # ax_br.plot(range_, trainer_class_to_use.val_eval_results['acc'], color=next(colours))
 
 
         val_preds = model1_obj.get_diagram_output(val_circuits)    
@@ -918,9 +923,9 @@ def perform_task(args):
 
     else:
         #read the base data, i.e plain text english.
-        train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN))
-        val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV))
-        test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST))
+        train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN),lines_to_read= args.no_of_training_data_points_to_use)
+        val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV),lines_to_read= args.no_of_training_data_points_to_use)
+        test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST),lines_to_read= args.no_of_training_data_points_to_use)
 
 
         
