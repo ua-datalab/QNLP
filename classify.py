@@ -407,11 +407,11 @@ def generate_OOV_parameterising_model(trained_qnlp_model, train_vocab_embeddings
         hist = OOV_NN_model.fit(NN_train_X, np.array(NN_train_Y), validation_split=0.2, verbose=1, epochs=epochs_model3_oov_model,callbacks=[callback])
         print(hist.history.keys())
         print(f'OOV NN model final epoch loss: {(hist.history["loss"][-1], hist.history["val_loss"][-1])}')
-        plt.plot(hist.history['loss'], label='loss')
-        plt.plot(hist.history['val_loss'], label='val_loss')
-        plt.xlabel('Epoch')
-        plt.ylabel('Error')
-        plt.legend()
+        # plt.plot(hist.history['loss'], label='loss')
+        # plt.plot(hist.history['val_loss'], label='val_loss')
+        # plt.xlabel('Epoch')
+        # plt.ylabel('Error')
+        # plt.legend()
         # plt.show() #code is expecting user closing the picture manually. commenting this temporarily since that was preventing the smooth run/debugging of code
 
         best_model= OOV_NN_model
@@ -528,13 +528,18 @@ def read_glue_data(dataset_downloaded,split,lines_to_read=0):
 
 
 
-def read_data(filename):         
+def read_data(filename,lines_to_read):         
             labels, sentences = [], []
+            line_counter=0
             with open(filename) as f:
                 for line in f:           
                     t = float(line[0])            
                     labels.append([t, 1-t])            
                     sentences.append(line[1:].strip())
+                    line_counter+=1
+                    if (line_counter> lines_to_read):
+                        break 
+
             return labels, sentences
 
 
@@ -595,7 +600,7 @@ def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     return list_circuits, list_labels
 
 
-def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz_class, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use,do_model3_tuning,learning_rate_model3 ,maxparams,epochs_model3_oov_model,model14type):
+def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz_class, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use,do_model3_tuning,learning_rate_model3 ,maxparams,epochs_model3_oov_model,model14type,use_wandb):
     if ansatz_class in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz_obj = ansatz_class ({AtomicType.NOUN: base_dimension_for_noun,
                     AtomicType.SENTENCE: base_dimension_for_sent,
@@ -723,24 +728,24 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
     """if there are no OOV words, we dont need the model 2 through model 4. 
     just use model 1 to evaluate and exit"""
     if oov_word_count==0:
-        import matplotlib.pyplot as plt
+        
         import numpy as np
 
-        fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
+        # fig1, ((ax_tl, ax_tr), (ax_bl, ax_br)) = plt.subplots(2, 2, sharey='row', figsize=(10, 6))
 
-        ax_tl.set_title('Training set')
-        ax_tr.set_title('Development set')
-        ax_bl.set_xlabel('Epochs')
-        ax_br.set_xlabel('Epochs')
-        ax_bl.set_ylabel('Accuracy')
-        ax_tl.set_ylabel('Loss')
+        # ax_tl.set_title('Training set')
+        # ax_tr.set_title('Development set')
+        # ax_bl.set_xlabel('Epochs')
+        # ax_br.set_xlabel('Epochs')
+        # ax_bl.set_ylabel('Accuracy')
+        # ax_tl.set_ylabel('Loss')
 
-        colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
-        range_ = np.arange(1, trainer_class_to_use.epochs+1)
-        ax_tl.plot(range_, trainer_class_to_use.train_epoch_costs, color=next(colours))
-        ax_bl.plot(range_, trainer_class_to_use.train_eval_results['acc'], color=next(colours))
-        ax_tr.plot(range_, trainer_class_to_use.val_costs, color=next(colours))
-        ax_br.plot(range_, trainer_class_to_use.val_eval_results['acc'], color=next(colours))
+        # colours = iter(plt.rcParams['axes.prop_cycle'].by_key()['color'])
+        # range_ = np.arange(1, trainer_class_to_use.epochs+1)
+        # ax_tl.plot(range_, trainer_class_to_use.train_epoch_costs, color=next(colours))
+        # ax_bl.plot(range_, trainer_class_to_use.train_eval_results['acc'], color=next(colours))
+        # ax_tr.plot(range_, trainer_class_to_use.val_costs, color=next(colours))
+        # ax_br.plot(range_, trainer_class_to_use.val_eval_results['acc'], color=next(colours))
 
 
         val_preds = model1_obj.get_diagram_output(val_circuits)    
@@ -791,6 +796,9 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
             
             
            }
+
+    if bool(use_wandb):
+        wandb.log({"accuracy_model4": smart_acc.item(), "loss_model4": smart_loss.item()})
     
     return smart_loss.item(), smart_acc.item()
 
@@ -869,7 +877,15 @@ def perform_task(args):
     # a unique name to identify this run inside wandb data and graph
     arch = f"{args.ansatz}+'_'+{args.dataset}+'_'+{args.parser}+'_'+{args.trainer}+'_'+{args.model14type}+'_'+{embedding_model}"
 
-    wandb.init(    
+    if bool(args.use_wandb):
+        # Importing required module
+        import subprocess
+
+        # Using system() method to
+        # execute shell commands
+        subprocess.Popen('WANDB online', shell=True)
+
+        wandb.init(    
         project="qnlp_nov2024_expts",    
         config={
         "learning_rate_model1": args.learning_rate_model1,
@@ -907,9 +923,9 @@ def perform_task(args):
 
     else:
         #read the base data, i.e plain text english.
-        train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN))
-        val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV))
-        test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST))
+        train_labels, train_data = read_data(os.path.join(args.data_base_folder,TRAIN),lines_to_read= args.no_of_training_data_points_to_use)
+        val_labels, val_data = read_data(os.path.join(args.data_base_folder,DEV),lines_to_read= args.no_of_training_data_points_to_use)
+        test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST),lines_to_read= args.no_of_training_data_points_to_use)
 
 
         
@@ -917,13 +933,6 @@ def perform_task(args):
     """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
     in a try catch, so that code doesnt completely halt/atleast rest of the dataset can be used
     """
-    # if (args.dataset in ["uspantek","spanish"]):
-    #     train_diagrams, train_labels = convert_to_diagrams_with_try_catch(parser_obj,train_data,train_labels,spacy_tokeniser, split="train")
-    #     val_diagrams, val_labels= convert_to_diagrams_with_try_catch(parser_obj,val_data,val_labels,spacy_tokeniser,split="val")
-    #     test_diagrams, test_labels = convert_to_diagrams_with_try_catch(parser_obj,test_data,test_labels,spacy_tokeniser,split="test")
-    # else:
-
-    
         
         #convert the plain text input to ZX diagrams
     train_diagrams, train_labels = convert_to_diagrams_with_try_catch(args,parser_obj,train_data,train_labels,spacy_tokeniser, split="train")        
@@ -970,7 +979,7 @@ def perform_task(args):
     # But  commenting out due to lack of ram in laptop 
     tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model14type,      args.epochs_train_model1,args.trainer,args.do_model3_tuning,args.learning_rate_model3,args.maxparams,args.epochs_model3_oov_model, args.model14type)
+    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model14type,      args.epochs_train_model1,args.trainer,args.do_model3_tuning,args.learning_rate_model3,args.maxparams,args.epochs_model3_oov_model, args.model14type, args.use_wandb)
 
 def parse_name_model(val):
     try:
@@ -1054,8 +1063,7 @@ def do_debug(val):#uncomment only for debugging/accessing breakpoints
         print("not doing any debugging")
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description="Description of your script.")
-    parser.add_argument('--do_debug', action= "store_true",help="to run debug or not to debug. If yes, will uncomment the attachment code")
+    parser = argparse.ArgumentParser(description="Description of your script.")    
     parser.add_argument('--dataset', type=str, required=True, default="food_it" ,help="type of dataset-choose from [sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2")
     parser.add_argument('--parser', type=parse_name_parser, required=True, help="type of parser to use: [BobCatParser, Spider]")
     parser.add_argument('--ansatz', type=parse_name_ansatz, required=True, help="type of ansatz to use: [IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz ]")
@@ -1081,6 +1089,8 @@ def parse_arguments():
     parser.add_argument('--no_of_test_data_points_to_use', type=int, default=10, required=False, help="65k of sst data was taking a long time. temporarily training on a smaller data")
     parser.add_argument('--single_qubit_params', type=int, default=3, required=False, help="")
     parser.add_argument('--max_tokens_per_sent', type=int, required=True, help="Bobcat parser doesn't like longer sentences 9 or 10 is like the upper limit")
+    parser.add_argument('--do_debug', action= "store_true",help="to run debug or not to debug. If yes, will uncomment the attachment code")
+    parser.add_argument('--use_wandb', action= "store_true",help="turn on wandb. making it optional since wandb doesnt work well with cyverse")
     
 
     return parser.parse_args()

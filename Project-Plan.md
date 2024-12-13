@@ -4,12 +4,14 @@
 * live or dead status of all experiments as of :dec 10th 2024
 	*  sst2_classical_1: runs well end to end+ has pytest. Latest version can be found in branch titled: run_sst1_classical1
 	* sst2_classical2: i.e with bob cat parser, is hitting `both inputs must be same dtype` error again. end of road for now.Latest version can be found in branch titled: run_sst_classical2
-	* sst2_quantum1:
-	* sst2_quantum2:
+	* sst2_quantum1: stuck on time out/ first .fit doesnt respond after a long time. Tried adding a pytest, but not able to cleanly capture a time out.
+	* sst2_quantum2: same stuck on time out/ first .fit doesnt respond after a long time. Tried adding a pytest, but not able to cleanly capture a time out.
+   
 	* spanish_classical_1: 
 	* spanish_classical2:
 	* spanish_quantum1:
 	* spanish_quantum2:
+   
 	* uspantek_classical_1: 
 	* uspantek_classical2:
 	* uspantek_quantum1:
@@ -54,13 +56,31 @@
 
 ## Dec 12th 20204
 todos:
-3. add pytest for  run_sst1_run_sst1_quantum1
+- add pytest for  run_sst1_run_sst1_quantum1 ---done
 	- add time out 
  	- add if wandb
   	- merge to staging
    	- merge to main
-4. add pytest for run_sst1_run_sst1_quantum2
+- add pytest for run_sst1_run_sst1_quantum2---done/ignored
 	- mostly same as above- timeout
+- make wandb optional  ---done
+	- in a branch called make_wandb_optional_commandline_arg ---done
+ 	-  run pytest locally --done  	
+  	- merge to main---done
+  	- pull and run pytest locally : started at 7pm dec 12th
+- create 8 pytests for spanish
+	- classical1 x2
+ 	- classical2 x2
+   	- quantum1 x2
+    - quantum2 x2
+- create 8 pytests for uspantek
+	- classical1 x2
+ 	- classical2 x2
+   	- quantum1 x2
+     - quantum2 x2
+- add python dictionary
+- start tuning uspantek with whatever of the 8 above you think is best 
+ 
 
 
 
