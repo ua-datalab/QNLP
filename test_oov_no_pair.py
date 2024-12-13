@@ -271,4 +271,55 @@ def test_uspantek_quantum1_yes_expose_val(monkeypatch):
         except Exception as ex:
                 print(ex)
                 assert type(ex) == KeyError
+
+
+# quantum2+uspantek
+# python classify.py --dataset uspantek --parser BobCatParser --ansatz IQPAnsatz --model14type PennyLaneModel --trainer QuantumTrainer --epochs_train_model1 30 --no_of_training_data_points_to_use 70 --no_of_val_data_points_to_use 30 --max_tokens_per_sent 10
+# returns:  raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+# AttributeError: 'PennyLaneModel' object has no attribute '_clear_predictions'
       
+def test_uspantek_quantum2_no_expose_val(monkeypatch):        
+        monkeypatch.setattr(sys, 'argv', 
+                            ['classify.py', 
+                             '--dataset', 'uspantek',
+                             '--parser', 'BobCatParser',
+                             '--ansatz', 'IQPAnsatz',
+                             '--model14type', 'PennyLaneModel',
+                             '--trainer', 'QuantumTrainer',
+                             '--epochs_train_model1', '30',
+                             '--no_of_training_data_points_to_use', '70',
+                             '--no_of_val_data_points_to_use', '30',                             
+                             '--max_tokens_per_sent', '10' ,                                                         
+                             ])
+        try:
+                model4_loss, model4_acc=classify.main()                         
+        except Exception as ex:
+                print(ex)
+                assert type(ex) == AttributeError
+
+
+
+# quantum2+uspantek+yes expose
+# python classify.py --dataset uspantek --parser BobCatParser --ansatz IQPAnsatz --model14type PennyLaneModel --trainer QuantumTrainer --epochs_train_model1 30 --no_of_training_data_points_to_use 70 --no_of_val_data_points_to_use 30 --max_tokens_per_sent 10 
+# returns:  raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")
+# AttributeError: 'PennyLaneModel' object has no attribute '_clear_predictions'
+      
+def test_uspantek_quantum2_yes_expose_val(monkeypatch):        
+        monkeypatch.setattr(sys, 'argv', 
+                            ['classify.py', 
+                             '--dataset', 'uspantek',
+                             '--parser', 'BobCatParser',
+                             '--ansatz', 'IQPAnsatz',
+                             '--model14type', 'PennyLaneModel',
+                             '--trainer', 'QuantumTrainer',
+                             '--epochs_train_model1', '30',
+                             '--no_of_training_data_points_to_use', '70',
+                             '--no_of_val_data_points_to_use', '30',                             
+                             '--max_tokens_per_sent', '10' ,
+                             '--expose_model1_val_during_model_initialization'                                                                                      
+                             ])
+        try:
+                model4_loss, model4_acc=classify.main()                         
+        except Exception as ex:
+                print(ex)
+                assert type(ex) == AttributeError
