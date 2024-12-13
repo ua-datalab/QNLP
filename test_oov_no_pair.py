@@ -224,3 +224,51 @@ def test_uspantek_classical2_yes_expose_val(monkeypatch):
         assert round(model4_loss,2)  <= 0.75
         assert round(model4_acc,2)  >= 0.3 
         assert round(model4_acc,2)  <= 0.6 
+
+
+# python classify.py --dataset uspantek --parser BobCatParser --ansatz IQPAnsatz --model14type TketModel --trainer QuantumTrainer --epochs_train_model1 30 --no_of_training_data_points_to_use 70 --no_of_val_data_points_to_use 30 --max_tokens_per_sent 10 
+
+
+def test_uspantek_quantum1_no_expose_val(monkeypatch):        
+        monkeypatch.setattr(sys, 'argv', 
+                            ['classify.py', 
+                             '--dataset', 'uspantek',
+                             '--parser', 'BobCatParser',
+                             '--ansatz', 'IQPAnsatz',
+                             '--model14type', 'TketModel',
+                             '--trainer', 'QuantumTrainer',
+                             '--epochs_train_model1', '30',
+                             '--no_of_training_data_points_to_use', '70',
+                             '--no_of_val_data_points_to_use', '30',                             
+                             '--max_tokens_per_sent', '10'                              
+                             ])
+        try:
+                model4_loss, model4_acc=classify.main()                         
+        except Exception as ex:
+                print(ex)
+                assert type(ex) == KeyError
+      
+
+# python classify.py --dataset uspantek --parser BobCatParser --ansatz IQPAnsatz --model14type TketModel --trainer QuantumTrainer --epochs_train_model1 30 --no_of_training_data_points_to_use 70 --no_of_val_data_points_to_use 30 --max_tokens_per_sent 10 ----expose_model1_val_during_model_initialization
+
+
+def test_uspantek_quantum1_yes_expose_val(monkeypatch):        
+        monkeypatch.setattr(sys, 'argv', 
+                            ['classify.py', 
+                             '--dataset', 'uspantek',
+                             '--parser', 'BobCatParser',
+                             '--ansatz', 'IQPAnsatz',
+                             '--model14type', 'TketModel',
+                             '--trainer', 'QuantumTrainer',
+                             '--epochs_train_model1', '30',
+                             '--no_of_training_data_points_to_use', '70',
+                             '--no_of_val_data_points_to_use', '30',                             
+                             '--max_tokens_per_sent', '10' ,
+                             '--expose_model1_val_during_model_initialization'                             
+                             ])
+        try:
+                model4_loss, model4_acc=classify.main()                         
+        except Exception as ex:
+                print(ex)
+                assert type(ex) == KeyError
+      
