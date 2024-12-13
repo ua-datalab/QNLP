@@ -2,21 +2,30 @@
 # References and links:
 * [Google sheet](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) listing the latest status of all experiments at any given point of time
 * live or dead status of all experiments as of :dec 10th 2024
-	*  sst2_classical_1: runs well end to end+ has pytest. Latest version can be found in branch titled: run_sst1_classical1
-	* sst2_classical2: i.e with bob cat parser, is hitting `both inputs must be same dtype` error again. end of road for now.Latest version can be found in branch titled: run_sst_classical2
-	* sst2_quantum1: stuck on time out/ first .fit doesnt respond after a long time. Tried adding a pytest, but not able to cleanly capture a time out.
-	* sst2_quantum2: same stuck on time out/ first .fit doesnt respond after a long time. Tried adding a pytest, but not able to cleanly capture a time out.
+	*  sst2_classical_1: (alive)
+ 		- runs well end to end+ has pytest. Latest version can be found in branch titled: run_sst1_classical1
+	* sst2_classical2: (dead)
+ 		- i.e with bob cat parser, is hitting `both inputs must be same dtype` error again. end of road for now.Latest version can be found in branch titled: run_sst_classical2
+	* sst2_quantum1:(dead)
+   		- stuck on time out/ first .fit doesnt respond after a long time. Tried adding a pytest, but not able to cleanly capture a time out.
+	* sst2_quantum2: (dead)
+ 		- same stuck on time out/ first .fit doesnt respond after a long time. Tried adding a pytest, but not able to cleanly capture a time out.
    
 	* spanish_classical_1: 
 	* spanish_classical2:
 	* spanish_quantum1:
 	* spanish_quantum2:
    
-	* uspantek_classical_1:  works+ have added a pytest
-	* uspantek_classical2: works+ have added a pytest
-	* uspantek_quantum1: error (KeyError: ResultHandle('d06e4535-1edc-4190-b0e3-838b257d7612', 1, 10, 'null'))+added pytestx2
-	* uspantek_quantum2:
- * latest command line command to run the code of any branch will be found in its respective readme.md
+	* uspantek_classical_1: (alive)
+   		- works+ have added a pytest
+	* uspantek_classical2: (alive)
+		- works+ have added a pytest
+	* uspantek_quantum1: (dead)
+ 		- error (KeyError: ResultHandle('d06e4535-1edc-4190-b0e3-838b257d7612', 1, 10, 'null'))+added pytestx2
+	* uspantek_quantum2: (dead)
+		- error (Attributeerror:    raise AttributeError(f"'{type(self).__name__}' object has no attribute '{name}'")AttributeError: 'PennyLaneModel' object has no attribute '_clear_predictions))+added pytestx2
+  
+ * latest command line command to run the code of any branch will be found next to its respective test case
  * always run pytest before merging a branch or even git push
   
 * Link to github started by Robert Henderson:
