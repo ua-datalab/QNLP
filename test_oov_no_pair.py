@@ -249,7 +249,7 @@ def test_uspantek_quantum1_no_expose_val(monkeypatch):
                 assert type(ex) == KeyError
       
 
-# python classify.py --dataset uspantek --parser BobCatParser --ansatz IQPAnsatz --model14type TketModel --trainer QuantumTrainer --epochs_train_model1 30 --no_of_training_data_points_to_use 70 --no_of_val_data_points_to_use 30 --max_tokens_per_sent 10 ----expose_model1_val_during_model_initialization
+# python classify.py --dataset uspantek --parser BobCatParser --ansatz IQPAnsatz --model14type TketModel --trainer QuantumTrainer --epochs_train_model1 30 --no_of_training_data_points_to_use 70 --no_of_val_data_points_to_use 30 --max_tokens_per_sent 10 --expose_model1_val_during_model_initialization
 
 
 def test_uspantek_quantum1_yes_expose_val(monkeypatch):        

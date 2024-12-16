@@ -60,7 +60,7 @@ import keras
 from keras import layers
 import os.path
 
-
+USPANTEK_SPANISH_DICT_FILENAME="usp_spanish_dictionary.txt"
 
 
 def f1(y_hat, y):
@@ -98,20 +98,39 @@ def get_max_word_param_length_all_other_ansatz(input_circuits):
                 lengths.append(int(symb.name[-1]))
         return lengths
 
-            
+"""
+given a word in uspantek- from training or dev, give it to a look up dictionary,find its corresponding spanish word, and return it.
+The dictionary was provided to us by the professor who went to guatemala to create this dictionary from uspantek speaking people
+
+:param usp_word: the word in uspantek
+
+:return: returns the corresponding spanish word
+""" 
+def get_spanish_word_given_usp_word(usp_word):
+    
+    pass
+
+
 """
 given a word from training and dev vocab, get the corresponding embedding using fast text. 
 
 :param vocab: vocabulary
+:param embdding model: the corresponding embedding model, that will be used. i.e model 3. e.g fasttext for spanish or english
+:param language: what language. options are  spanish or uspantek. Rather if it is uspantek, we need to do one extra step. i.e take every word in uspantek, and find its corresponding spanish word,- then only does pulling the corresponding spanish embedding makes sense.
+
 :return: returns a dictionary of each word and its corresponding embedding
 """ 
-def get_vocab_emb_dict(vocab,embedding_model):            
+def get_vocab_emb_dict(vocab,embedding_model,language):            
             embed_dict={}
             for wrd in vocab:                
                 cleaned_wrd_just_plain_text,cleaned_wrd_with_type=clean_wrd_for_spider_ansatz_coming_from_vocab(wrd)
                 if cleaned_wrd_with_type in embed_dict   :                   
                     print(f"error.  the word {cleaned_wrd_with_type} was already in dict")
                 else:
+                    if(language == "uspantek"):
+                        pass
+                        
+                        #then for each uspantek word, get the corresponding spanish word
                     embed_dict[cleaned_wrd_with_type]= embedding_model[cleaned_wrd_just_plain_text] 
             return embed_dict
 
@@ -206,7 +225,7 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
     
     if(ansatz==SpiderAnsatz):               
         #for each word in train and test vocab get its embedding from fasttext
-        train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model)
+        train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model,language)
         val_vocab_embeddings = get_vocab_emb_dict(val_vocab,embedding_model)            
     else:
         #for the words created by other ansatz other formatting is different
@@ -527,6 +546,22 @@ def read_glue_data(dataset_downloaded,split,lines_to_read=0):
 
 
 
+
+"""
+The dictionary/translator between uspantek and spanish came in a txt file. 
+here we will load the file and convert it into a key value pair
+
+:param file_path: path to the dictionary
+
+:return: returns a dictionary of each usp word with corresponding spanish translation
+""" 
+
+
+def read_usp_spanish_dictionary(file_path):
+    with open(file_path) as f:
+                for line in f:   
+                    line_split = line.split(" ")
+                    print(line_split)
 
 def read_data(filename,lines_to_read):         
             labels, sentences = [], []
@@ -911,6 +946,12 @@ def perform_task(args):
     if args.dataset  in ["uspantek","spanish"]:
         spanish_tokeniser=spacy.load("es_core_news_sm")
         spacy_tokeniser.tokeniser = spanish_tokeniser
+
+        if args.dataset == "uspantek":
+            #load the usp_spanish-dictionary
+            usp_spanish_dictionary= read_usp_spanish_dictionary(os.path.join(args.data_base_folder,USPANTEK_SPANISH_DICT_FILENAME))
+    
+
     else:
         english_tokenizer = spacy.load("en_core_web_sm")
         spacy_tokeniser.tokeniser =english_tokenizer
@@ -928,6 +969,7 @@ def perform_task(args):
         test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST),lines_to_read= args.no_of_training_data_points_to_use)
 
 
+    
         
 
     """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
@@ -1091,6 +1133,7 @@ def parse_arguments():
     parser.add_argument('--max_tokens_per_sent', type=int, required=True, help="Bobcat parser doesn't like longer sentences 9 or 10 is like the upper limit")
     parser.add_argument('--do_debug', action= "store_true",help="to run debug or not to debug. If yes, will uncomment the attachment code")
     parser.add_argument('--use_wandb', action= "store_true",help="turn on wandb. making it optional since wandb doesnt work well with cyverse")
+    
     
 
     return parser.parse_args()
