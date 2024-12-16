@@ -558,10 +558,19 @@ here we will load the file and convert it into a key value pair
 
 
 def read_usp_spanish_dictionary(file_path):
-    with open(file_path) as f:
-                for line in f:   
-                    line_split = line.split(" ")
-                    print(line_split)
+    with open(file_path) as f:                             
+                    # Extracting word pairs
+                    uspantek_to_spanish = {}
+                    for text_input in f:
+                        for line in text_input.strip().split("\n"):
+                            parts = line.split(maxsplit=2)
+                            if len(parts) >= 3:
+                                key = parts[0].strip()
+                                value = parts[2].strip()
+                                uspantek_to_spanish[key] = value
+    return uspantek_to_spanish
+        
+        
 
 def read_data(filename,lines_to_read):         
             labels, sentences = [], []
