@@ -30,12 +30,10 @@ some definitions
 **Steps for accessing and using data files:**
 - Clone this reposory to access the data files (e.g. spanish_test.txt): [Private Repository](https://github.com/bkeej/usp_qnlp/tree/main/qnlp-data).
 - Copy the folder qnlp_data to the QNLP repository: `cp -r usp_qnlp/qnlp-data QNLP/data`
-- Create a new branch to test the code: `git checkout -b test_branch`
-
-
 Once all requirements and the environment has been set up, you can begin training the QNLP model and testing it.
 
 **Steps for training and testing the QNLP Model:**
+- Create a new branch to test the code: `git checkout -b test_branch`
 - Run `python classify.py`
 
 **Note:** the last line of ./run_me_first.sh will try to download a 5GB file. Alternately you can download spanish fasttext embeddings: go to [this](https://github.com/dccuchile/spanish-word-embeddings?tab=readme-ov-file#fasttext-embeddings-from-suc) url and download manually the `.bin` file for spanish unannotated corpora to the same location where this code is.
