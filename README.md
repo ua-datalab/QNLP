@@ -77,11 +77,12 @@ Also note, during development its a healthy habit to always run pytest before th
 `./runner.sh`
 
 ---
-### Details of args:
-
-
-`--expose_model1_val_during_model_initialization`: Pass this (dont have to do ==True) if you want the model1 to evaluate its performance in val/dev data while training itself. 
-
-`--do_debug`:  pass this only if you want debugging done. i.e you are planning to attaching a debugging process from an IDE like visual studio code.
-
-`--use_wandb`: pass this if you want to turn on wandb/logging all variables online. making it optional since wandb doesnt work well with cyverse.
+### Details of arguments used in `classify.py`:
+- `--dataset`: Argument is required and accepts a string input. It is the name of the dataset used for running the model. Options to choose from: `sst2,uspantek,spanish,food_it,msr_paraphrase_corpus,sst2`
+-`--parser`: Argument is required and accepts a string inputs. It is the name of the parser specified by the user. Options include: `BobCatParser, Spider`
+- `--ansatz`: Argument is required and accepts the name of a parser ansatz as input. Options to choose from:  `IQPAnsatz,SpiderAnsatz,Sim14Ansatz, Sim15Ansatz,TensorAnsatz`
+- `--model14type`: Argument is required and accepts the name of the type of model to use for model1 and model4 as input. Options to choose from: `numpy,PennyLaneModel PytorchModel,TketModel`
+- `--trainer`: Argument is required and accepts the name of the type of trainer to use. Options to choose from: `PytorchTrainer, QuantumTrainer`
+- `--expose_model1_val_during_model_initialization`: Checks if the user wants expose the dev data during the initialization of model 1. The code assigns random weights for dev data. action="store_true". Boolean options
+- `--max_param_length_global`: Optional argument for a lobal value which will be later replaced by the actual max param length. Accepts an integer value, default is 0.
+- `--do_model3_tuning`: Optional argument to tune up for parameters, for testing only. Boolean.
