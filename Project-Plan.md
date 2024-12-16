@@ -63,7 +63,13 @@
 
 # Meeting Notes
 
-## Dec 12th 20204
+## Dec 16th 20204
+- Pytests for each specific usecase:
+- BobCat parser is not working
+- Quantum case is not functional
+- Chaking if code works on Cyverse
+
+## Dec 12th 2024
 todos:
 - overall: add pytests: no fixing things. just add pytest
 - add pytest for  run_sst1_run_sst1_quantum1 ---done
@@ -91,9 +97,6 @@ todos:
 - add python dictionary
 - start tuning uspantek with whatever of the 8 above you think is best 
  
-
-
-
 
 ## Dec 11th 2024
 - Discussion of monthly goals and future plan:
