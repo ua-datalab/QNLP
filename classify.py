@@ -21,6 +21,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 
 import argparse
+import json
 from lambeq.text2diagram.ccg_parser import CCGParser
 from lambeq.ansatz import BaseAnsatz
 from lambeq.training.model import Model
@@ -60,7 +61,7 @@ import keras
 from keras import layers
 import os.path
 
-USPANTEK_SPANISH_DICT_FILENAME="usp_spanish_dictionary.txt"
+USPANTEK_SPANISH_DICT_FILENAME="refined_usp_to_spanish.json"
 
 
 def f1(y_hat, y):
@@ -120,17 +121,20 @@ given a word from training and dev vocab, get the corresponding embedding using 
 
 :return: returns a dictionary of each word and its corresponding embedding
 """ 
-def get_vocab_emb_dict(vocab,embedding_model,language):            
+def get_vocab_emb_dict(vocab,embedding_model,dataset_name,usp_spanish_dictionary=None):            
             embed_dict={}
             for wrd in vocab:                
                 cleaned_wrd_just_plain_text,cleaned_wrd_with_type=clean_wrd_for_spider_ansatz_coming_from_vocab(wrd)
                 if cleaned_wrd_with_type in embed_dict   :                   
                     print(f"error.  the word {cleaned_wrd_with_type} was already in dict")
                 else:
-                    if(language == "uspantek"):
-                        pass
-                        
+                    if(dataset_name == "uspantek"):
+                        assert usp_spanish_dictionary != None                        
                         #then for each uspantek word, get the corresponding spanish word
+                        if cleaned_wrd_just_plain_text in usp_spanish_dictionary:
+                            spanish_equivalent_word_or_sent = usp_spanish_dictionary[cleaned_wrd_just_plain_text]
+                        else:
+                            pass
                     embed_dict[cleaned_wrd_with_type]= embedding_model[cleaned_wrd_just_plain_text] 
             return embed_dict
 
@@ -173,7 +177,7 @@ as of nov21st2024 - is hurting the first model's fit- i.e loss not reducing.
 
 """
 
-def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model,ansatz,model_type_class):   
+def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model,ansatz,model_type_class,usp_spanish_dictionary,dataset_name):   
 
     
     train_vocab=create_vocab_from_circuits(train_circuits,ansatz)
@@ -223,9 +227,9 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
 
     assert max_word_param_length!=0
     
-    if(ansatz==SpiderAnsatz):               
+    if(ansatz==SpiderAnsatz):                               
         #for each word in train and test vocab get its embedding from fasttext
-        train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model,language)
+        train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model,dataset_name,usp_spanish_dictionary)
         val_vocab_embeddings = get_vocab_emb_dict(val_vocab,embedding_model)            
     else:
         #for the words created by other ansatz other formatting is different
@@ -558,16 +562,9 @@ here we will load the file and convert it into a key value pair
 
 
 def read_usp_spanish_dictionary(file_path):
-    with open(file_path) as f:                             
-                    # Extracting word pairs
-                    uspantek_to_spanish = {}
-                    for text_input in f:
-                        for line in text_input.strip().split("\n"):
-                            parts = line.split(maxsplit=2)
-                            if len(parts) >= 3:
-                                key = parts[0].strip()
-                                value = parts[2].strip()
-                                uspantek_to_spanish[key] = value
+    with open(file_path,'r') as json_file:        
+        uspantek_to_spanish = json.load(json_file)
+        
     return uspantek_to_spanish
         
         
@@ -644,7 +641,7 @@ def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     return list_circuits, list_labels
 
 
-def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz_class, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use,do_model3_tuning,learning_rate_model3 ,maxparams,epochs_model3_oov_model,model14type,use_wandb):
+def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz_class, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use,do_model3_tuning,learning_rate_model3 ,maxparams,epochs_model3_oov_model,model14type,use_wandb,usp_spanish_dictionary,dataset_name):
     if ansatz_class in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz_obj = ansatz_class ({AtomicType.NOUN: base_dimension_for_noun,
                     AtomicType.SENTENCE: base_dimension_for_sent,
@@ -754,7 +751,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
 
     
 
-    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, model1_obj,ansatz_class, model_class_to_use)
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, model1_obj,ansatz_class, model_class_to_use,usp_spanish_dictionary,dataset_name)
     
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
@@ -1030,7 +1027,7 @@ def perform_task(args):
     # But  commenting out due to lack of ram in laptop 
     tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model14type,      args.epochs_train_model1,args.trainer,args.do_model3_tuning,args.learning_rate_model3,args.maxparams,args.epochs_model3_oov_model, args.model14type, args.use_wandb)
+    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model14type,      args.epochs_train_model1,args.trainer,args.do_model3_tuning,args.learning_rate_model3,args.maxparams,args.epochs_model3_oov_model, args.model14type, args.use_wandb,usp_spanish_dictionary,args.dataset)
 
 def parse_name_model(val):
     try:
