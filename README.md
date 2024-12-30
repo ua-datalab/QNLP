@@ -44,7 +44,8 @@ Once all requirements and the environment has been set up, you can begin trainin
 
 #### To run on dataset sst2 classical 1 combination (i.e SpiderReader, SpiderAnsatz, PytorchModel,PytorchTrainer+ yes expose val)
 
-```bash
+```
+
 python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 20 --no_of_val_data_points_to_use 10 --expose_model1_val_during_model_initialization --max_tokens_per_sent 10
 ```
 
@@ -52,7 +53,8 @@ python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model1
 
 #### To run on dataset sst2 classical 2 combination (i.e BobCatParser, SpiderAnsatz, PytorchModel,PytorchTrainer+ no expose val)
 
-```bash
+```
+
 python classify.py --dataset sst2 --parser BobCatParser --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 7 --no_of_training_data_points_to_use 20 --no_of_val_data_points_to_use 10 --max_tokens_per_sent 10 
 ```
 
@@ -66,7 +68,8 @@ python classify.py --dataset sst2 --parser BobCatParser --ansatz IQPAnsatz --mod
 
 ## if you want to debug the code use:
 
-```bash
+```
+
 python classify.py --dataset sst2 --parser Spider --ansatz SpiderAnsatz --model14type PytorchModel --trainer PytorchTrainer --epochs_train_model1 100 --no_of_training_data_points_to_use 23 --no_of_val_data_points_to_use 1000 --expose_model1_val_during_model_initialization --do_debug
 ```
 Note: you will have to explicitly attach debugger. Refer projectplan.md
