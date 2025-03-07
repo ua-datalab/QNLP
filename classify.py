@@ -21,6 +21,7 @@ https://github.com/ua-datalab/QNLP/blob/main/Project-Plan.md
 
 
 import argparse
+import json
 from lambeq.text2diagram.ccg_parser import CCGParser
 from lambeq.ansatz import BaseAnsatz
 from lambeq.training.model import Model
@@ -60,7 +61,7 @@ import keras
 from keras import layers
 import os.path
 
-
+USPANTEK_SPANISH_DICT_FILENAME="refined_usp_to_spanish.json"
 
 
 def f1(y_hat, y):
@@ -98,20 +99,42 @@ def get_max_word_param_length_all_other_ansatz(input_circuits):
                 lengths.append(int(symb.name[-1]))
         return lengths
 
-            
+"""
+given a word in uspantek- from training or dev, give it to a look up dictionary,find its corresponding spanish word, and return it.
+The dictionary was provided to us by the professor who went to guatemala to create this dictionary from uspantek speaking people
+
+:param usp_word: the word in uspantek
+
+:return: returns the corresponding spanish word
+""" 
+def get_spanish_word_given_usp_word(usp_word):
+    
+    pass
+
+
 """
 given a word from training and dev vocab, get the corresponding embedding using fast text. 
 
 :param vocab: vocabulary
+:param embdding model: the corresponding embedding model, that will be used. i.e model 3. e.g fasttext for spanish or english
+:param language: what language. options are  spanish or uspantek. Rather if it is uspantek, we need to do one extra step. i.e take every word in uspantek, and find its corresponding spanish word,- then only does pulling the corresponding spanish embedding makes sense.
+
 :return: returns a dictionary of each word and its corresponding embedding
 """ 
-def get_vocab_emb_dict(vocab,embedding_model):            
+def get_vocab_emb_dict(vocab,embedding_model,dataset_name,usp_spanish_dictionary=None):            
             embed_dict={}
             for wrd in vocab:                
                 cleaned_wrd_just_plain_text,cleaned_wrd_with_type=clean_wrd_for_spider_ansatz_coming_from_vocab(wrd)
                 if cleaned_wrd_with_type in embed_dict   :                   
                     print(f"error.  the word {cleaned_wrd_with_type} was already in dict")
                 else:
+                    if(dataset_name == "uspantek"):
+                        assert usp_spanish_dictionary != None                        
+                        #then for each uspantek word, get the corresponding spanish word
+                        if cleaned_wrd_just_plain_text in usp_spanish_dictionary:
+                            spanish_equivalent_word_or_sent = usp_spanish_dictionary[cleaned_wrd_just_plain_text]
+                        else:
+                            pass
                     embed_dict[cleaned_wrd_with_type]= embedding_model[cleaned_wrd_just_plain_text] 
             return embed_dict
 
@@ -154,7 +177,7 @@ as of nov21st2024 - is hurting the first model's fit- i.e loss not reducing.
 
 """
 
-def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model,ansatz,model_type_class):   
+def generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, qnlp_model,ansatz,model_type_class,usp_spanish_dictionary,dataset_name):   
 
     
     train_vocab=create_vocab_from_circuits(train_circuits,ansatz)
@@ -204,9 +227,9 @@ def generate_initial_parameterisation(train_circuits, val_circuits, embedding_mo
 
     assert max_word_param_length!=0
     
-    if(ansatz==SpiderAnsatz):               
+    if(ansatz==SpiderAnsatz):                               
         #for each word in train and test vocab get its embedding from fasttext
-        train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model)
+        train_vocab_embeddings = get_vocab_emb_dict(train_vocab,embedding_model,dataset_name,usp_spanish_dictionary)
         val_vocab_embeddings = get_vocab_emb_dict(val_vocab,embedding_model)            
     else:
         #for the words created by other ansatz other formatting is different
@@ -528,6 +551,24 @@ def read_glue_data(dataset_downloaded,split,lines_to_read=0):
 
 
 
+"""
+The dictionary/translator between uspantek and spanish came in a txt file. 
+here we will load the file and convert it into a key value pair
+
+:param file_path: path to the dictionary
+
+:return: returns a dictionary of each usp word with corresponding spanish translation
+""" 
+
+
+def read_usp_spanish_dictionary(file_path):
+    with open(file_path,'r') as json_file:        
+        uspantek_to_spanish = json.load(json_file)
+        
+    return uspantek_to_spanish
+        
+        
+
 def read_data(filename,lines_to_read):         
             labels, sentences = [], []
             line_counter=0
@@ -600,7 +641,7 @@ def convert_diagram_to_circuits_with_try_catch(diagrams, ansatz, labels,split):
     return list_circuits, list_labels
 
 
-def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz_class, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use,do_model3_tuning,learning_rate_model3 ,maxparams,epochs_model3_oov_model,model14type,use_wandb):
+def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels,  eval_metrics,seed,embedding_model,ansatz_class, single_qubit_params,base_dimension_for_noun,base_dimension_for_sent,base_dimension_for_prep_phrase,no_of_layers_in_ansatz,expose_model1_val_during_model_initialization,batch_size,learning_rate_model1,model_class_to_use, epochs_train_model1, trainer_class_to_use,do_model3_tuning,learning_rate_model3 ,maxparams,epochs_model3_oov_model,model14type,use_wandb,usp_spanish_dictionary,dataset_name):
     if ansatz_class in [IQPAnsatz,Sim15Ansatz, Sim14Ansatz]:
         ansatz_obj = ansatz_class ({AtomicType.NOUN: base_dimension_for_noun,
                     AtomicType.SENTENCE: base_dimension_for_sent,
@@ -710,7 +751,7 @@ def run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_d
 
     
 
-    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, model1_obj,ansatz_class, model_class_to_use)
+    train_embeddings, val_embeddings, max_w_param_length, oov_word_count = generate_initial_parameterisation(train_circuits, val_circuits, embedding_model, model1_obj,ansatz_class, model_class_to_use,usp_spanish_dictionary,dataset_name)
     
     global MAX_PARAM_LENGTH
     MAX_PARAM_LENGTH = max_w_param_length
@@ -911,6 +952,12 @@ def perform_task(args):
     if args.dataset  in ["uspantek","spanish"]:
         spanish_tokeniser=spacy.load("es_core_news_sm")
         spacy_tokeniser.tokeniser = spanish_tokeniser
+
+        if args.dataset == "uspantek":
+            #load the usp_spanish-dictionary
+            usp_spanish_dictionary= read_usp_spanish_dictionary(os.path.join(args.data_base_folder,USPANTEK_SPANISH_DICT_FILENAME))
+    
+
     else:
         english_tokenizer = spacy.load("en_core_web_sm")
         spacy_tokeniser.tokeniser =english_tokenizer
@@ -928,6 +975,7 @@ def perform_task(args):
         test_labels, test_data = read_data(os.path.join(args.data_base_folder,TEST),lines_to_read= args.no_of_training_data_points_to_use)
 
 
+    
         
 
     """#some datasets like spanish, uspantek, sst2 have some sentences which bobcat doesnt like. putting it
@@ -979,7 +1027,7 @@ def perform_task(args):
     # But  commenting out due to lack of ram in laptop 
     tf_seed = args.seed
     tf.random.set_seed(tf_seed)
-    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model14type,      args.epochs_train_model1,args.trainer,args.do_model3_tuning,args.learning_rate_model3,args.maxparams,args.epochs_model3_oov_model, args.model14type, args.use_wandb)
+    return run_experiment(train_diagrams, train_labels, val_diagrams, val_labels,test_diagrams,test_labels, eval_metrics,tf_seed,embedding_model,args.ansatz,args.single_qubit_params,args.base_dimension_for_noun,args.base_dimension_for_sent,args.base_dimension_for_prep_phrase,    args.no_of_layers_in_ansatz,args.expose_model1_val_during_model_initialization , args.batch_size,args.learning_rate_model1,args.model14type,      args.epochs_train_model1,args.trainer,args.do_model3_tuning,args.learning_rate_model3,args.maxparams,args.epochs_model3_oov_model, args.model14type, args.use_wandb,usp_spanish_dictionary,args.dataset)
 
 def parse_name_model(val):
     try:
@@ -1091,6 +1139,7 @@ def parse_arguments():
     parser.add_argument('--max_tokens_per_sent', type=int, required=True, help="Bobcat parser doesn't like longer sentences 9 or 10 is like the upper limit")
     parser.add_argument('--do_debug', action= "store_true",help="to run debug or not to debug. If yes, will uncomment the attachment code")
     parser.add_argument('--use_wandb', action= "store_true",help="turn on wandb. making it optional since wandb doesnt work well with cyverse")
+    
     
 
     return parser.parse_args()
