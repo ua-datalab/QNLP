@@ -1,3 +1,13 @@
+some definitions/possible experiment run combinations 
+
+- Classical 1= the combination of (Spider parser, spider ansatz, pytorch model, pytorchtrainer) 
+
+- Classical 2= the combination of (bobCatParser , spider ansatz, pytorch model, pytorchtrainer)
+
+- Quantum1= (IQPansatz+TKetmodel+Quantum Trainer+ bob cat parser)- this runs on a simulation f a quantum computer
+
+- Quantum2 = Quantum2-simulation-actual quantum computer=(penny lane model, bob cat parser, iqp ansatz, pytorchtrainer)
+
 
 # References and links:
 * [Google sheet](https://docs.google.com/spreadsheets/d/1NBINiUsAdrqoO50y_CX_BGGgXcP9Zt6i5nYKvuB70Tg/edit?usp=sharing) listing the latest status of all experiments at any given point of time
